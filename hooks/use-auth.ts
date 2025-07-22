@@ -6,11 +6,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
 interface User {
   id: string
-  email: string
+  email?: string
   username: string
-  role: string
-  subscriptionType: 'free' | 'pro' | 'enterprise'
+  name?: string
+  walletAddress?: string
+  registrationMethod?: 'email' | 'wallet'
+  subscription: 'free' | 'pro' | 'enterprise'
+  isVerified: boolean
+  avatar?: string
+  twoFactorEnabled: boolean
   createdAt: string
+  updatedAt: string
 }
 
 interface LoginData {
