@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // List of protected routes
-  const protectedRoutes = ['/dashboard', '/portfolio', '/projects', '/analytics', '/watchlist', '/alerts', '/settings']
+  const protectedRoutes = ['/dashboard', '/portfolio', '/projects', '/analytics', '/watchlist', '/alerts', '/settings', '/profile']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Auth routes
@@ -33,6 +33,7 @@ export const config = {
     '/watchlist/:path*',
     '/alerts/:path*',
     '/settings/:path*',
+    '/profile/:path*',
     '/login', 
     '/register'
   ]

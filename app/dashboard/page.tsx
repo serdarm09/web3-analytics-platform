@@ -31,6 +31,7 @@ import { useWallet } from '@/hooks/useWallet'
 import { useAuth } from '@/hooks/use-auth'
 import { STORAGE_KEYS } from '@/lib/constants'
 import { toast } from 'sonner'
+import { getTopCryptos, getTrendingCryptos, getGlobalMarketData } from '@/lib/services/crypto-api'
 
 export default function DashboardPage() {
   const { address, isConnected } = useWallet()
@@ -98,7 +99,41 @@ export default function DashboardPage() {
     try {
       setLoading(true)
       
-      // Mock data kullan
+      // Fetch real-time crypto data
+      const [cryptos, globalData] = await Promise.all([
+        getTopCryptos(20),
+        getGlobalMarketData()
+      ])
+      
+      if (cryptos.length > 0) {
+        // Sort by 24h change to get gainers and losers
+        const sorted = [...cryptos].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
+        
+        setMarketData({
+          topGainers: sorted.slice(0, 5).map(coin => ({
+            symbol: coin.symbol.toUpperCase(),
+            name: coin.name,
+            price: coin.current_price,
+            change: coin.price_change_percentage_24h,
+            image: coin.image,
+            marketCap: coin.market_cap,
+            volume: coin.volume_24h
+          })),
+          topLosers: sorted.slice(-5).reverse().map(coin => ({
+            symbol: coin.symbol.toUpperCase(),
+            name: coin.name,
+            price: coin.current_price,
+            change: coin.price_change_percentage_24h,
+            image: coin.image,
+            marketCap: coin.market_cap,
+            volume: coin.volume_24h
+          })),
+          globalStats: globalData
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching market data:', error)
+      // Fallback to mock data if API fails
       setMarketData({
         topGainers: [
           { symbol: 'BTC', name: 'Bitcoin', price: 45000, change: 2.5 },
@@ -116,8 +151,6 @@ export default function DashboardPage() {
         ],
         globalStats: null
       })
-    } catch (error) {
-      console.error('Error fetching market data:', error)
     } finally {
       setLoading(false)
     }
@@ -565,9 +598,17 @@ export default function DashboardPage() {
                           className="flex items-center justify-between p-3 rounded-lg bg-green-500 bg-opacity-10 border border-green-500 border-opacity-20 hover:bg-green-500 hover:bg-opacity-20 transition-all duration-200"
                         >
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-bold text-green-400">#{index + 1}</span>
-                            </div>
+                            {token.image ? (
+                              <img 
+                                src={token.image} 
+                                alt={token.name}
+                                className="w-8 h-8 rounded-full"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-green-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-bold text-green-400">#{index + 1}</span>
+                              </div>
+                            )}
                             <div>
                               <p className="text-white font-medium">{token.symbol}</p>
                               <p className="text-gray-400 text-xs">{token.name}</p>
@@ -618,9 +659,17 @@ export default function DashboardPage() {
                           className="flex items-center justify-between p-3 rounded-lg bg-red-500 bg-opacity-10 border border-red-500 border-opacity-20 hover:bg-red-500 hover:bg-opacity-20 transition-all duration-200"
                         >
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-red-500 bg-opacity-20 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-bold text-red-400">#{index + 1}</span>
-                            </div>
+                            {token.image ? (
+                              <img 
+                                src={token.image} 
+                                alt={token.name}
+                                className="w-8 h-8 rounded-full"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 bg-red-500 bg-opacity-20 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-bold text-red-400">#{index + 1}</span>
+                              </div>
+                            )}
                             <div>
                               <p className="text-white font-medium">{token.symbol}</p>
                               <p className="text-gray-400 text-xs">{token.name}</p>
