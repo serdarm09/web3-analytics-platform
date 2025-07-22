@@ -28,11 +28,13 @@ import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { useWallet } from '@/hooks/useWallet'
+import { useAuth } from '@/hooks/use-auth'
 import { STORAGE_KEYS } from '@/lib/constants'
 import { toast } from 'sonner'
 
 export default function DashboardPage() {
   const { address, isConnected } = useWallet()
+  const { user: authUser } = useAuth()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [portfolios, setPortfolios] = useState<any[]>([])
@@ -216,7 +218,7 @@ export default function DashboardPage() {
               Dashboard
             </h1>
             <p className="text-gray-400 mt-2">
-              Welcome back, {user?.name || 'Trader'}! Here's your Web3 overview.
+              Welcome back, {authUser?.username || authUser?.name || 'Trader'}! Here's your Web3 overview.
             </p>
             {isConnected && address && (
               <div className="flex items-center mt-2 text-sm text-green-400">

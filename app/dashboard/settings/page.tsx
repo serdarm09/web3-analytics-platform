@@ -124,9 +124,33 @@ export default function SettingsPage() {
     { id: "subscription", label: "Subscription", icon: CreditCard }
   ]
 
-  const handleSave = () => {
-    // Save settings logic here
-    setUnsavedChanges(false)
+  const handleSave = async () => {
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch('/api/user/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: settings.profile.username,
+          email: settings.profile.email,
+          name: settings.profile.name,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile')
+      }
+
+      toast.success('Profile updated successfully')
+      setUnsavedChanges(false)
+    } catch (error) {
+      toast.error('Failed to update profile')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const containerVariants = {
@@ -261,10 +285,13 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-sm font-medium mb-2 block text-gray-300">Email</label>
+                        <label className="text-sm font-medium mb-2 block text-gray-300">
+                          Email {user?.registrationMethod === 'wallet' && !user?.email && <span className="text-xs text-gray-500">(Add email to your account)</span>}
+                        </label>
                         <PremiumInput
                           type="email"
                           value={settings.profile.email}
+                          placeholder={user?.registrationMethod === 'wallet' && !user?.email ? "Add your email" : ""}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             setSettings({
                               ...settings,
@@ -272,9 +299,33 @@ export default function SettingsPage() {
                             })
                             setUnsavedChanges(true)
                           }}
+                          disabled={user?.registrationMethod === 'email'}
                         />
                       </div>
                     </div>
+
+                    {user?.walletAddress && (
+                      <div>
+                        <label className="text-sm font-medium mb-2 block text-gray-300">Wallet Address</label>
+                        <div className="flex items-center gap-2">
+                          <PremiumInput
+                            value={user.walletAddress}
+                            disabled
+                            className="flex-1"
+                          />
+                          <PremiumButton
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(user.walletAddress || '')
+                              toast.success('Wallet address copied!')
+                            }}
+                          >
+                            Copy
+                          </PremiumButton>
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label className="text-sm font-medium mb-2 block text-gray-300">Bio</label>

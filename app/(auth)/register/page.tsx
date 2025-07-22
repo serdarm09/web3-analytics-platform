@@ -4,12 +4,13 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Mail, Lock, User, ArrowRight, Wallet } from 'lucide-react'
+import { Mail, Lock, User, ArrowRight, Wallet, ArrowLeft, Sparkles } from 'lucide-react'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumInput } from '@/components/ui/premium-input'
 import { useWallet } from '@/hooks/useWallet'
 import { STORAGE_KEYS } from '@/lib/constants'
+import { PrivacyModal } from '@/components/ui/privacy-modal'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -20,6 +21,7 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
   })
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [errors, setErrors] = useState({
     username: '',
     email: '',
@@ -29,6 +31,7 @@ export default function RegisterPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [registerMethod, setRegisterMethod] = useState<'email' | 'wallet'>('email')
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
 
   const validateForm = () => {
     const newErrors = {
@@ -72,6 +75,11 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!agreedToTerms) {
+      setErrors({ ...errors, general: 'Please agree to the Terms of Service and Privacy Policy' })
+      return
+    }
     
     if (!validateForm()) {
       return
@@ -142,9 +150,56 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden">
       {/* Enhanced Background Effects */}
       <div className="absolute inset-0 bg-mesh"></div>
-      <div className="floating-orb floating-orb-1"></div>
-      <div className="floating-orb floating-orb-2"></div>
-      <div className="floating-orb floating-orb-3"></div>
+      <motion.div 
+        className="floating-orb floating-orb-1"
+        animate={{ 
+          y: [0, -30, 0],
+          x: [0, 15, 0]
+        }}
+        transition={{ 
+          duration: 5,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      <motion.div 
+        className="floating-orb floating-orb-2"
+        animate={{ 
+          y: [0, 25, 0],
+          x: [0, -20, 0]
+        }}
+        transition={{ 
+          duration: 7,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      <motion.div 
+        className="floating-orb floating-orb-3"
+        animate={{ 
+          scale: [1, 1.1, 1],
+          opacity: [0.3, 0.5, 0.3]
+        }}
+        transition={{ 
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      
+      {/* Back Button */}
+      <motion.button
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        whileHover={{ x: -5 }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ duration: 0.3 }}
+        onClick={() => router.push('/')}
+        className="absolute top-8 left-8 z-20 flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+      >
+        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        <span className="text-sm font-medium">Back to Home</span>
+      </motion.button>
       
       {/* Grid Pattern */}
       <div className="absolute inset-0 opacity-30">
@@ -165,21 +220,62 @@ export default function RegisterPage() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md mx-4"
       >
-        <PremiumCard className="glassmorphism-dark border border-white/10 shadow-2xl glow-primary/20">
+        <PremiumCard className="glassmorphism-dark border border-white/10 shadow-2xl glow-primary/20 relative overflow-hidden">
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-br from-accent-purple/5 to-accent-pink/5"
+            animate={{ 
+              backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"]
+            }}
+            transition={{ 
+              duration: 15,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+            style={{ backgroundSize: "200% 200%" }}
+          />
           <div className="p-8">
             <div className="text-center mb-8">
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2 }}
+                initial={{ scale: 0.8, opacity: 0, rotate: 180 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                transition={{ 
+                  delay: 0.2,
+                  duration: 0.8,
+                  type: "spring",
+                  stiffness: 200
+                }}
                 className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-full mb-4 glow-primary"
               >
                 <User className="w-8 h-8 text-white" />
               </motion.div>
-              <h1 className="text-3xl font-bold text-gradient mb-2">
+              <motion.h1 
+                className="text-3xl font-bold text-gradient mb-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
                 Create Account
-              </h1>
-              <p className="text-gray-400">Join the Web3 analytics revolution</p>
+              </motion.h1>
+              <motion.p 
+                className="text-gray-400"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+              >
+                Join the Web3 analytics revolution
+              </motion.p>
+              <motion.div
+                className="absolute -top-10 -left-10 w-20 h-20 bg-gradient-to-br from-accent-purple to-accent-pink rounded-full blur-3xl opacity-20"
+                animate={{ 
+                  scale: [1, 1.3, 1],
+                  rotate: [0, 90, 0]
+                }}
+                transition={{ 
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
             </div>
 
             {/* Registration Method Selector */}
@@ -375,7 +471,8 @@ export default function RegisterPage() {
                     <input
                       type="checkbox"
                       className="w-4 h-4 mt-1 rounded border-gray-600 bg-gray-800 text-accent-slate focus:ring-accent-slate focus:ring-offset-0"
-                      required
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
                     />
                     <span className="text-sm text-gray-400 leading-5">
                       I agree to the{' '}
@@ -383,9 +480,16 @@ export default function RegisterPage() {
                         Terms of Service
                       </Link>{' '}
                       and{' '}
-                      <Link href="/privacy" className="text-accent-slate hover:text-accent-slate/80 underline">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          setShowPrivacyModal(true)
+                        }}
+                        className="text-accent-slate hover:text-accent-slate/80 underline"
+                      >
                         Privacy Policy
-                      </Link>
+                      </button>
                     </span>
                   </motion.div>
 
@@ -436,6 +540,16 @@ export default function RegisterPage() {
           </div>
         </PremiumCard>
       </motion.div>
+      
+      {/* Privacy Modal */}
+      <PrivacyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onAccept={() => {
+          setAgreedToTerms(true)
+          setShowPrivacyModal(false)
+        }}
+      />
     </div>
   )
 }

@@ -137,12 +137,11 @@ export function Navbar() {
                   />
                   <span className="relative flex items-center gap-2">
                     <Home className="w-4 h-4" />
-                    Landing Page
+                    Landing Page Here
                     <motion.div
                       animate={{ x: [0, 3, 0] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      <ArrowRight className="w-3 h-3" />
                     </motion.div>
                   </span>
                 </PremiumButton>
