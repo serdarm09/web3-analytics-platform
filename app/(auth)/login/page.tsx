@@ -140,7 +140,7 @@ export default function LoginPage() {
                   onClick={() => setLoginMethod('email')}
                   className={`py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
                     loginMethod === 'email'
-                      ? 'bg-gradient-primary text-white shadow-lg glow-purple'
+                      ? 'bg-gradient-primary text-white shadow-lg shadow-accent-teal/20'
                       : 'text-gray-400 hover:text-white hover:bg-black-quaternary'
                   }`}
                 >
@@ -151,7 +151,7 @@ export default function LoginPage() {
                   onClick={() => setLoginMethod('wallet')}
                   className={`py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
                     loginMethod === 'wallet'
-                      ? 'bg-gradient-primary text-white shadow-lg glow-purple'
+                      ? 'bg-gradient-primary text-white shadow-lg shadow-accent-teal/20'
                       : 'text-gray-400 hover:text-white hover:bg-black-quaternary'
                   }`}
                 >
@@ -254,7 +254,7 @@ export default function LoginPage() {
                       </label>
                       <Link 
                         href="/forgot-password" 
-                        className="text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
+                        className="text-sm text-accent-slate hover:text-accent-slate/80 transition-colors duration-200"
                       >
                         Forgot password?
                       </Link>
@@ -281,7 +281,7 @@ export default function LoginPage() {
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500 focus:ring-offset-0"
+                        className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent-slate focus:ring-accent-slate focus:ring-offset-0"
                       />
                       <span className="ml-2 text-sm text-gray-400">Remember me</span>
                     </label>
@@ -363,7 +363,7 @@ export default function LoginPage() {
                 Don't have an account?{' '}
                 <Link 
                   href="/register" 
-                  className="text-purple-400 hover:text-purple-300 font-medium transition-colors duration-200"
+                  className="text-accent-slate hover:text-accent-slate/80 font-medium transition-colors duration-200"
                 >
                   Sign up
                 </Link>

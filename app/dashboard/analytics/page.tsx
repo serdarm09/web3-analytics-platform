@@ -125,7 +125,7 @@ export default function AnalyticsPage() {
         <motion.div variants={itemVariants} className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
                 Advanced Analytics
               </h1>
               <p className="text-muted-foreground mt-2">
@@ -161,7 +161,7 @@ export default function AnalyticsPage() {
                   <span className="text-sm text-green-500">+5.34%</span>
                 </div>
               </div>
-              <BarChart3 className="h-8 w-8 text-purple-500" />
+              <BarChart3 className="h-8 w-8 text-accent-slate" />
             </div>
           </PremiumCard>
 
@@ -245,7 +245,7 @@ export default function AnalyticsPage() {
               </div>
               <div className="flex justify-center gap-6 mt-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                  <div className="w-3 h-3 rounded-full bg-accent-slate"></div>
                   <span className="text-sm">Your Portfolio</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -348,7 +348,7 @@ export default function AnalyticsPage() {
                       initial={{ width: 0 }}
                       animate={{ width: `${100 - mockMarketMetrics.btcDominance - mockMarketMetrics.ethDominance}%` }}
                       transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                      className="h-full bg-gradient-to-r from-accent-slate to-accent-teal"
                     />
                   </div>
                 </div>

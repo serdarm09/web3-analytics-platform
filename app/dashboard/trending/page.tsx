@@ -2,100 +2,155 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { TrendingUp, TrendingDown, Star, Clock, DollarSign, BarChart3 } from "lucide-react"
+import { TrendingUp, TrendingDown, Star, Clock, DollarSign, BarChart3, Eye, Users, Activity, Zap, Filter, Rocket, TestTube } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumButton } from "@/components/ui/premium-button"
 import { PremiumBadge } from "@/components/ui/premium-badge"
+import { toast } from 'sonner'
+import Link from 'next/link'
 
-interface TrendingCoin {
+interface TrendingProject {
   id: string
   name: string
   symbol: string
+  logo: string
+  description: string
+  category: string
+  blockchain: string
+  contractAddress: string
+  website: string
+  isTestnet?: boolean
   price: number
   change24h: number
+  change7d: number
   volume24h: number
   marketCap: number
-  sparkline: number[]
-  rank: number
+  addedBy: string
+  addedAt: Date
+  views: number
+  watchlistCount: number
+  isInWatchlist?: boolean
+  lastUpdated: Date
+  launchDate?: string
+  social?: {
+    twitter?: string
+    telegram?: string
+    discord?: string
+  }
 }
 
-const mockTrendingCoins: TrendingCoin[] = [
-  {
-    id: "1",
-    name: "Bitcoin",
-    symbol: "BTC",
-    price: 45234.56,
-    change24h: 5.34,
-    volume24h: 28456789012,
-    marketCap: 883456789012,
-    sparkline: [40000, 41000, 42000, 43000, 44000, 45000, 45234],
-    rank: 1
-  },
-  {
-    id: "2",
-    name: "Ethereum",
-    symbol: "ETH",
-    price: 2456.78,
-    change24h: -2.15,
-    volume24h: 15678901234,
-    marketCap: 295678901234,
-    sparkline: [2500, 2480, 2470, 2460, 2450, 2460, 2456],
-    rank: 2
-  },
-  {
-    id: "3",
-    name: "Solana",
-    symbol: "SOL",
-    price: 98.45,
-    change24h: 12.67,
-    volume24h: 2345678901,
-    marketCap: 42345678901,
-    sparkline: [85, 87, 90, 92, 95, 97, 98],
-    rank: 3
-  },
-  {
-    id: "4",
-    name: "Cardano",
-    symbol: "ADA",
-    price: 0.456,
-    change24h: 8.91,
-    volume24h: 1234567890,
-    marketCap: 15987654321,
-    sparkline: [0.42, 0.43, 0.44, 0.445, 0.45, 0.455, 0.456],
-    rank: 4
-  },
-  {
-    id: "5",
-    name: "Avalanche",
-    symbol: "AVAX",
-    price: 34.56,
-    change24h: -5.23,
-    volume24h: 987654321,
-    marketCap: 11234567890,
-    sparkline: [36, 35.5, 35, 34.8, 34.6, 34.5, 34.56],
-    rank: 5
-  }
-]
-
 export default function TrendingPage() {
-  const [coins, setCoins] = useState<TrendingCoin[]>(mockTrendingCoins)
+  const [projects, setProjects] = useState<TrendingProject[]>([])
+  const [loading, setLoading] = useState(true)
   const [timeframe, setTimeframe] = useState("24h")
   const [category, setCategory] = useState("all")
+  const [showTestnet, setShowTestnet] = useState(true)
+  const [sortBy, setSortBy] = useState("views")
+
+  const categories = ["all", "Layer1", "Layer2", "DeFi", "NFT", "Gaming", "Meme", "AI", "DAO", "Oracle", "Privacy"]
+  const sortOptions = [
+    { value: "views", label: "Most Viewed" },
+    { value: "recent", label: "Recently Added" },
+    { value: "watchlist", label: "Most Watched" },
+    { value: "gainers", label: "Top Gainers" },
+    { value: "volume", label: "Volume" }
+  ]
+
+  useEffect(() => {
+    fetchTrendingProjects()
+  }, [])
+
+  const fetchTrendingProjects = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch('/api/projects?sort=trending&limit=50')
+      if (response.ok) {
+        const data = await response.json()
+        setProjects(data.projects || [])
+      }
+    } catch (error) {
+      console.error('Error fetching trending projects:', error)
+      toast.error('Failed to load trending projects')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const formatPrice = (price: number) => {
+    if (!price || price === 0) return 'N/A'
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 2,
-      maximumFractionDigits: price < 1 ? 6 : 2
+      maximumFractionDigits: price < 0.01 ? 8 : price < 1 ? 6 : 2
     }).format(price)
   }
 
   const formatVolume = (volume: number) => {
+    if (!volume || volume === 0) return 'N/A'
     if (volume >= 1e9) return `$${(volume / 1e9).toFixed(2)}B`
     if (volume >= 1e6) return `$${(volume / 1e6).toFixed(2)}M`
-    return `$${(volume / 1e3).toFixed(2)}K`
+    if (volume >= 1e3) return `$${(volume / 1e3).toFixed(2)}K`
+    return `$${volume.toFixed(2)}`
   }
+
+  const formatNumber = (num: number) => {
+    if (!num || num === 0) return '0'
+    if (num >= 1e9) return `${(num / 1e9).toFixed(1)}B`
+    if (num >= 1e6) return `${(num / 1e6).toFixed(1)}M`
+    if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`
+    return num.toString()
+  }
+
+  const toggleWatchlist = (projectId: string) => {
+    setProjects(prevProjects => 
+      prevProjects.map(project => {
+        if (project.id === projectId) {
+          const isInWatchlist = !project.isInWatchlist
+          if (isInWatchlist) {
+            toast.success(`${project.symbol} added to watchlist`)
+          } else {
+            toast.success(`${project.symbol} removed from watchlist`)
+          }
+          return { 
+            ...project, 
+            isInWatchlist,
+            watchlistCount: isInWatchlist 
+              ? project.watchlistCount + 1 
+              : project.watchlistCount - 1
+          }
+        }
+        return project
+      })
+    )
+  }
+
+  const filteredAndSortedProjects = projects
+    .filter(project => {
+      if (category !== "all" && project.category !== category) return false
+      if (!showTestnet && project.isTestnet) return false
+      return true
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "views":
+          return b.views - a.views
+        case "recent":
+          return new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
+        case "watchlist":
+          return b.watchlistCount - a.watchlistCount
+        case "gainers":
+          return (b.change24h || 0) - (a.change24h || 0)
+        case "volume":
+          return (b.volume24h || 0) - (a.volume24h || 0)
+        default:
+          return b.views - a.views
+      }
+    })
+
+  const topProject = filteredAndSortedProjects[0]
+  const totalViews = projects.reduce((sum, p) => sum + p.views, 0)
+  const testnetProjects = projects.filter(p => p.isTestnet).length
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -131,33 +186,62 @@ export default function TrendingPage() {
         <motion.div variants={itemVariants} className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Trending Cryptocurrencies
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
+                Trending Projects
               </h1>
               <p className="text-muted-foreground mt-2">
-                Discover the hottest coins and tokens in the market
+                Discover projects added by our community
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <PremiumButton variant="outline" size="sm">
-                <Star className="h-4 w-4 mr-2" />
-                Add to Watchlist
-              </PremiumButton>
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard/projects">
+                <PremiumButton variant="gradient">
+                  <Rocket className="h-4 w-4 mr-2" />
+                  Add Project
+                </PremiumButton>
+              </Link>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-2">
-            {["24h", "7d", "30d", "1y"].map((tf) => (
-              <PremiumButton
-                key={tf}
-                variant={timeframe === tf ? "gradient" : "outline"}
-                size="sm"
-                onClick={() => setTimeframe(tf)}
-              >
-                {tf}
-              </PremiumButton>
-            ))}
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showTestnet"
+                checked={showTestnet}
+                onChange={(e) => setShowTestnet(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-600 bg-gray-800 text-accent-teal focus:ring-accent-teal"
+              />
+              <label htmlFor="showTestnet" className="text-sm text-gray-300 flex items-center gap-1">
+                <TestTube className="h-3 w-3" />
+                Show Testnet Projects
+              </label>
+            </div>
+            
+            <div className="flex gap-2 overflow-x-auto">
+              {categories.map((cat) => (
+                <PremiumButton
+                  key={cat}
+                  variant={category === cat ? "gradient" : "outline"}
+                  size="sm"
+                  onClick={() => setCategory(cat)}
+                  className="whitespace-nowrap"
+                >
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </PremiumButton>
+              ))}
+            </div>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-accent-teal focus:border-transparent"
+            >
+              {sortOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
           </div>
         </motion.div>
 
@@ -166,124 +250,190 @@ export default function TrendingPage() {
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Top Gainer</p>
-                <p className="text-2xl font-bold">SOL</p>
-                <p className="text-sm text-green-500">+12.67%</p>
+                <p className="text-sm text-muted-foreground">Total Projects</p>
+                <p className="text-2xl font-bold">{projects.length}</p>
+                <p className="text-sm text-gray-400">{testnetProjects} on testnet</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
+              <Rocket className="h-8 w-8 text-accent-teal" />
             </div>
           </PremiumCard>
 
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Top Loser</p>
-                <p className="text-2xl font-bold">AVAX</p>
-                <p className="text-sm text-red-500">-5.23%</p>
+                <p className="text-sm text-muted-foreground">Most Viewed</p>
+                <p className="text-2xl font-bold">{topProject?.symbol || 'N/A'}</p>
+                <p className="text-sm text-gray-400">{formatNumber(topProject?.views || 0)} views</p>
               </div>
-              <TrendingDown className="h-8 w-8 text-red-500" />
+              <Eye className="h-8 w-8 text-accent-slate" />
             </div>
           </PremiumCard>
 
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Volume</p>
-                <p className="text-2xl font-bold">$48.7B</p>
-                <p className="text-sm text-muted-foreground">24h</p>
+                <p className="text-sm text-muted-foreground">Total Views</p>
+                <p className="text-2xl font-bold">{formatNumber(totalViews)}</p>
+                <p className="text-sm text-green-500">All time</p>
               </div>
-              <DollarSign className="h-8 w-8 text-purple-500" />
+              <Activity className="h-8 w-8 text-accent-teal" />
             </div>
           </PremiumCard>
 
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Market Trend</p>
-                <p className="text-2xl font-bold">Bullish</p>
-                <p className="text-sm text-green-500">67% up</p>
+                <p className="text-sm text-muted-foreground">Added Today</p>
+                <p className="text-2xl font-bold">
+                  {projects.filter(p => {
+                    const addedDate = new Date(p.addedAt)
+                    const today = new Date()
+                    return addedDate.toDateString() === today.toDateString()
+                  }).length}
+                </p>
+                <p className="text-sm text-gray-400">New projects</p>
               </div>
-              <BarChart3 className="h-8 w-8 text-purple-500" />
+              <Clock className="h-8 w-8 text-accent-slate" />
             </div>
           </PremiumCard>
         </motion.div>
 
-        {/* Trending Table */}
+        {/* Projects Grid */}
         <motion.div variants={itemVariants}>
-          <PremiumCard className="overflow-hidden">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold">Top Trending Coins</h2>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center gap-2">
+                <div className="w-6 h-6 border-2 border-accent-teal border-t-transparent rounded-full animate-spin" />
+                <span>Loading trending projects...</span>
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="text-left p-4">#</th>
-                    <th className="text-left p-4">Name</th>
-                    <th className="text-right p-4">Price</th>
-                    <th className="text-right p-4">24h %</th>
-                    <th className="text-right p-4">Volume (24h)</th>
-                    <th className="text-right p-4">Market Cap</th>
-                    <th className="text-center p-4">Last 7 Days</th>
-                    <th className="text-center p-4">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {coins.map((coin, index) => (
-                    <motion.tr
-                      key={coin.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="border-b hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="p-4">
-                        <PremiumBadge variant="outline">{coin.rank}</PremiumBadge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                            {coin.symbol.charAt(0)}
+          ) : filteredAndSortedProjects.length === 0 ? (
+            <PremiumCard className="p-12 text-center">
+              <Rocket className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No projects found</h3>
+              <p className="text-gray-400 mb-4">Be the first to add a project!</p>
+              <Link href="/dashboard/projects">
+                <PremiumButton variant="gradient">
+                  <Rocket className="h-4 w-4 mr-2" />
+                  Add Project
+                </PremiumButton>
+              </Link>
+            </PremiumCard>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredAndSortedProjects.map((project, index) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <PremiumCard className="p-6 hover:shadow-lg transition-all hover:scale-[1.02]">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        {project.logo ? (
+                          <img 
+                            src={project.logo} 
+                            alt={project.name}
+                            className="w-12 h-12 rounded-full"
+                            onError={(e) => {
+                              e.currentTarget.src = `https://ui-avatars.com/api/?name=${project.symbol}&background=64748b&color=fff`
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-slate to-accent-teal flex items-center justify-center text-white font-bold">
+                            {project.symbol.slice(0, 2)}
                           </div>
-                          <div>
-                            <p className="font-semibold">{coin.name}</p>
-                            <p className="text-sm text-muted-foreground">{coin.symbol}</p>
+                        )}
+                        <div>
+                          <h3 className="font-semibold text-lg flex items-center gap-2">
+                            {project.name}
+                            {project.isTestnet && (
+                              <PremiumBadge size="sm" variant="outline" className="text-yellow-400 border-yellow-400">
+                                <TestTube className="h-3 w-3 mr-1" />
+                                Testnet
+                              </PremiumBadge>
+                            )}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-sm text-gray-400">{project.symbol}</span>
+                            <PremiumBadge size="sm" variant="outline">{project.blockchain}</PremiumBadge>
+                            <PremiumBadge size="sm" variant="outline">{project.category}</PremiumBadge>
                           </div>
                         </div>
-                      </td>
-                      <td className="p-4 text-right font-mono">{formatPrice(coin.price)}</td>
-                      <td className="p-4 text-right">
-                        <span className={coin.change24h > 0 ? "text-green-500" : "text-red-500"}>
-                          {coin.change24h > 0 ? "+" : ""}{coin.change24h.toFixed(2)}%
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">{formatVolume(coin.volume24h)}</td>
-                      <td className="p-4 text-right">{formatVolume(coin.marketCap)}</td>
-                      <td className="p-4">
-                        <div className="w-24 h-8 mx-auto">
-                          <svg viewBox="0 0 100 30" className="w-full h-full">
-                            <polyline
-                              fill="none"
-                              stroke={coin.change24h > 0 ? "#10b981" : "#ef4444"}
-                              strokeWidth="2"
-                              points={coin.sparkline.map((value, i) => 
-                                `${(i / (coin.sparkline.length - 1)) * 100},${30 - ((value - Math.min(...coin.sparkline)) / (Math.max(...coin.sparkline) - Math.min(...coin.sparkline))) * 30}`
-                              ).join(" ")}
-                            />
-                          </svg>
+                      </div>
+                      <PremiumButton 
+                        size="sm" 
+                        variant={project.isInWatchlist ? "gradient" : "ghost"}
+                        onClick={() => toggleWatchlist(project.id)}
+                      >
+                        <Star className={`h-4 w-4 ${project.isInWatchlist ? 'fill-current' : ''}`} />
+                      </PremiumButton>
+                    </div>
+
+                    <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                      {project.description || 'No description available'}
+                    </p>
+
+                    {/* Price Info */}
+                    {project.price > 0 ? (
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-xs text-gray-400">Price</p>
+                          <p className="font-mono">{formatPrice(project.price)}</p>
                         </div>
-                      </td>
-                      <td className="p-4 text-center">
-                        <PremiumButton size="sm" variant="ghost">
-                          <Star className="h-4 w-4" />
-                        </PremiumButton>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
+                        <div>
+                          <p className="text-xs text-gray-400">24h Change</p>
+                          <p className={`font-mono ${project.change24h > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            {project.change24h > 0 ? '+' : ''}{project.change24h?.toFixed(2) || '0'}%
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-4 p-3 bg-gray-800/50 rounded-lg text-center">
+                        <p className="text-sm text-gray-400">Price data not available</p>
+                      </div>
+                    )}
+
+                    {/* Stats */}
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3 text-gray-400" />
+                          <span>{formatNumber(project.views || 0)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3 text-gray-400" />
+                          <span>{formatNumber(project.watchlistCount || 0)}</span>
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        Added {new Date(project.addedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    {/* Links */}
+                    <div className="flex gap-2 mt-4">
+                      {project.website && (
+                        <a href={project.website} target="_blank" rel="noopener noreferrer">
+                          <PremiumButton size="sm" variant="outline">
+                            Website
+                          </PremiumButton>
+                        </a>
+                      )}
+                      {project.social?.twitter && (
+                        <a href={project.social.twitter} target="_blank" rel="noopener noreferrer">
+                          <PremiumButton size="sm" variant="outline">
+                            Twitter
+                          </PremiumButton>
+                        </a>
+                      )}
+                    </div>
+                  </PremiumCard>
+                </motion.div>
+              ))}
             </div>
-          </PremiumCard>
+          )}
         </motion.div>
       </motion.div>
     </div>

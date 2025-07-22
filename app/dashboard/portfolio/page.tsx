@@ -8,6 +8,7 @@ import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumSkeleton } from '@/components/ui/premium-skeleton'
 import { AreaChart, PieChart as PieChartComponent } from '@/components/charts'
+import PortfolioCreationModal from '@/components/portfolio/PortfolioCreationModal'
 
 export default function PortfolioPage() {
   const { portfolios, isLoading, createPortfolio, isCreating } = usePortfolio()
@@ -75,8 +76,8 @@ export default function PortfolioPage() {
                   ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="p-3 bg-purple-500/20 rounded-lg">
-                <DollarSign className="w-6 h-6 text-purple-400" />
+              <div className="p-3 bg-accent-slate/20 rounded-lg">
+                <DollarSign className="w-6 h-6 text-accent-slate" />
               </div>
             </div>
           </PremiumCard>
@@ -139,8 +140,8 @@ export default function PortfolioPage() {
                   {totalProfitLossPercentage >= 0 ? '+' : ''}{totalProfitLossPercentage.toFixed(2)}%
                 </p>
               </div>
-              <div className="p-3 bg-purple-500/20 rounded-lg">
-                <PieChart className="w-6 h-6 text-purple-400" />
+              <div className="p-3 bg-accent-teal/20 rounded-lg">
+                <PieChart className="w-6 h-6 text-accent-teal" />
               </div>
             </div>
           </PremiumCard>
@@ -158,7 +159,7 @@ export default function PortfolioPage() {
             dataKey="value"
             title="Portfolio Performance"
             height={400}
-            color="#8B5CF6"
+            color="#64748b"
           />
         </motion.div>
 
@@ -185,7 +186,7 @@ export default function PortfolioPage() {
           {portfolios && portfolios.length > 0 ? (
             <div className="space-y-4">
               {portfolios.map((portfolio) => (
-                <div key={portfolio.id} className="border border-gray-800 rounded-lg p-4 hover:border-purple-500/50 transition-colors">
+                <div key={portfolio.id} className="border border-gray-800 rounded-lg p-4 hover:border-accent-slate/50 transition-colors">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-medium text-white">{portfolio.name}</h3>
@@ -222,6 +223,16 @@ export default function PortfolioPage() {
           )}
         </PremiumCard>
       </motion.div>
+
+      {/* Portfolio Creation Modal */}
+      <PortfolioCreationModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          // Refresh portfolios after creation
+          window.location.reload()
+        }}
+      />
     </div>
   )
 }

@@ -20,6 +20,9 @@ interface LoginData {
 
 interface RegisterData extends LoginData {
   username: string
+  walletAddress?: string
+  registrationMethod?: 'email' | 'wallet'
+  name?: string
 }
 
 export function useAuth() {

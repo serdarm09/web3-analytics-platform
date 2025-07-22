@@ -156,7 +156,7 @@ export default function AlertsPage() {
         <motion.div variants={itemVariants} className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
                 Price Alerts
               </h1>
               <p className="text-muted-foreground mt-2">
@@ -178,7 +178,7 @@ export default function AlertsPage() {
                 <p className="text-sm text-muted-foreground">Total Alerts</p>
                 <p className="text-2xl font-bold">{alerts.length}</p>
               </div>
-              <Bell className="h-8 w-8 text-purple-500" />
+              <Bell className="h-8 w-8 text-accent-slate" />
             </div>
           </PremiumCard>
 
@@ -355,9 +355,9 @@ export default function AlertsPage() {
 
         {/* Alert Tips */}
         <motion.div variants={itemVariants}>
-          <PremiumCard className="p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10">
+          <PremiumCard className="p-6 bg-gradient-to-r from-accent-slate/10 to-accent-teal/10">
             <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-purple-500" />
+              <AlertTriangle className="h-5 w-5 text-accent-slate" />
               Pro Tips for Price Alerts
             </h3>
             <ul className="space-y-2 text-sm text-muted-foreground">

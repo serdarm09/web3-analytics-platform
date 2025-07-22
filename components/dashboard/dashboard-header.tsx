@@ -1,8 +1,7 @@
 'use client'
 
-import { Bell, Search, User, Menu } from 'lucide-react'
+import { Bell, User, Menu } from 'lucide-react'
 import { PremiumBadge } from '@/components/ui/premium-badge'
-import { PremiumInput } from '@/components/ui/premium-input'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -48,14 +47,8 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
         <Menu className="w-5 h-5 text-white" />
       </button>
 
-      {/* Search */}
-      <div className="flex-1 max-w-md mx-4">
-        <PremiumInput
-          icon={Search}
-          placeholder="Search projects, wallets, or addresses..."
-          className="bg-gray-primary"
-        />
-      </div>
+      {/* Spacer */}
+      <div className="flex-1"></div>
 
       {/* Right Section */}
       <div className="flex items-center space-x-4">

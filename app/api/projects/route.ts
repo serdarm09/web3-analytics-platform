@@ -33,10 +33,32 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .lean()
 
+    // Ensure all projects have required marketData and metrics
+    const processedProjects = projects.map(project => ({
+      ...project,
+      marketData: {
+        price: 0,
+        marketCap: 0,
+        volume24h: 0,
+        change24h: 0,
+        change7d: 0,
+        circulatingSupply: 0,
+        totalSupply: 0,
+        ...project.marketData
+      },
+      metrics: {
+        socialScore: 0,
+        trendingScore: 0,
+        hypeScore: 0,
+        holders: 0,
+        ...project.metrics
+      }
+    }))
+
     const total = await Project.countDocuments(query)
 
     return NextResponse.json({
-      projects,
+      projects: processedProjects,
       pagination: {
         page,
         limit,

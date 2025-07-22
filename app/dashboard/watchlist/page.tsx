@@ -127,7 +127,7 @@ export default function WatchlistPage() {
         <motion.div variants={itemVariants} className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
                 My Watchlist
               </h1>
               <p className="text-muted-foreground mt-2">
@@ -217,7 +217,7 @@ export default function WatchlistPage() {
                     {/* Header */}
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-slate to-accent-teal flex items-center justify-center text-white font-bold text-lg">
                           {item.symbol.charAt(0)}
                         </div>
                         <div>
@@ -267,7 +267,7 @@ export default function WatchlistPage() {
                       <div className="pt-3 border-t space-y-2">
                         {item.alertPrice && (
                           <div className="flex items-center gap-2">
-                            <Bell className="h-3 w-3 text-purple-500" />
+                            <Bell className="h-3 w-3 text-accent-slate" />
                             <span className="text-xs">Alert: {formatPrice(item.alertPrice)}</span>
                           </div>
                         )}

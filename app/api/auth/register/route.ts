@@ -72,10 +72,10 @@ export async function POST(request: NextRequest) {
       }
     } else if (registrationMethod === 'email') {
       // Email registration validation
-      if (!email || !password || !name) {
+      if (!email || !password || !username) {
         return NextResponse.json(
           { 
-            error: 'Email, password, and name are required for email registration',
+            error: 'Email, password, and username are required for email registration',
             success: false 
           },
           { status: 400 }
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Check if user already exists
+      // Check if user already exists (only for email registration)
       const existingUser = await User.findOne({ email: email.toLowerCase() })
       if (existingUser) {
         return NextResponse.json(
@@ -127,18 +127,18 @@ export async function POST(request: NextRequest) {
     }
 
     let userData: any = {
-      registrationMethod
+      registrationMethod,
+      username
     }
 
     if (registrationMethod === 'wallet') {
       userData.walletAddress = walletAddress
-      userData.name = name || `User-${walletAddress.slice(0, 6)}`
-      userData.username = username
+      userData.name = name || username || `User-${walletAddress.slice(0, 6)}`
+      // Don't set email field for wallet registration to avoid null constraint issues
     } else {
       userData.email = email.toLowerCase()
       userData.password = password
-      userData.name = name
-      userData.username = username
+      userData.name = username // Use username as name for email registration
     }
 
     // Create new user

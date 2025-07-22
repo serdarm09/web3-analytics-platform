@@ -49,9 +49,9 @@ const sidebarItems = [
     href: '/dashboard/watchlist',
   },
   {
-    title: 'Whale Tracker',
+    title: 'Wallet Tracker',
     icon: Activity,
-    href: '/dashboard/whale-tracker',
+    href: '/dashboard/wallet-tracker',
   },
   {
     title: 'Analytics',
@@ -68,9 +68,10 @@ const sidebarItems = [
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
+export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarProps) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -83,6 +84,11 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
+
+  useEffect(() => {
+    // Notify parent of collapse state changes
+    onCollapsedChange?.(isCollapsed)
+  }, [isCollapsed, onCollapsedChange])
 
   const handleLogout = () => {
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
@@ -180,7 +186,11 @@ export function Sidebar({ isOpen = true, onClose }: SidebarProps) {
       {/* Collapse Toggle - Only show on desktop */}
       {!isMobile && (
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => {
+            const newCollapsed = !isCollapsed
+            setIsCollapsed(newCollapsed)
+            onCollapsedChange?.(newCollapsed)
+          }}
           className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-secondary border border-gray-border rounded-full flex items-center justify-center text-white-secondary hover:text-white transition-colors"
         >
           {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}

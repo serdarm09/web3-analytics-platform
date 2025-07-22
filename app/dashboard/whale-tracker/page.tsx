@@ -170,7 +170,7 @@ export default function WhaleTrackerPage() {
         <motion.div variants={itemVariants} className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
                 Whale Tracker
               </h1>
               <p className="text-muted-foreground mt-2">
@@ -199,7 +199,7 @@ export default function WhaleTrackerPage() {
                 <p className="text-2xl font-bold">156</p>
                 <p className="text-sm text-green-500">+12 today</p>
               </div>
-              <Fish className="h-8 w-8 text-purple-500" />
+              <Fish className="h-8 w-8 text-accent-slate" />
             </div>
           </PremiumCard>
 
@@ -299,7 +299,7 @@ export default function WhaleTrackerPage() {
                         href={`https://etherscan.io/tx/${tx.txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-purple-500 hover:underline"
+                        className="text-xs text-accent-slate hover:underline"
                       >
                         View TX →
                       </a>
@@ -328,7 +328,7 @@ export default function WhaleTrackerPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-slate to-accent-teal flex items-center justify-center text-white">
                         <Wallet className="h-5 w-5" />
                       </div>
                       <div>

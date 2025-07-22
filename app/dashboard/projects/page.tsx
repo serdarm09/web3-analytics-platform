@@ -152,33 +152,33 @@ export default function ProjectsPage() {
                     <div className="flex items-center gap-8">
                       <div className="text-right">
                         <p className="text-xl font-semibold text-white">
-                          ${project.marketData.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}
+                          ${(project.marketData?.price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}
                         </p>
-                        <div className={`flex items-center justify-end gap-1 ${project.marketData.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {project.marketData.change24h >= 0 ? (
+                        <div className={`flex items-center justify-end gap-1 ${(project.marketData?.change24h || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {(project.marketData?.change24h || 0) >= 0 ? (
                             <TrendingUp className="w-4 h-4" />
                           ) : (
                             <TrendingDown className="w-4 h-4" />
                           )}
                           <span className="text-sm font-medium">
-                            {Math.abs(project.marketData.change24h).toFixed(2)}%
+                            {Math.abs(project.marketData?.change24h || 0).toFixed(2)}%
                           </span>
                         </div>
                       </div>
 
                       <div className="text-right">
                         <p className="text-sm text-gray-400">Market Cap</p>
-                        <p className="text-lg font-medium text-white">{formatMarketCap(project.marketData.marketCap)}</p>
+                        <p className="text-lg font-medium text-white">{formatMarketCap(project.marketData?.marketCap || 0)}</p>
                       </div>
 
                       <div className="text-right">
                         <p className="text-sm text-gray-400">24h Volume</p>
-                        <p className="text-lg font-medium text-white">{formatMarketCap(project.marketData.volume24h)}</p>
+                        <p className="text-lg font-medium text-white">{formatMarketCap(project.marketData?.volume24h || 0)}</p>
                       </div>
 
                       <div className="text-right">
                         <p className="text-sm text-gray-400">Social Score</p>
-                        <p className="text-lg font-medium text-white">{project.metrics.socialScore}/100</p>
+                        <p className="text-lg font-medium text-white">{project.metrics?.socialScore || 0}/100</p>
                       </div>
 
                       <div className="flex items-center gap-2">

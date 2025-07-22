@@ -133,7 +133,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900/30 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-900/30 p-4 md:p-6 lg:p-8">
       <motion.div
         initial="hidden"
         animate="visible"
@@ -144,7 +144,7 @@ export default function SettingsPage() {
         <motion.div variants={itemVariants} className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
                 Settings
               </h1>
               <p className="text-gray-400 mt-2">
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                       whileTap={{ scale: 0.98 }}
                       className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 ${
                         activeSection === section.id
-                          ? "bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-400 border border-purple-500/30"
+                          ? "bg-gradient-to-r from-accent-slate/20 to-accent-teal/20 text-accent-slate border border-accent-slate/30"
                           : "hover:bg-gray-800/50 text-gray-300 hover:text-white"
                       }`}
                     >
@@ -215,7 +215,7 @@ export default function SettingsPage() {
                   <div className="p-6 space-y-6">
                     <div className="flex items-center gap-6">
                       <div className="relative">
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent-slate to-accent-teal flex items-center justify-center text-white text-2xl font-bold shadow-lg">
                           {settings.profile.name.charAt(0)}
                         </div>
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-gray-900"></div>
@@ -263,7 +263,7 @@ export default function SettingsPage() {
                     <div>
                       <label className="text-sm font-medium mb-2 block text-gray-300">Bio</label>
                       <textarea
-                        className="w-full px-4 py-3 rounded-lg border bg-gray-900/50 border-gray-600 text-white placeholder:text-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 backdrop-blur-sm resize-none"
+                        className="w-full px-4 py-3 rounded-lg border bg-gray-900/50 border-gray-600 text-white placeholder:text-gray-400 focus:outline-none focus:border-accent-slate focus:ring-2 focus:ring-accent-slate/20 transition-all duration-200 backdrop-blur-sm resize-none"
                         rows={4}
                         value={settings.profile.bio}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -311,7 +311,7 @@ export default function SettingsPage() {
                       <div className="space-y-3">
                         <label className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer">
                           <div className="flex items-center gap-3">
-                            <Mail className="h-5 w-5 text-purple-500" />
+                            <Mail className="h-5 w-5 text-accent-slate" />
                             <div>
                               <p className="font-medium">Email Notifications</p>
                               <p className="text-sm text-muted-foreground">
@@ -338,7 +338,7 @@ export default function SettingsPage() {
 
                         <label className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer">
                           <div className="flex items-center gap-3">
-                            <Smartphone className="h-5 w-5 text-purple-500" />
+                            <Smartphone className="h-5 w-5 text-accent-slate" />
                             <div>
                               <p className="font-medium">Push Notifications</p>
                               <p className="text-sm text-muted-foreground">
@@ -439,7 +439,7 @@ export default function SettingsPage() {
                               }}
                               className={`p-4 rounded-lg border-2 transition-colors ${
                                 settings.appearance.theme === theme.value
-                                  ? "border-purple-500 bg-purple-500/10"
+                                  ? "border-accent-slate bg-accent-slate/10"
                                   : "border-muted"
                               }`}
                             >
@@ -516,7 +516,7 @@ export default function SettingsPage() {
                   <div className="p-6 space-y-6">
                     <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                       <div className="flex items-center gap-3">
-                        <Shield className="h-5 w-5 text-purple-500" />
+                        <Shield className="h-5 w-5 text-accent-slate" />
                         <div>
                           <p className="font-medium">Two-Factor Authentication</p>
                           <p className="text-sm text-muted-foreground">
@@ -568,7 +568,7 @@ export default function SettingsPage() {
                     <h2 className="text-xl font-semibold">Subscription & Billing</h2>
                   </div>
                   <div className="p-6 space-y-6">
-                    <div className="p-4 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-500/20">
+                    <div className="p-4 rounded-lg bg-gradient-to-r from-accent-slate/20 to-accent-teal/20">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-lg font-semibold">Current Plan</h3>
                         <PremiumBadge>PRO</PremiumBadge>

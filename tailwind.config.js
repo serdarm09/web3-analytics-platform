@@ -16,13 +16,14 @@ module.exports = {
           quaternary: '#2a2a2a',
         },
         accent: {
-          purple: '#9B99FE',
+          silver: '#E4E4E7',
+          slate: '#64748b',
           teal: '#2BC8B7', 
           blue: '#3b82f6',
           green: '#10b981',
           orange: '#f59e0b',
           red: '#ef4444',
-          pink: '#ec4899',
+          purple: '#6366f1',
         },
         white: {
           primary: '#ffffff',
@@ -46,16 +47,17 @@ module.exports = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'gradient-primary': 'linear-gradient(135deg, #9B99FE 0%, #2BC8B7 100%)',
-        'gradient-secondary': 'linear-gradient(135deg, #3b82f6 0%, #9B99FE 100%)',
-        'gradient-radial-primary': 'radial-gradient(circle at center, rgba(155, 153, 254, 0.15) 0%, transparent 70%)',
+        'gradient-primary': 'linear-gradient(135deg, #64748b 0%, #2BC8B7 100%)',
+        'gradient-secondary': 'linear-gradient(135deg, #3b82f6 0%, #64748b 100%)',
+        'gradient-silver': 'linear-gradient(135deg, #E4E4E7 0%, #9ca3af 100%)',
+        'gradient-radial-primary': 'radial-gradient(circle at center, rgba(100, 116, 139, 0.15) 0%, transparent 70%)',
         'gradient-radial-teal': 'radial-gradient(circle at center, rgba(43, 200, 183, 0.15) 0%, transparent 70%)',
         'gradient-mesh': `
-          radial-gradient(at 40% 20%, rgba(155, 153, 254, 0.3) 0px, transparent 50%),
+          radial-gradient(at 40% 20%, rgba(100, 116, 139, 0.3) 0px, transparent 50%),
           radial-gradient(at 80% 0%, rgba(43, 200, 183, 0.2) 0px, transparent 50%),
           radial-gradient(at 0% 50%, rgba(59, 130, 246, 0.2) 0px, transparent 50%),
-          radial-gradient(at 80% 50%, rgba(236, 72, 153, 0.2) 0px, transparent 50%),
-          radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.2) 0px, transparent 50%),
+          radial-gradient(at 80% 50%, rgba(228, 228, 231, 0.2) 0px, transparent 50%),
+          radial-gradient(at 0% 100%, rgba(100, 116, 139, 0.2) 0px, transparent 50%),
           radial-gradient(at 80% 100%, rgba(16, 185, 129, 0.2) 0px, transparent 50%)
         `,
       },
@@ -71,6 +73,7 @@ module.exports = {
         'scale-in': 'scale-in 0.3s ease-out',
         'blur-in': 'blur-in 0.6s ease-out',
         'shimmer': 'shimmer 2s linear infinite',
+        'spotlight': 'spotlight 2s ease .75s 1 forwards',
       },
       keyframes: {
         'gradient-x': {
@@ -109,10 +112,10 @@ module.exports = {
         },
         'glow-pulse': {
           '0%, 100%': { 
-            boxShadow: '0 0 20px rgba(155, 153, 254, 0.4), 0 0 40px rgba(43, 200, 183, 0.2)' 
+            boxShadow: '0 0 20px rgba(100, 116, 139, 0.4), 0 0 40px rgba(43, 200, 183, 0.2)' 
           },
           '50%': { 
-            boxShadow: '0 0 40px rgba(155, 153, 254, 0.6), 0 0 80px rgba(43, 200, 183, 0.4)' 
+            boxShadow: '0 0 40px rgba(100, 116, 139, 0.6), 0 0 80px rgba(43, 200, 183, 0.4)' 
           },
         },
         float: {
@@ -138,6 +141,16 @@ module.exports = {
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
+        },
+        spotlight: {
+          '0%': {
+            opacity: 0,
+            transform: 'translate(-72%, -62%) scale(0.5)',
+          },
+          '100%': {
+            opacity: 1,
+            transform: 'translate(-50%,-40%) scale(1)',
+          },
         },
       },
       backdropBlur: {

@@ -11,9 +11,10 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-black-primary relative">
+    <div className="h-screen bg-black-primary">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <motion.div
@@ -26,10 +27,16 @@ export default function DashboardLayout({
       )}
       
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className={`fixed inset-y-0 left-0 z-50 transition-all duration-300 ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}`}>
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onClose={() => setSidebarOpen(false)} 
+          onCollapsedChange={setIsCollapsed}
+        />
+      </div>
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex h-full flex-col transition-all duration-300 ${isCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
         {/* Header */}
         <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
         

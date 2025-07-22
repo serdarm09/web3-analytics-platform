@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
-import ProjectCreationForm from './ProjectCreationForm'
+import ProjectCreationFormEnhanced from './ProjectCreationFormEnhanced'
 
 interface ProjectFormData {
   name: string
@@ -15,6 +15,9 @@ interface ProjectFormData {
     twitter: string
     telegram: string
     discord: string
+    github: string
+    reddit: string
+    medium: string
   }
   blockchain: string
   contractAddress: string
@@ -26,6 +29,8 @@ interface ProjectFormData {
     change7d: number
     circulatingSupply: number
     totalSupply: number
+    maxSupply: number
+    fullyDilutedValuation: number
   }
   metrics: {
     socialScore: number
@@ -33,6 +38,33 @@ interface ProjectFormData {
     hypeScore: number
     holders: number
   }
+  tokenomics: {
+    publicSale: number
+    privateSale: number
+    team: number
+    advisors: number
+    liquidity: number
+    marketing: number
+    ecosystem: number
+    staking: number
+  }
+  team: {
+    members: Array<{
+      name: string
+      role: string
+      linkedin: string
+      twitter: string
+    }>
+  }
+  exchanges: string[]
+  audits: Array<{
+    auditor: string
+    date: string
+    reportUrl: string
+  }>
+  launchDate: string
+  whitepaperUrl: string
+  tags: string[]
 }
 
 interface ProjectCreationModalProps {
@@ -105,7 +137,7 @@ export default function ProjectCreationModal({ isOpen, onClose, onProjectCreated
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-700">
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
                 Add New Project
               </h2>
               <p className="text-gray-400 text-sm mt-1">
@@ -147,7 +179,7 @@ export default function ProjectCreationModal({ isOpen, onClose, onProjectCreated
                   </div>
                 )}
 
-                <ProjectCreationForm
+                <ProjectCreationFormEnhanced
                   onSubmit={handleSubmit}
                   onCancel={handleClose}
                   isLoading={isLoading}

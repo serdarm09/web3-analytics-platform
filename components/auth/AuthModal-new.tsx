@@ -204,7 +204,7 @@ export function AuthModal({ isOpen, onClose, mode: initialMode }: AuthModalProps
                   <button
                     type="button"
                     onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                    className="text-accent-slate hover:text-accent-slate/80 transition-colors"
+                    className="text-accent-purple hover:text-accent-purple/80 transition-colors"
                   >
                     {mode === 'login' ? 'Register' : 'Login'}
                   </button>

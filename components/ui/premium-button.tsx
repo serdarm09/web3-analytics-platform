@@ -23,9 +23,9 @@ const PremiumButton = forwardRef<HTMLButtonElement, CombinedProps>(
     }
     
     const variants = {
-      gradient: 'bg-gradient-primary hover:bg-gradient-secondary text-white shadow-2xl glow-primary hover:glow-purple transform hover:scale-105 active:scale-95 border border-white/10',
-      glow: 'bg-black-tertiary text-white border border-gray-600 hover:border-accent-purple hover:glow-purple hover:bg-black-quaternary backdrop-blur-sm',
-      outline: 'bg-transparent border-2 border-accent-purple text-accent-purple hover:bg-accent-purple hover:text-black-primary transform hover:scale-105 backdrop-blur-sm',
+      gradient: 'bg-gradient-primary hover:bg-gradient-secondary text-white shadow-2xl hover:shadow-accent-teal/20 transform hover:scale-105 active:scale-95 border border-white/10',
+      glow: 'bg-black-tertiary text-white border border-gray-600 hover:border-accent-slate hover:shadow-lg hover:shadow-accent-slate/20 hover:bg-black-quaternary backdrop-blur-sm',
+      outline: 'bg-transparent border-2 border-accent-slate text-accent-slate hover:bg-accent-slate hover:text-white transform hover:scale-105 backdrop-blur-sm',
       ghost: 'bg-transparent text-gray-300 hover:bg-black-tertiary hover:text-white transform hover:scale-105 backdrop-blur-sm'
     }
     

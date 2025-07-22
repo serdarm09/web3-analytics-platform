@@ -191,7 +191,7 @@ export default function RegisterPage() {
                   onClick={() => setRegisterMethod('email')}
                   className={`py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
                     registerMethod === 'email'
-                      ? 'bg-gradient-primary text-white shadow-lg glow-purple'
+                      ? 'bg-gradient-primary text-white shadow-lg shadow-accent-teal/20'
                       : 'text-gray-400 hover:text-white hover:bg-black-quaternary'
                   }`}
                 >
@@ -202,7 +202,7 @@ export default function RegisterPage() {
                   onClick={() => setRegisterMethod('wallet')}
                   className={`py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
                     registerMethod === 'wallet'
-                      ? 'bg-gradient-primary text-white shadow-lg glow-purple'
+                      ? 'bg-gradient-primary text-white shadow-lg shadow-accent-teal/20'
                       : 'text-gray-400 hover:text-white hover:bg-black-quaternary'
                   }`}
                 >
@@ -370,16 +370,16 @@ export default function RegisterPage() {
                   >
                     <input
                       type="checkbox"
-                      className="w-4 h-4 mt-1 rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500 focus:ring-offset-0"
+                      className="w-4 h-4 mt-1 rounded border-gray-600 bg-gray-800 text-accent-slate focus:ring-accent-slate focus:ring-offset-0"
                       required
                     />
                     <span className="text-sm text-gray-400 leading-5">
                       I agree to the{' '}
-                      <Link href="/terms" className="text-purple-400 hover:text-purple-300 underline">
+                      <Link href="/terms" className="text-accent-slate hover:text-accent-slate/80 underline">
                         Terms of Service
                       </Link>{' '}
                       and{' '}
-                      <Link href="/privacy" className="text-purple-400 hover:text-purple-300 underline">
+                      <Link href="/privacy" className="text-accent-slate hover:text-accent-slate/80 underline">
                         Privacy Policy
                       </Link>
                     </span>
@@ -423,7 +423,7 @@ export default function RegisterPage() {
                 Already have an account?{' '}
                 <Link 
                   href="/login" 
-                  className="text-purple-400 hover:text-purple-300 font-medium transition-colors duration-200"
+                  className="text-accent-slate hover:text-accent-slate/80 font-medium transition-colors duration-200"
                 >
                   Sign in
                 </Link>
