@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/database/mongoose'
 import User from '@/models/User'
 import { generateToken } from '@/lib/auth/jwt'
+import { rateLimitPresets } from '@/lib/middleware/rateLimiter'
 
 export async function POST(request: NextRequest) {
+  return rateLimitPresets.auth(request, async (req) => {
   try {
     await dbConnect()
 
-    const body = await request.json()
+    const body = await req.json()
     const { email, password, walletAddress, loginMethod } = body
 
     // Validate based on login method
@@ -181,4 +183,5 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+  })
 }

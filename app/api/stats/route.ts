@@ -23,26 +23,35 @@ export async function GET() {
     
     const totalVolume = volumeResult[0]?.totalVolume || 0
 
+    const formatNumber = (num: number): string => {
+      if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M+`
+      if (num >= 1000) return `${Math.floor(num / 1000)}K+`
+      return num.toString()
+    }
+
+    const formatVolume = (volume: number): string => {
+      if (volume >= 1000000000) return `$${(volume / 1000000000).toFixed(1)}B`
+      if (volume >= 1000000) return `$${(volume / 1000000).toFixed(1)}M`
+      if (volume >= 1000) return `$${Math.floor(volume / 1000)}K`
+      return `$${volume.toFixed(0)}`
+    }
+
     const stats = {
-      activeUsers: userCount > 0 ? `${Math.floor(userCount / 1000)}K+` : '50K+',
-      projectsTracked: projectCount > 0 ? `${Math.floor(projectCount / 1000)}K+` : '10K+',
-      totalVolume: totalVolume > 1000000000 
-        ? `$${(totalVolume / 1000000000).toFixed(1)}B` 
-        : totalVolume > 1000000 
-        ? `$${(totalVolume / 1000000).toFixed(1)}M`
-        : '$2.5B',
-      whaleWallets: whaleCount > 0 ? `${Math.floor(whaleCount / 1000)}K+` : '5K+'
+      activeUsers: formatNumber(userCount),
+      projectsTracked: formatNumber(projectCount),
+      totalVolume: formatVolume(totalVolume),
+      whaleWallets: formatNumber(whaleCount)
     }
 
     return NextResponse.json(stats)
   } catch (error) {
     console.error('Error fetching stats:', error)
-    // Return default values on error
+    // Return zero values on error
     return NextResponse.json({
-      activeUsers: '50K+',
-      projectsTracked: '10K+',
-      totalVolume: '$2.5B',
-      whaleWallets: '5K+'
+      activeUsers: '0',
+      projectsTracked: '0',
+      totalVolume: '$0',
+      whaleWallets: '0'
     })
   }
 }

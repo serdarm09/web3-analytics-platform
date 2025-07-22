@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/database/mongoose'
 import User from '@/models/User'
 import { generateToken } from '@/lib/auth/jwt'
+import { rateLimitPresets } from '@/lib/middleware/rateLimiter'
 
 export async function POST(request: NextRequest) {
+  return rateLimitPresets.auth(request, async (req) => {
   try {
     console.log('📝 Registration attempt started')
     
@@ -21,7 +23,7 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ Database connected successfully')
 
-    const body = await request.json()
+    const body = await req.json()
     const { email, username, password, name, walletAddress, registrationMethod } = body
 
     // Validate username for both registration methods
@@ -217,4 +219,5 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
+  })
 }

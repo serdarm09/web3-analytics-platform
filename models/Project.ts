@@ -8,11 +8,6 @@ export interface IProject extends Document {
   category: string
   website: string
   whitepaper?: string
-  social: {
-    twitter?: string
-    telegram?: string
-    discord?: string
-  }
   socialLinks?: {
     twitter?: string
     telegram?: string
@@ -47,6 +42,39 @@ export interface IProject extends Document {
   }
   blockchain: string
   contractAddress?: string
+  isTestnet?: boolean
+  views: number
+  watchlistCount: number
+  addedBy: string
+  addedAt: Date
+  launchDate?: string
+  tokenomics?: {
+    totalSupply?: number
+    circulatingSupply?: number
+    distribution?: Array<{
+      category: string
+      percentage: number
+      lockPeriod?: string
+    }>
+  }
+  team?: Array<{
+    name: string
+    role: string
+    linkedin?: string
+    twitter?: string
+  }>
+  audits?: Array<{
+    auditor: string
+    date: Date
+    report?: string
+    score?: number
+  }>
+  partnerships?: Array<{
+    partner: string
+    type: string
+    date?: Date
+    description?: string
+  }>
   isActive: boolean
   lastUpdated?: Date
   createdAt: Date
@@ -77,7 +105,7 @@ const projectSchema = new Schema<IProject>(
     category: {
       type: String,
       required: true,
-      enum: ['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Other'],
+      enum: ['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Oracle', 'Other'],
     },
     website: {
       type: String,
@@ -85,11 +113,6 @@ const projectSchema = new Schema<IProject>(
     },
     whitepaper: {
       type: String,
-    },
-    social: {
-      twitter: String,
-      telegram: String,
-      discord: String,
     },
     socialLinks: {
       twitter: String,
@@ -192,6 +215,58 @@ const projectSchema = new Schema<IProject>(
       enum: ['Ethereum', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Avalanche', 'Solana', 'Other'],
     },
     contractAddress: String,
+    isTestnet: {
+      type: Boolean,
+      default: false,
+    },
+    views: {
+      type: Number,
+      default: 0,
+    },
+    watchlistCount: {
+      type: Number,
+      default: 0,
+    },
+    addedBy: {
+      type: String,
+      default: 'unknown',
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now,
+    },
+    launchDate: String,
+    tokenomics: {
+      type: Schema.Types.Mixed,
+      default: null
+    },
+    team: {
+      type: [{
+        name: String,
+        role: String,
+        linkedin: String,
+        twitter: String
+      }],
+      default: []
+    },
+    audits: {
+      type: [{
+        auditor: String,
+        date: Date,
+        report: String,
+        score: Number
+      }],
+      default: []
+    },
+    partnerships: {
+      type: [{
+        partner: String,
+        type: String,
+        date: Date,
+        description: String
+      }],
+      default: []
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -211,6 +286,10 @@ projectSchema.index({ symbol: 1 })
 projectSchema.index({ category: 1 })
 projectSchema.index({ 'marketData.marketCap': -1 })
 projectSchema.index({ 'metrics.trendingScore': -1 })
+projectSchema.index({ views: -1 })
+projectSchema.index({ watchlistCount: -1 })
+projectSchema.index({ addedAt: -1 })
+projectSchema.index({ isTestnet: 1 })
 
 const Project: Model<IProject> = mongoose.models.Project || mongoose.model<IProject>('Project', projectSchema)
 

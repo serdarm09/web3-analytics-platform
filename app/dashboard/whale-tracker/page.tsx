@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   Wallet, 
@@ -12,108 +12,89 @@ import {
   Fish,
   Activity,
   Clock,
-  DollarSign
+  DollarSign,
+  RefreshCw,
+  ExternalLink
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumButton } from "@/components/ui/premium-button"
 import { PremiumBadge } from "@/components/ui/premium-badge"
 import { PremiumInput } from "@/components/ui/premium-input"
+import { whaleTrackingService } from "@/lib/services/whaleTrackingService"
+import { toast } from "sonner"
 
 interface WhaleTransaction {
-  id: string
-  walletAddress: string
-  walletName?: string
-  type: "buy" | "sell" | "transfer"
-  token: string
-  amount: number
-  value: number
+  hash: string
+  from: string
+  to: string
+  value: string
+  valueUSD: number
+  tokenSymbol?: string
+  tokenName?: string
   timestamp: Date
-  txHash: string
-  from?: string
-  to?: string
+  blockNumber: number
+  network: string
+  fromLabel?: string
+  toLabel?: string
 }
 
 interface WhaleWallet {
   address: string
-  name?: string
-  balance: number
-  totalTransactions: number
+  balance: string
+  balanceUSD: number
+  network: string
+  label?: string
+  transactionCount: number
   lastActive: Date
-  profitLoss: number
-  tokens: { symbol: string; amount: number; value: number }[]
 }
 
-const mockTransactions: WhaleTransaction[] = [
-  {
-    id: "1",
-    walletAddress: "0x1234...5678",
-    walletName: "Binance Hot Wallet",
-    type: "buy",
-    token: "ETH",
-    amount: 5000,
-    value: 12284000,
-    timestamp: new Date(Date.now() - 1000 * 60 * 5),
-    txHash: "0xabc123...",
-  },
-  {
-    id: "2",
-    walletAddress: "0x8765...4321",
-    walletName: "Unknown Whale",
-    type: "sell",
-    token: "BTC",
-    amount: 100,
-    value: 4523400,
-    timestamp: new Date(Date.now() - 1000 * 60 * 15),
-    txHash: "0xdef456...",
-  },
-  {
-    id: "3",
-    walletAddress: "0x9876...5432",
-    walletName: "DeFi Whale",
-    type: "transfer",
-    token: "USDT",
-    amount: 10000000,
-    value: 10000000,
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    txHash: "0xghi789...",
-    from: "0x9876...5432",
-    to: "0x1111...2222"
-  }
-]
-
-const mockWhaleWallets: WhaleWallet[] = [
-  {
-    address: "0x1234...5678",
-    name: "Binance Hot Wallet",
-    balance: 125456789,
-    totalTransactions: 15234,
-    lastActive: new Date(Date.now() - 1000 * 60 * 5),
-    profitLoss: 23456789,
-    tokens: [
-      { symbol: "BTC", amount: 1500, value: 67851000 },
-      { symbol: "ETH", amount: 25000, value: 61420000 },
-      { symbol: "USDT", amount: 50000000, value: 50000000 }
-    ]
-  },
-  {
-    address: "0x8765...4321",
-    name: "Unknown Whale",
-    balance: 89234567,
-    totalTransactions: 8976,
-    lastActive: new Date(Date.now() - 1000 * 60 * 15),
-    profitLoss: -5678901,
-    tokens: [
-      { symbol: "ETH", amount: 15000, value: 36852000 },
-      { symbol: "SOL", amount: 50000, value: 4922500 }
-    ]
-  }
-]
-
 export default function WhaleTrackerPage() {
-  const [transactions, setTransactions] = useState<WhaleTransaction[]>(mockTransactions)
-  const [whaleWallets, setWhaleWallets] = useState<WhaleWallet[]>(mockWhaleWallets)
-  const [filter, setFilter] = useState<"all" | "buy" | "sell" | "transfer">("all")
+  const [transactions, setTransactions] = useState<WhaleTransaction[]>([])
+  const [whaleWallets, setWhaleWallets] = useState<WhaleWallet[]>([])
+  const [filter, setFilter] = useState<"all" | "ethereum" | "bsc">("all")
   const [searchAddress, setSearchAddress] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [selectedNetwork, setSelectedNetwork] = useState<"ethereum" | "bsc">("ethereum")
+
+  useEffect(() => {
+    fetchWhaleData()
+    const interval = setInterval(fetchWhaleData, 60000) // Her dakika güncelle
+    return () => clearInterval(interval)
+  }, [selectedNetwork])
+
+  const fetchWhaleData = async () => {
+    try {
+      setLoading(true)
+      
+      // Paralel olarak whale verilerini getir
+      const [txs, wallets, tokenTxs] = await Promise.all([
+        whaleTrackingService.getRecentWhaleTransactions(selectedNetwork, 20),
+        whaleTrackingService.getTopWhaleWallets(selectedNetwork, 10),
+        whaleTrackingService.getTokenWhaleTransfers(selectedNetwork, 10)
+      ])
+
+      // İşlemleri birleştir ve sırala
+      const allTransactions = [...txs, ...tokenTxs].sort(
+        (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+      )
+
+      setTransactions(allTransactions)
+      setWhaleWallets(wallets)
+    } catch (error) {
+      console.error('Error fetching whale data:', error)
+      toast.error('Failed to fetch whale data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const refreshData = () => {
+    toast.promise(fetchWhaleData(), {
+      loading: 'Refreshing whale data...',
+      success: 'Whale data updated!',
+      error: 'Failed to refresh data'
+    })
+  }
 
   const formatValue = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -130,6 +111,26 @@ export default function WhaleTrackerPage() {
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
     return `${Math.floor(seconds / 86400)}d ago`
+  }
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
+  }
+
+  const getTransactionType = (tx: WhaleTransaction) => {
+    // Basit bir mantık - gerçek uygulamada daha detaylı olmalı
+    if (tx.from === tx.to) return "transfer"
+    if (tx.from.toLowerCase() === searchAddress.toLowerCase()) return "sell"
+    if (tx.to.toLowerCase() === searchAddress.toLowerCase()) return "buy"
+    return "transfer"
+  }
+
+  const getExplorerUrl = (hash: string, network: string) => {
+    const explorers: Record<string, string> = {
+      ethereum: `https://etherscan.io/tx/${hash}`,
+      bsc: `https://bscscan.com/tx/${hash}`
+    }
+    return explorers[network] || '#'
   }
 
   const containerVariants = {
@@ -155,7 +156,7 @@ export default function WhaleTrackerPage() {
   }
 
   const filteredTransactions = transactions.filter(tx => 
-    filter === "all" || tx.type === filter
+    filter === "all" || tx.network === filter
   )
 
   return (
@@ -178,6 +179,14 @@ export default function WhaleTrackerPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <PremiumButton 
+                variant="ghost" 
+                size="sm"
+                onClick={refreshData}
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </PremiumButton>
               <PremiumButton variant="outline">
                 <AlertCircle className="h-4 w-4 mr-2" />
                 Set Alert

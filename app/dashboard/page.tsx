@@ -14,7 +14,8 @@ import {
   Plus,
   BarChart3,
   Users,
-  Zap
+  Zap,
+  RefreshCw
 } from 'lucide-react'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { PremiumCard } from '@/components/ui/premium-card'
@@ -22,10 +23,28 @@ import { PremiumBadge } from '@/components/ui/premium-badge'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { useWallet } from '@/hooks/useWallet'
 import { STORAGE_KEYS } from '@/lib/constants'
+import { cryptoDataService } from '@/lib/services/cryptoDataService'
+import { toast } from 'sonner'
 
 export default function DashboardPage() {
   const { address, isConnected } = useWallet()
   const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [marketData, setMarketData] = useState<{
+    topGainers: any[]
+    topLosers: any[]
+    globalStats: any
+  }>({
+    topGainers: [],
+    topLosers: [],
+    globalStats: null
+  })
+  const [portfolioData, setPortfolioData] = useState({
+    totalValue: 0,
+    change24h: 0,
+    totalProjects: 0,
+    activeAlerts: 0
+  })
 
   useEffect(() => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
@@ -36,26 +55,70 @@ export default function DashboardPage() {
         subscription: 'pro'
       })
     }
+    fetchMarketData()
+    fetchPortfolioData()
   }, [])
 
-  const portfolioData = {
-    totalValue: 125420.50,
-    change24h: 5.23,
-    totalProjects: 24,
-    activeAlerts: 7
+  const fetchMarketData = async () => {
+    try {
+      setLoading(true)
+      
+      // Gerçek piyasa verilerini getir
+      const [gainersLosers, globalData] = await Promise.all([
+        cryptoDataService.getTopGainersLosers(5),
+        cryptoDataService.getGlobalMarketData()
+      ])
+
+      setMarketData({
+        topGainers: gainersLosers.gainers.map(coin => ({
+          symbol: coin.symbol.toUpperCase(),
+          name: coin.name,
+          price: coin.current_price,
+          change: coin.price_change_percentage_24h
+        })),
+        topLosers: gainersLosers.losers.map(coin => ({
+          symbol: coin.symbol.toUpperCase(),
+          name: coin.name,
+          price: coin.current_price,
+          change: coin.price_change_percentage_24h
+        })),
+        globalStats: globalData
+      })
+    } catch (error) {
+      console.error('Error fetching market data:', error)
+      toast.error('Failed to fetch market data')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const topGainers = [
-    { symbol: 'PEPE', name: 'Pepe', price: 0.00000123, change: 45.2 },
-    { symbol: 'SHIB', name: 'Shiba Inu', price: 0.00002341, change: 23.5 },
-    { symbol: 'DOGE', name: 'Dogecoin', price: 0.0823, change: 12.8 },
-  ]
+  const fetchPortfolioData = async () => {
+    try {
+      // Portfolio verilerini getir (şimdilik mock, sonra gerçek portfolio API'si eklenecek)
+      const response = await fetch('/api/portfolio/summary')
+      if (response.ok) {
+        const data = await response.json()
+        setPortfolioData(data)
+      }
+    } catch (error) {
+      console.error('Error fetching portfolio:', error)
+      // Mock data kullan
+      setPortfolioData({
+        totalValue: 125420.50,
+        change24h: 5.23,
+        totalProjects: 24,
+        activeAlerts: 7
+      })
+    }
+  }
 
-  const topLosers = [
-    { symbol: 'LUNA', name: 'Terra Luna', price: 0.00012, change: -32.1 },
-    { symbol: 'FTT', name: 'FTX Token', price: 1.23, change: -28.9 },
-    { symbol: 'SAND', name: 'The Sandbox', price: 0.423, change: -15.2 },
-  ]
+  const refreshData = () => {
+    toast.promise(fetchMarketData(), {
+      loading: 'Refreshing market data...',
+      success: 'Market data updated!',
+      error: 'Failed to refresh data'
+    })
+  }
 
   const recentActivity = [
     { type: 'buy', asset: 'BTC', amount: '0.5', value: '$22,500', time: '2 hours ago' },
@@ -246,9 +309,28 @@ export default function DashboardPage() {
             >
               <PremiumCard className="glassmorphism border border-white border-opacity-10">
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold text-white mb-6">Top Gainers</h3>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-semibold text-white">Top Gainers</h3>
+                    <PremiumButton 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={refreshData}
+                      disabled={loading}
+                    >
+                      <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    </PremiumButton>
+                  </div>
                   <div className="space-y-4">
-                    {topGainers.map((token, index) => (
+                    {loading ? (
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="animate-pulse">
+                            <div className="h-16 bg-gray-800 rounded-lg"></div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : marketData.topGainers.length > 0 ? (
+                      marketData.topGainers.map((token, index) => (
                       <motion.div
                         key={token.symbol}
                         initial={{ opacity: 0, x: 20 }}
@@ -261,14 +343,17 @@ export default function DashboardPage() {
                           <p className="text-gray-400 text-sm">{token.name}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-white font-medium">${token.price}</p>
+                          <p className="text-white font-medium">${token.price < 0.01 ? token.price.toFixed(8) : token.price.toFixed(2)}</p>
                           <p className="text-green-400 text-sm flex items-center">
                             <ArrowUpRight className="w-4 h-4 mr-1" />
-                            +{token.change}%
+                            +{token.change.toFixed(2)}%
                           </p>
                         </div>
                       </motion.div>
-                    ))}
+                    ))
+                    ) : (
+                      <p className="text-gray-400 text-center py-4">No data available</p>
+                    )}
                   </div>
                 </div>
               </PremiumCard>
@@ -284,7 +369,16 @@ export default function DashboardPage() {
                 <div className="p-6">
                   <h3 className="text-xl font-semibold text-white mb-6">Top Losers</h3>
                   <div className="space-y-4">
-                    {topLosers.map((token, index) => (
+                    {loading ? (
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="animate-pulse">
+                            <div className="h-16 bg-gray-800 rounded-lg"></div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : marketData.topLosers.length > 0 ? (
+                      marketData.topLosers.map((token, index) => (
                       <motion.div
                         key={token.symbol}
                         initial={{ opacity: 0, x: 20 }}
@@ -297,14 +391,17 @@ export default function DashboardPage() {
                           <p className="text-gray-400 text-sm">{token.name}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-white font-medium">${token.price}</p>
+                          <p className="text-white font-medium">${token.price < 0.01 ? token.price.toFixed(8) : token.price.toFixed(2)}</p>
                           <p className="text-red-400 text-sm flex items-center">
                             <ArrowDownRight className="w-4 h-4 mr-1" />
-                            {token.change}%
+                            {token.change.toFixed(2)}%
                           </p>
                         </div>
                       </motion.div>
-                    ))}
+                    ))
+                    ) : (
+                      <p className="text-gray-400 text-center py-4">No data available</p>
+                    )}
                   </div>
                 </div>
               </PremiumCard>

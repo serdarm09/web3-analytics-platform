@@ -10,8 +10,14 @@ export interface AuthResult {
 
 export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
   try {
+    // Check for token in both Authorization header and cookies
     const authHeader = request.headers.get('authorization')
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null
+    let token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null
+    
+    // If no token in header, check cookies
+    if (!token) {
+      token = request.cookies.get('token')?.value || null
+    }
     
     if (!token) {
       return { authenticated: false }
@@ -32,8 +38,14 @@ export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
 
 export async function authMiddleware(request: NextRequest): Promise<NextResponse> {
   try {
+    // Check for token in both Authorization header and cookies
     const authHeader = request.headers.get('authorization')
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null
+    let token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null
+    
+    // If no token in header, check cookies
+    if (!token) {
+      token = request.cookies.get('token')?.value || null
+    }
     
     if (!token) {
       return NextResponse.json(

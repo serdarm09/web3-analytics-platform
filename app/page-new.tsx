@@ -10,7 +10,6 @@ import { Navbar } from '@/components/layout/navbar'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { SplineScene } from '@/components/ui/spline'
 import { Web3Hero } from '@/components/ui/web3-hero'
-import { cryptoDataService } from '@/lib/services/cryptoDataService'
 
 export default function Home() {
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({ 
@@ -18,16 +17,10 @@ export default function Home() {
     mode: 'register' 
   })
   const [stats, setStats] = useState({
-    activeUsers: '0',
-    projectsTracked: '0',
-    totalVolume: '$0',
-    whaleWallets: '0'
-  })
-  const [statsLoading, setStatsLoading] = useState(true)
-  const [liveData, setLiveData] = useState({
-    topGainers: [] as any[],
-    trending: [] as any[],
-    newListings: [] as any[]
+    activeUsers: '50K+',
+    projectsTracked: '10K+',
+    totalVolume: '$2.5B',
+    whaleWallets: '5K+'
   })
 
   useEffect(() => {
@@ -40,40 +33,10 @@ export default function Home() {
         }
       } catch (error) {
         console.error('Error fetching stats:', error)
-      } finally {
-        setStatsLoading(false)
       }
     }
-    
-    // Fetch immediately
     fetchStats()
-    fetchLiveData()
-    
-    // Refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchStats()
-      fetchLiveData()
-    }, 30000)
-    
-    return () => clearInterval(interval)
   }, [])
-
-  const fetchLiveData = async () => {
-    try {
-      const [gainersLosers, trending] = await Promise.all([
-        cryptoDataService.getTopGainersLosers(3),
-        cryptoDataService.getTrendingCryptos()
-      ])
-
-      setLiveData({
-        topGainers: gainersLosers.gainers.slice(0, 3),
-        trending: trending.slice(0, 3),
-        newListings: gainersLosers.gainers.slice(3, 6) // Temporary - ideally would be actual new listings
-      })
-    } catch (error) {
-      console.error('Error fetching live data:', error)
-    }
-  }
 
   const features = [
     {
@@ -202,20 +165,8 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="relative"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-relaxed"
             >
-              {!statsLoading && (
-                <motion.div 
-                  className="absolute -top-8 right-0 flex items-center gap-2 text-xs text-gray-500"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1 }}
-                >
-                  <Activity className="w-3 h-3" />
-                  <span>Live data</span>
-                </motion.div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-relaxed">
               {[
                 { label: 'Active Users', value: stats.activeUsers },
                 { label: 'Projects Tracked', value: stats.projectsTracked },
@@ -229,30 +180,17 @@ export default function Home() {
                   transition={{ delay: 0.4 + index * 0.1, duration: 0.5 }}
                 >
                   <PremiumCard variant="glass" className="text-center p-6 bg-gray-900/50 border-gray-800 hover:border-gray-700 transition-all duration-300 group">
-                    {statsLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-8 bg-gray-800 rounded w-24 mx-auto mb-2"></div>
-                        <div className="h-4 bg-gray-800 rounded w-20 mx-auto"></div>
-                      </div>
-                    ) : (
-                      <>
-                        <motion.h3 
-                          className="text-2xl md:text-3xl font-bold text-white"
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ type: "spring", stiffness: 300 }}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          key={stat.value}
-                        >
-                          {stat.value}
-                        </motion.h3>
-                        <p className="text-gray-500 mt-2 text-sm group-hover:text-gray-400 transition-colors">{stat.label}</p>
-                      </>
-                    )}
+                    <motion.h3 
+                      className="text-2xl md:text-3xl font-bold text-white"
+                      whileHover={{ scale: 1.1 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      {stat.value}
+                    </motion.h3>
+                    <p className="text-gray-500 mt-2 text-sm group-hover:text-gray-400 transition-colors">{stat.label}</p>
                   </PremiumCard>
                 </motion.div>
               ))}
-              </div>
             </motion.div>
           </div>
         </section>
@@ -333,21 +271,12 @@ export default function Home() {
                     <TrendingUp className="w-5 h-5 text-green-500" />
                   </div>
                   <div className="space-y-3">
-                    {liveData.topGainers.length > 0 ? (
-                      liveData.topGainers.map((coin, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-gray-400">{coin.symbol.toUpperCase()}</span>
-                          <span className="text-green-500 font-mono">+{coin.price_change_percentage_24h.toFixed(2)}%</span>
-                        </div>
-                      ))
-                    ) : (
-                      [1, 2, 3].map((i) => (
-                        <div key={i} className="animate-pulse flex justify-between items-center">
-                          <div className="h-4 bg-gray-800 rounded w-16"></div>
-                          <div className="h-4 bg-gray-800 rounded w-12"></div>
-                        </div>
-                      ))
-                    )}
+                    {['+245%', '+189%', '+156%'].map((gain, i) => (
+                      <div key={i} className="flex justify-between items-center">
+                        <span className="text-gray-400">Token {i + 1}</span>
+                        <span className="text-green-500 font-mono">{gain}</span>
+                      </div>
+                    ))}
                   </div>
                 </PremiumCard>
               </motion.div>
@@ -359,25 +288,16 @@ export default function Home() {
               >
                 <PremiumCard className="p-6 bg-gray-900/50 border-gray-800">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Trending Now</h3>
+                    <h3 className="text-lg font-semibold text-white">Whale Alerts</h3>
                     <AlertCircle className="w-5 h-5 text-yellow-500" />
                   </div>
                   <div className="space-y-3">
-                    {liveData.trending.length > 0 ? (
-                      liveData.trending.map((coin, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-gray-400">{coin.item.symbol}</span>
-                          <span className="text-yellow-500 font-mono text-sm">#{coin.item.market_cap_rank}</span>
-                        </div>
-                      ))
-                    ) : (
-                      [1, 2, 3].map((i) => (
-                        <div key={i} className="animate-pulse flex justify-between items-center">
-                          <div className="h-4 bg-gray-800 rounded w-16"></div>
-                          <div className="h-4 bg-gray-800 rounded w-20"></div>
-                        </div>
-                      ))
-                    )}
+                    {['$2.5M ETH', '$1.8M BTC', '$950K USDT'].map((alert, i) => (
+                      <div key={i} className="flex justify-between items-center">
+                        <span className="text-gray-400">Transfer</span>
+                        <span className="text-yellow-500 font-mono text-sm">{alert}</span>
+                      </div>
+                    ))}
                   </div>
                 </PremiumCard>
               </motion.div>
@@ -393,21 +313,12 @@ export default function Home() {
                     <Sparkles className="w-5 h-5 text-gray-400" />
                   </div>
                   <div className="space-y-3">
-                    {liveData.newListings.length > 0 ? (
-                      liveData.newListings.map((coin, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-gray-400">{coin.symbol.toUpperCase()}</span>
-                          <span className="text-gray-500 text-sm">${coin.current_price.toFixed(4)}</span>
-                        </div>
-                      ))
-                    ) : (
-                      [1, 2, 3].map((i) => (
-                        <div key={i} className="animate-pulse flex justify-between items-center">
-                          <div className="h-4 bg-gray-800 rounded w-16"></div>
-                          <div className="h-4 bg-gray-800 rounded w-16"></div>
-                        </div>
-                      ))
-                    )}
+                    {['Just Now', '5 min ago', '1 hour ago'].map((time, i) => (
+                      <div key={i} className="flex justify-between items-center">
+                        <span className="text-gray-400">Token {i + 4}</span>
+                        <span className="text-gray-500 text-sm">{time}</span>
+                      </div>
+                    ))}
                   </div>
                 </PremiumCard>
               </motion.div>

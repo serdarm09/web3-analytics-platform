@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 */30 * * * *"
+    }
+  ],
+  "functions": {
+    "app/api/sync/crypto-data/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
