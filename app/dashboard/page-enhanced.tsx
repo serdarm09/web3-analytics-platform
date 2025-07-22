@@ -65,7 +65,7 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<any[]>([])
   const [whaleActivities, setWhaleActivities] = useState<any[]>([])
   const [userStats, setUserStats] = useState({
-    joinDate: null,
+    joinDate: null as string | null,
     totalTrades: 0,
     successRate: 0,
     totalProfit: 0
@@ -104,9 +104,9 @@ export default function DashboardPage() {
       if (authUser) {
         setUserStats({
           joinDate: authUser.createdAt,
-          totalTrades: authUser.totalTrades || 0,
-          successRate: authUser.successRate || 0,
-          totalProfit: authUser.totalProfit || 0
+          totalTrades: 0, // These stats will be calculated from portfolios
+          successRate: 0,
+          totalProfit: 0
         })
       }
     } catch (error) {
@@ -176,14 +176,14 @@ export default function DashboardPage() {
           name: coin.name,
           price: coin.current_price,
           change: coin.price_change_percentage_24h,
-          image: coin.image
+          image: (coin as any).image || ''
         })),
         topLosers: gainersLosers.losers.map(coin => ({
           symbol: coin.symbol.toUpperCase(),
           name: coin.name,
           price: coin.current_price,
           change: coin.price_change_percentage_24h,
-          image: coin.image
+          image: (coin as any).image || ''
         })),
         globalStats: globalData
       })

@@ -66,23 +66,21 @@ export default function DashboardPage() {
   const [whaleActivities, setWhaleActivities] = useState<any[]>([])
 
   useEffect(() => {
-    activeAlerts: 0
-  })
+    setPortfolioData(prev => ({
+      ...prev,
+      activeAlerts: 0
+    }))
+  }, [])
 
   useEffect(() => {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
-    if (token) {
-      setUser({
-        name: 'Web3 Trader',
-        email: 'trader@example.com',
-        subscription: 'pro'
-      })
+    if (authUser) {
+      setUser(authUser)
     }
     fetchMarketData()
     fetchPortfolioData()
     fetchTrendingData()
     fetchUserProjects()
-  }, [])
+  }, [authUser])
 
   const fetchTrendingData = async () => {
     try {

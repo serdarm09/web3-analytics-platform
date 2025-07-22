@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         const projectData = {
           name: crypto.name,
           symbol: crypto.symbol.toUpperCase(),
-          logo: crypto.image || `https://ui-avatars.com/api/?name=${crypto.symbol}&background=64748b&color=fff`,
+          logo: `https://ui-avatars.com/api/?name=${crypto.symbol}&background=64748b&color=fff`,
           description: `${crypto.name} is a cryptocurrency ranked #${crypto.market_cap_rank} by market cap.`,
           category: determineCategory(crypto.id),
           website: `https://www.coingecko.com/en/coins/${crypto.id}`,

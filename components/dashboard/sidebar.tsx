@@ -16,7 +16,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  User
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
@@ -62,6 +63,11 @@ const sidebarItems = [
     title: 'Alerts',
     icon: Bell,
     href: '/dashboard/alerts',
+  },
+  {
+    title: 'Profile',
+    icon: User,
+    href: '/dashboard/profile',
   },
 ]
 

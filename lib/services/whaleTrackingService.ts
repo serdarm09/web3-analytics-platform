@@ -105,7 +105,7 @@ class WhaleTrackingService {
         for (const tx of block.transactions) {
           if (typeof tx === 'string') continue
           
-          const value = ethers.formatEther(tx.value)
+          const value = ethers.formatEther((tx as any).value)
           const valueNum = parseFloat(value)
           
           // ETH fiyatını tahmin et (gerçek uygulamada API'den alınmalı)
@@ -113,13 +113,13 @@ class WhaleTrackingService {
           const valueUSD = valueNum * ethPrice
 
           if (valueUSD >= this.minWhaleValueUSD[network]) {
-            const fromLabel = this.knownWhales[tx.from] || null
-            const toLabel = this.knownWhales[tx.to || ''] || null
+            const fromLabel = this.knownWhales[(tx as any).from] || null
+            const toLabel = this.knownWhales[(tx as any).to || ''] || null
 
             transactions.push({
-              hash: tx.hash,
-              from: tx.from,
-              to: tx.to || '',
+              hash: (tx as any).hash,
+              from: (tx as any).from,
+              to: (tx as any).to || '',
               value: value,
               valueUSD: valueUSD,
               tokenSymbol: network === 'ethereum' ? 'ETH' : 'BNB',
@@ -258,30 +258,6 @@ class WhaleTrackingService {
     }
   }
 
-  // Belirli bir cüzdanın detaylarını getir
-  async getWalletDetails(address: string, network: 'ethereum' | 'bsc' = 'ethereum'): Promise<WhaleWallet | null> {
-    try {
-      const provider = this.providers[network]
-      const balance = await provider.getBalance(address)
-      const balanceETH = ethers.formatEther(balance)
-      const ethPrice = network === 'ethereum' ? 2500 : 300
-      const balanceUSD = parseFloat(balanceETH) * ethPrice
-      const txCount = await provider.getTransactionCount(address)
-
-      return {
-        address: address,
-        balance: balanceETH,
-        balanceUSD: balanceUSD,
-        network: network,
-        label: this.knownWhales[address],
-        transactionCount: txCount,
-        lastActive: new Date()
-      }
-    } catch (error) {
-      console.error('Error fetching wallet details:', error)
-      return null
-    }
-  }
 
   // Whale alert oluştur
   async checkForWhaleAlerts(minValueUSD: number = 5000000): Promise<WhaleTransaction[]> {
@@ -340,7 +316,7 @@ class WhaleTrackingService {
 
       // Get recent transactions
       const currentBlock = await provider.getBlockNumber()
-      const recentTransactions = []
+      const recentTransactions: any[] = []
       
       // Mock data for holdings (in production, fetch from token balance APIs)
       const holdings = [

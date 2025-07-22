@@ -271,7 +271,7 @@ export default function WhaleTrackerPage() {
               <AnimatePresence>
                 {filteredTransactions.map((tx, index) => (
                   <motion.div
-                    key={tx.id}
+                    key={tx.hash || index}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
@@ -279,33 +279,27 @@ export default function WhaleTrackerPage() {
                     className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`p-3 rounded-full ${
-                        tx.type === "buy" ? "bg-green-500/20 text-green-500" :
-                        tx.type === "sell" ? "bg-red-500/20 text-red-500" :
-                        "bg-blue-500/20 text-blue-500"
-                      }`}>
-                        {tx.type === "buy" ? <ArrowDownLeft className="h-5 w-5" /> :
-                         tx.type === "sell" ? <ArrowUpRight className="h-5 w-5" /> :
-                         <Activity className="h-5 w-5" />}
+                      <div className="p-3 rounded-full bg-blue-500/20 text-blue-500">
+                        <Activity className="h-5 w-5" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-semibold">
-                            {tx.walletName || tx.walletAddress}
+                            {tx.from.slice(0, 6)}...{tx.from.slice(-4)}
                           </p>
                           <PremiumBadge variant="outline" className="text-xs">
-                            {tx.type.toUpperCase()}
+                            TRANSFER
                           </PremiumBadge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {tx.amount.toLocaleString()} {tx.token} • {formatValue(tx.value)}
+                          {tx.value} ETH • ${tx.valueUSD.toLocaleString()}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">{formatTimeAgo(tx.timestamp)}</p>
                       <a
-                        href={`https://etherscan.io/tx/${tx.txHash}`}
+                        href={`https://etherscan.io/tx/${tx.hash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-xs text-accent-slate hover:underline"
@@ -341,9 +335,9 @@ export default function WhaleTrackerPage() {
                         <Wallet className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="font-semibold">{wallet.name || wallet.address}</p>
+                        <p className="font-semibold">{wallet.label || wallet.address}</p>
                         <p className="text-sm text-muted-foreground">
-                          {wallet.totalTransactions.toLocaleString()} transactions
+                          {wallet.transactionCount.toLocaleString()} transactions
                         </p>
                       </div>
                     </div>
@@ -353,13 +347,11 @@ export default function WhaleTrackerPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Balance:</span>
-                    <span className="font-semibold">{formatValue(wallet.balance)}</span>
+                    <span className="font-semibold">${wallet.balanceUSD.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">P&L:</span>
-                    <span className={wallet.profitLoss > 0 ? "text-green-500" : "text-red-500"}>
-                      {wallet.profitLoss > 0 ? "+" : ""}{formatValue(wallet.profitLoss)}
-                    </span>
+                    <span className="text-muted-foreground">Network:</span>
+                    <span className="font-semibold">{wallet.network}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Clock className="h-3 w-3" />

@@ -48,21 +48,21 @@ export async function GET(request: NextRequest) {
       ...project,
       id: project._id?.toString() || '',
       marketData: {
-        price: 0,
-        marketCap: 0,
-        volume24h: 0,
-        change24h: 0,
-        change7d: 0,
-        circulatingSupply: 0,
-        totalSupply: 0,
-        ...(project.marketData || {})
+        ...(project.marketData || {}),
+        price: project.marketData?.price ?? 0,
+        marketCap: project.marketData?.marketCap ?? 0,
+        volume24h: project.marketData?.volume24h ?? 0,
+        change24h: project.marketData?.change24h ?? 0,
+        change7d: project.marketData?.change7d ?? 0,
+        circulatingSupply: project.marketData?.circulatingSupply ?? 0,
+        totalSupply: project.marketData?.totalSupply ?? 0
       },
       metrics: {
-        socialScore: 0,
-        trendingScore: 0,
-        hypeScore: 0,
-        holders: 0,
-        ...(project.metrics || {})
+        ...(project.metrics || {}),
+        socialScore: project.metrics?.socialScore ?? 0,
+        trendingScore: project.metrics?.trendingScore ?? 0,
+        hypeScore: project.metrics?.hypeScore ?? 0,
+        holders: project.metrics?.holders ?? 0
       }
     }))
 

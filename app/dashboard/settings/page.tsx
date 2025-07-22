@@ -31,6 +31,8 @@ interface UserSettings {
   profile: {
     name: string
     email: string
+    username?: string
+    walletAddress?: string
     avatar: string
     bio: string
   }
@@ -107,10 +109,19 @@ export default function SettingsPage() {
         ...prev,
         profile: {
           ...prev.profile,
-          name: user.username || '',
+          name: user.name || user.username || '',
           email: user.email || '',
           username: user.username || '',
-          walletAddress: user.walletAddress || ''
+          walletAddress: user.walletAddress || '',
+          bio: prev.profile.bio
+        },
+        subscription: {
+          ...prev.subscription,
+          plan: user.subscription || 'free'
+        },
+        security: {
+          ...prev.security,
+          twoFactor: user.twoFactorEnabled || false
         }
       }))
     }
@@ -134,14 +145,25 @@ export default function SettingsPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: settings.profile.username,
-          email: settings.profile.email,
           name: settings.profile.name,
+          bio: settings.profile.bio,
         }),
       })
 
       if (!response.ok) {
         throw new Error('Failed to update profile')
+      }
+
+      const data = await response.json()
+      if (data.user) {
+        // Update local auth state
+        setSettings(prev => ({
+          ...prev,
+          profile: {
+            ...prev.profile,
+            ...data.user
+          }
+        }))
       }
 
       toast.success('Profile updated successfully')
@@ -286,21 +308,15 @@ export default function SettingsPage() {
                       </div>
                       <div>
                         <label className="text-sm font-medium mb-2 block text-gray-300">
-                          Email {user?.registrationMethod === 'wallet' && !user?.email && <span className="text-xs text-gray-500">(Add email to your account)</span>}
+                          Email
                         </label>
                         <PremiumInput
                           type="email"
                           value={settings.profile.email}
-                          placeholder={user?.registrationMethod === 'wallet' && !user?.email ? "Add your email" : ""}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                            setSettings({
-                              ...settings,
-                              profile: { ...settings.profile, email: e.target.value }
-                            })
-                            setUnsavedChanges(true)
-                          }}
-                          disabled={user?.registrationMethod === 'email'}
+                          disabled
+                          className="opacity-50"
                         />
+                        <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                       </div>
                     </div>
 
@@ -326,6 +342,36 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     )}
+
+                    <div>
+                      <label className="text-sm font-medium mb-2 block text-gray-300">Username</label>
+                      <PremiumInput
+                        value={settings.profile.username || user?.username || ''}
+                        disabled
+                        className="opacity-50"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Username cannot be changed</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block text-gray-300">Registration Method</label>
+                        <PremiumInput
+                          value={user?.registrationMethod === 'wallet' ? 'Wallet' : 'Email'}
+                          disabled
+                          className="opacity-50 capitalize"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block text-gray-300">Account Status</label>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${user?.isVerified ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
+                          <span className="text-sm text-gray-300">
+                            {user?.isVerified ? 'Verified' : 'Unverified'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
                     <div>
                       <label className="text-sm font-medium mb-2 block text-gray-300">Bio</label>
@@ -623,7 +669,7 @@ export default function SettingsPage() {
                     <div className="p-4 rounded-lg bg-gradient-to-r from-accent-slate/20 to-accent-teal/20">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-lg font-semibold">Current Plan</h3>
-                        <PremiumBadge>PRO</PremiumBadge>
+                        <PremiumBadge>{(user?.subscription || 'free').toUpperCase()}</PremiumBadge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-4">
                         Unlimited portfolio tracking, advanced analytics, and priority support

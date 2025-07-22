@@ -36,22 +36,22 @@ export async function GET(request: NextRequest) {
         // Create new wallet entry
         wallet = await Wallet.create({
           address: address.toLowerCase(),
-          ens: walletData.ens,
-          totalValue: walletData.totalValue,
-          totalChange24h: walletData.totalChange24h,
-          transactionCount: walletData.transactionCount,
-          holdings: walletData.holdings,
-          recentTransactions: walletData.recentTransactions,
-          trackingUsers: [userId],
-          chain: 'ethereum',
-          lastActive: new Date()
+          label: `Whale Wallet ${address.slice(0, 6)}...${address.slice(-4)}`,
+          balance: 0,
+          balanceUSD: 0,
+          transactions: [],
+          tokens: [],
+          isTracked: true,
+          trackingUsers: [userId!],
+          lastActivity: new Date(),
+          totalTransactions: 0
         })
       } catch (error) {
         console.error('Error fetching wallet data:', error)
         // Return mock data for now
-        wallet = {
+        const mockWalletData = {
           address: address.toLowerCase(),
-          ens: null,
+          ens: undefined,
           totalValue: 0,
           totalChange24h: 0,
           transactionCount: 0,
@@ -64,13 +64,15 @@ export async function GET(request: NextRequest) {
           profitLoss: 0,
           realizedPnL: 0,
           unrealizedPnL: 0,
-          trackingUsers: [userId],
+          trackingUsers: userId ? [userId] : [],
           chain: 'ethereum'
         }
+        
+        return NextResponse.json(mockWalletData)
       }
     } else {
       // Add user to tracking if not already tracking
-      if (!wallet.trackingUsers.includes(userId)) {
+      if (userId && !wallet.trackingUsers.includes(userId)) {
         wallet.trackingUsers.push(userId)
         await wallet.save()
       }
@@ -111,7 +113,7 @@ export async function POST(request: NextRequest) {
 
     if (wallet) {
       // Add user to tracking list if not already tracking
-      if (!wallet.trackingUsers.includes(userId)) {
+      if (userId && !wallet.trackingUsers.includes(userId)) {
         wallet.trackingUsers.push(userId)
         await wallet.save()
       }
@@ -125,14 +127,15 @@ export async function POST(request: NextRequest) {
       // Create new wallet
       wallet = await Wallet.create({
         address: address.toLowerCase(),
-        ens: walletData?.ens,
-        totalValue: walletData?.totalValue || 0,
-        totalChange24h: walletData?.totalChange24h || 0,
-        transactionCount: walletData?.transactionCount || 0,
-        holdings: walletData?.holdings || [],
-        recentTransactions: walletData?.recentTransactions || [],
-        trackingUsers: [userId],
-        chain: 'ethereum'
+        label: `Whale Wallet ${address.slice(0, 6)}...${address.slice(-4)}`,
+        balance: 0,
+        balanceUSD: (walletData as any)?.balanceUSD || 0,
+        transactions: [],
+        tokens: [],
+        isTracked: true,
+        trackingUsers: userId ? [userId] : [],
+        lastActivity: new Date(),
+        totalTransactions: (walletData as any)?.transactionCount || 0
       })
 
       return NextResponse.json(wallet, { status: 201 })
@@ -142,7 +145,7 @@ export async function POST(request: NextRequest) {
       // Create wallet with minimal data
       wallet = await Wallet.create({
         address: address.toLowerCase(),
-        trackingUsers: [userId],
+        trackingUsers: userId ? [userId] : [],
         chain: 'ethereum'
       })
 
