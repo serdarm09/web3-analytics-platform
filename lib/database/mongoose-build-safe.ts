@@ -18,14 +18,16 @@ if (!global.__mongoose) {
 }
 
 async function dbConnect(): Promise<typeof mongoose | null> {
-  // During Vercel build, skip if no MongoDB URI
+  // During build time, return null to skip database connection
+  if (process.env.NODE_ENV === 'production' && !MONGODB_URI) {
+    console.warn('⚠️ MongoDB URI not found during build, skipping connection')
+    return null
+  }
+
+  // In runtime, check for MongoDB URI
   if (!MONGODB_URI) {
-    if (process.env.VERCEL || process.env.CI) {
-      console.warn('⚠️ MongoDB URI not found, skipping database connection')
-      return null
-    }
-    // Only throw error in local development
-    throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
+    console.error('MONGODB_URI is not defined in environment variables')
+    throw new Error('Please define the MONGODB_URI environment variable')
   }
 
   if (cached.conn) {
@@ -52,6 +54,11 @@ async function dbConnect(): Promise<typeof mongoose | null> {
   } catch (e) {
     cached.promise = null
     console.error('❌ MongoDB connection error:', e)
+    // During build, don't throw error
+    if (process.env.VERCEL) {
+      console.warn('⚠️ Running on Vercel, continuing without database')
+      return null
+    }
     throw e
   }
 
