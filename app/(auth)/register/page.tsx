@@ -4,552 +4,346 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Mail, Lock, User, ArrowRight, Wallet, ArrowLeft, Sparkles } from 'lucide-react'
+import { Mail, Lock, User, ArrowRight, Wallet, ArrowLeft, Check, Eye, EyeOff } from 'lucide-react'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumInput } from '@/components/ui/premium-input'
+import { useAuth } from '@/hooks/use-auth'
 import { useWallet } from '@/hooks/useWallet'
-import { STORAGE_KEYS } from '@/lib/constants'
-import { PrivacyModal } from '@/components/ui/privacy-modal'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { connectWallet, address, isConnecting, error: walletError } = useWallet()
+  const { register } = useAuth()
+  const { connectWallet, address, isConnecting } = useWallet()
+  
   const [formData, setFormData] = useState({
-    username: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
+    agreeToTerms: false
   })
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [errors, setErrors] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    general: '',
-  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [registerMethod, setRegisterMethod] = useState<'email' | 'wallet'>('email')
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
-
-  const validateForm = () => {
-    const newErrors = {
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      general: '',
-    }
-
-    if (registerMethod === 'email') {
-      if (formData.username.length < 3) {
-        newErrors.username = 'Username must be at least 3 characters'
-      }
-
-      if (!formData.email.includes('@')) {
-        newErrors.email = 'Please enter a valid email'
-      }
-
-      if (formData.password.length < 6) {
-        newErrors.password = 'Password must be at least 6 characters'
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match'
-      }
-    } else {
-      // Wallet registration validation
-      if (!address) {
-        newErrors.general = 'Please connect your wallet first'
-      }
-      
-      if (formData.username.length < 3) {
-        newErrors.username = 'Username must be at least 3 characters'
-      }
-    }
-
-    setErrors(newErrors)
-    return !Object.values(newErrors).some(error => error !== '')
-  }
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!agreedToTerms) {
-      setErrors({ ...errors, general: 'Please agree to the Terms of Service and Privacy Policy' })
+    setError('')
+
+    // Validation
+    if (!formData.agreeToTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy')
       return
     }
-    
-    if (!validateForm()) {
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long')
       return
     }
 
     setIsLoading(true)
-    setErrors({ username: '', email: '', password: '', confirmPassword: '', general: '' })
 
     try {
-      const payload = registerMethod === 'wallet' 
-        ? {
-            username: formData.username,
-            walletAddress: address,
-            registrationMethod: 'wallet'
-          }
-        : {
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-            registrationMethod: 'email'
-          }
-
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      await register({
+        username: formData.name,
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        if (data.error.includes('already exists')) {
-          setErrors({ ...errors, general: 'Username or email already exists' })
-        } else {
-          setErrors({ ...errors, general: data.error })
-        }
-        return
-      }
-
-      // Store token in localStorage if provided
-      if (data.token) {
-        localStorage.setItem('auth_token', data.token)
-      }
-      
-      // Wait a bit for auth state to update
-      setTimeout(() => {
-        router.push('/dashboard')
-      }, 100)
-    } catch (error) {
-      setErrors({ ...errors, general: 'Something went wrong. Please try again.' })
+      router.push('/dashboard')
+    } catch (error: any) {
+      setError(error.message || 'Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleWalletRegister = async () => {
+  const handleWalletConnect = async () => {
+    setError('')
+    setIsLoading(true)
+
     try {
       await connectWallet()
-      setRegisterMethod('wallet')
-    } catch (error) {
-      setErrors({ ...errors, general: 'Failed to connect wallet' })
+      if (address) {
+        router.push('/dashboard')
+      }
+    } catch (error: any) {
+      setError('Failed to connect wallet. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden">
-      {/* Enhanced Background Effects */}
-      <div className="absolute inset-0 bg-mesh"></div>
-      <motion.div 
-        className="floating-orb floating-orb-1"
-        animate={{ 
-          y: [0, -30, 0],
-          x: [0, 15, 0]
-        }}
-        transition={{ 
-          duration: 5,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      <motion.div 
-        className="floating-orb floating-orb-2"
-        animate={{ 
-          y: [0, 25, 0],
-          x: [0, -20, 0]
-        }}
-        transition={{ 
-          duration: 7,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      <motion.div 
-        className="floating-orb floating-orb-3"
-        animate={{ 
-          scale: [1, 1.1, 1],
-          opacity: [0.3, 0.5, 0.3]
-        }}
-        transition={{ 
-          duration: 6,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-      
-      {/* Back Button */}
-      <motion.button
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        whileHover={{ x: -5 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ duration: 0.3 }}
-        onClick={() => router.push('/')}
-        className="absolute top-8 left-8 z-20 flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
+  // Custom Checkbox Component
+  const CustomCheckbox = ({ 
+    checked, 
+    onChange, 
+    children 
+  }: {
+    checked: boolean
+    onChange: (checked: boolean) => void
+    children: React.ReactNode
+  }) => (
+    <div className="flex items-start gap-3">
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={`flex-shrink-0 w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center mt-0.5 ${
+          checked 
+            ? 'bg-gradient-to-r from-blue-500 to-purple-600 border-blue-500 text-white' 
+            : 'border-gray-600 hover:border-gray-500 bg-gray-800/50'
+        }`}
       >
-        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        <span className="text-sm font-medium">Back to Home</span>
-      </motion.button>
-      
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute inset-0" 
-             style={{
-               backgroundImage: `
-                 linear-gradient(rgba(155, 153, 254, 0.1) 1px, transparent 1px),
-                 linear-gradient(90deg, rgba(155, 153, 254, 0.1) 1px, transparent 1px)
-               `,
-               backgroundSize: '50px 50px'
-             }}>
-        </div>
+        {checked && <Check className="w-3 h-3" />}
+      </button>
+      <div className="text-sm text-gray-300 cursor-pointer leading-relaxed" onClick={() => onChange(!checked)}>
+        {children}
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse delay-1000" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-md mx-4"
+      {/* Back Button */}
+      <Link
+        href="/"
+        className="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors z-10"
       >
-        <PremiumCard className="glassmorphism-dark border border-white/10 shadow-2xl glow-primary/20 relative overflow-hidden">
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-accent-purple/5 to-accent-pink/5"
-            animate={{ 
-              backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"]
-            }}
-            transition={{ 
-              duration: 15,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            style={{ backgroundSize: "200% 200%" }}
-          />
-          <div className="p-8">
+        <ArrowLeft className="w-4 h-4" />
+        <span>Back to Home</span>
+      </Link>
+
+      <div className="relative z-10 w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <PremiumCard variant="glass" className="p-8">
+            {/* Header */}
             <div className="text-center mb-8">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0, rotate: 180 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                transition={{ 
-                  delay: 0.2,
-                  duration: 0.8,
-                  type: "spring",
-                  stiffness: 200
-                }}
-                className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-full mb-4 glow-primary"
-              >
-                <User className="w-8 h-8 text-white" />
-              </motion.div>
-              <motion.h1 
-                className="text-3xl font-bold text-gradient mb-2"
-                initial={{ opacity: 0, y: 20 }}
+              <motion.h1
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
+                transition={{ delay: 0.1 }}
+                className="text-3xl font-bold text-white mb-2"
               >
                 Create Account
               </motion.h1>
-              <motion.p 
-                className="text-gray-400"
+              <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
+                transition={{ delay: 0.2 }}
+                className="text-gray-400"
               >
-                Join the Web3 analytics revolution
+                Join Web3 Analytics today
               </motion.p>
-              <motion.div
-                className="absolute -top-10 -left-10 w-20 h-20 bg-gradient-to-br from-accent-purple to-accent-pink rounded-full blur-3xl opacity-20"
-                animate={{ 
-                  scale: [1, 1.3, 1],
-                  rotate: [0, 90, 0]
-                }}
-                transition={{ 
-                  duration: 5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
             </div>
 
-            {/* Registration Method Selector */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="mb-6"
-            >
-              <div className="grid grid-cols-2 gap-2 p-1 bg-black-tertiary/60 rounded-lg border border-gray-700">
-                <button
-                  type="button"
-                  onClick={() => setRegisterMethod('email')}
-                  className={`py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                    registerMethod === 'email'
-                      ? 'bg-gradient-primary text-white shadow-lg shadow-accent-teal/20'
-                      : 'text-gray-400 hover:text-white hover:bg-black-quaternary'
-                  }`}
-                >
-                  Email
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRegisterMethod('wallet')}
-                  className={`py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                    registerMethod === 'wallet'
-                      ? 'bg-gradient-primary text-white shadow-lg shadow-accent-teal/20'
-                      : 'text-gray-400 hover:text-white hover:bg-black-quaternary'
-                  }`}
-                >
-                  Wallet
-                </button>
-              </div>
-            </motion.div>
-
-            {errors.general && (
+            {/* Error Message */}
+            {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"
+                className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm"
               >
-                {errors.general}
+                {error}
               </motion.div>
             )}
 
-            {walletError && registerMethod === 'wallet' && (
+            {/* Register Form */}
+            <form onSubmit={handleSubmit} className="space-y-5">
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
               >
-                {walletError}
+                <PremiumInput
+                  icon={User}
+                  type="text"
+                  placeholder="Full name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
               </motion.div>
-            )}
 
-            {registerMethod === 'wallet' && address && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-sm"
-              >
-                Wallet Connected: {address.slice(0, 6)}...{address.slice(-4)}
-              </motion.div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Wallet Connection */}
-              {registerMethod === 'wallet' && !address && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <PremiumButton
-                    type="button"
-                    onClick={handleWalletRegister}
-                    disabled={isConnecting}
-                    className="w-full"
-                  >
-                    {isConnecting ? (
-                      <div className="flex items-center justify-center">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        Connecting Wallet...
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center">
-                        <Wallet className="w-5 h-5 mr-2" />
-                        Connect Wallet
-                      </div>
-                    )}
-                  </PremiumButton>
-                </motion.div>
-              )}
-
-              {/* Username (always required) */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
-                  Username
-                </label>
                 <PremiumInput
-                  id="username"
-                  type="text"
-                  icon={User}
-                  placeholder="Choose a username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  error={errors.username}
+                  icon={Mail}
+                  type="email"
+                  placeholder="Email address"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="w-full"
                 />
               </motion.div>
 
-              {/* Email Registration Fields */}
-              {registerMethod === 'email' && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                      Email
-                    </label>
-                    <PremiumInput
-                      id="email"
-                      type="email"
-                      icon={Mail}
-                      placeholder="Enter your email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      error={errors.email}
-                      required
-                      className="w-full"
-                    />
-                  </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="relative"
+              >
+                <PremiumInput
+                  icon={Lock}
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </motion.div>
 
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 }}
-                  >
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                      Password
-                    </label>
-                    <PremiumInput
-                      id="password"
-                      type="password"
-                      icon={Lock}
-                      placeholder="Create a password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      error={errors.password}
-                      required
-                      className="w-full"
-                    />
-                  </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+                className="relative"
+              >
+                <PremiumInput
+                  icon={Lock}
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirm password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </motion.div>
 
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7 }}
-                  >
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
-                      Confirm Password
-                    </label>
-                    <PremiumInput
-                      id="confirmPassword"
-                      type="password"
-                      icon={Lock}
-                      placeholder="Confirm your password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      error={errors.confirmPassword}
-                      required
-                      className="w-full"
-                    />
-                  </motion.div>
-                </>
-              )}
+              {/* Terms Agreement */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+              >
+                <CustomCheckbox
+                  checked={formData.agreeToTerms}
+                  onChange={(checked) => setFormData({ ...formData, agreeToTerms: checked })}
+                >
+                  I agree to the{' '}
+                  <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="text-blue-400 hover:text-blue-300 transition-colors">
+                    Privacy Policy
+                  </Link>
+                </CustomCheckbox>
+              </motion.div>
 
-              {(registerMethod === 'email' || (registerMethod === 'wallet' && address)) && (
-                <>
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="flex items-start space-x-3"
-                  >
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 mt-1 rounded border-gray-600 bg-gray-800 text-accent-slate focus:ring-accent-slate focus:ring-offset-0"
-                      checked={agreedToTerms}
-                      onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    />
-                    <span className="text-sm text-gray-400 leading-5">
-                      I agree to the{' '}
-                      <Link href="/terms" className="text-accent-slate hover:text-accent-slate/80 underline">
-                        Terms of Service
-                      </Link>{' '}
-                      and{' '}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          setShowPrivacyModal(true)
-                        }}
-                        className="text-accent-slate hover:text-accent-slate/80 underline"
-                      >
-                        Privacy Policy
-                      </button>
-                    </span>
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.9 }}
-                  >
-                    <PremiumButton
-                      type="submit"
-                      variant="gradient"
-                      className="w-full"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <div className="flex items-center justify-center">
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                          Creating account...
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          Create Account
-                          <ArrowRight className="ml-2 w-5 h-5" />
-                        </div>
-                      )}
-                    </PremiumButton>
-                  </motion.div>
-                </>
-              )}
+              {/* Submit Button */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+              >
+                <PremiumButton
+                  type="submit"
+                  variant="gradient"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-500 hover:to-purple-600"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Creating Account...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span>Create Account</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  )}
+                </PremiumButton>
+              </motion.div>
             </form>
 
+            {/* Divider */}
+            <div className="relative my-8">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-700" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-gray-900/80 text-gray-400">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Wallet Connect */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.9 }}
+            >
+              <PremiumButton
+                variant="outline"
+                className="w-full border-gray-700 hover:border-gray-600 hover:bg-gray-800/50"
+                onClick={handleWalletConnect}
+                disabled={isLoading || isConnecting}
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                {isConnecting ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 border-2 border-gray-400 border-t-white rounded-full animate-spin" />
+                    <span>Connecting...</span>
+                  </div>
+                ) : (
+                  'Connect Wallet'
+                )}
+              </PremiumButton>
+            </motion.div>
+
+            {/* Login Link */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.0 }}
-              className="mt-8 text-center"
+              className="text-center mt-8 pt-6 border-t border-gray-800"
             >
               <p className="text-gray-400">
                 Already have an account?{' '}
-                <Link 
-                  href="/login" 
-                  className="text-accent-slate hover:text-accent-slate/80 font-medium transition-colors duration-200"
+                <Link
+                  href="/login"
+                  className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
                 >
                   Sign in
                 </Link>
               </p>
             </motion.div>
-          </div>
-        </PremiumCard>
-      </motion.div>
-      
-      {/* Privacy Modal */}
-      <PrivacyModal
-        isOpen={showPrivacyModal}
-        onClose={() => setShowPrivacyModal(false)}
-        onAccept={() => {
-          setAgreedToTerms(true)
-          setShowPrivacyModal(false)
-        }}
-      />
+          </PremiumCard>
+        </motion.div>
+      </div>
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Mail, Lock, User, Wallet } from 'lucide-react'
+import { X, Mail, Lock, User, Wallet, Check } from 'lucide-react'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumInput } from '@/components/ui/premium-input'
@@ -28,7 +28,9 @@ export function AuthModal({ isOpen, onClose, mode: initialMode }: AuthModalProps
     email: '',
     username: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    rememberMe: false,
+    agreeToTerms: false
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,21 +45,30 @@ export function AuthModal({ isOpen, onClose, mode: initialMode }: AuthModalProps
           return
         }
         
-        register({
+        if (!formData.agreeToTerms) {
+          setError('Please agree to the Terms of Service and Privacy Policy')
+          return
+        }
+        
+        await register({
           email: formData.email,
           username: formData.username,
           password: formData.password,
           registrationMethod: 'email'
         })
+        onClose()
+        router.push('/dashboard')
       } else {
-        login({
+        await login({
           email: formData.email,
           password: formData.password
         })
+        onClose()
+        router.push('/dashboard')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth error:', error)
-      setError('Authentication failed. Please try again.')
+      setError(error.message || 'Authentication failed. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -71,32 +82,75 @@ export function AuthModal({ isOpen, onClose, mode: initialMode }: AuthModalProps
       await connectWallet()
       
       if (address) {
-        register({
+        await register({
           username: `user_${address.slice(0, 8)}`,
-          email: '',
+          email: `${address.slice(0, 8)}@wallet.local`,
           password: '',
-          walletAddress: address,
           registrationMethod: 'wallet'
         })
+        onClose()
+        router.push('/dashboard')
       }
-    } catch (error) {
-      console.error('Wallet connection error:', error)
+    } catch (error: any) {
+      console.error('Wallet connect error:', error)
       setError('Failed to connect wallet. Please try again.')
     } finally {
       setIsLoading(false)
     }
   }
 
+  // Custom Checkbox Component
+  const CustomCheckbox = ({ 
+    checked, 
+    onChange, 
+    children, 
+    className = '' 
+  }: {
+    checked: boolean
+    onChange: (checked: boolean) => void
+    children: React.ReactNode
+    className?: string
+  }) => (
+    <div className={`flex items-start gap-3 ${className}`}>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={`flex-shrink-0 w-5 h-5 rounded-md border-2 transition-all duration-200 flex items-center justify-center ${
+          checked 
+            ? 'bg-gradient-to-r from-blue-500 to-purple-600 border-blue-500 text-white' 
+            : 'border-gray-600 hover:border-gray-500 bg-gray-800/50'
+        }`}
+      >
+        <AnimatePresence>
+          {checked && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 0.2, type: "spring" }}
+            >
+              <Check className="w-3 h-3" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </button>
+      <div className="text-sm text-gray-300 leading-relaxed cursor-pointer" onClick={() => onChange(!checked)}>
+        {children}
+      </div>
+    </div>
+  )
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
             onClick={onClose}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
           />
           
           <motion.div
@@ -108,15 +162,20 @@ export function AuthModal({ isOpen, onClose, mode: initialMode }: AuthModalProps
             <PremiumCard variant="glass" className="relative">
               <button
                 onClick={onClose}
-                className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors"
+                className="absolute right-4 top-4 text-gray-400 hover:text-white transition-colors z-10"
               >
                 <X className="w-5 h-5" />
               </button>
               
               <div className="p-8">
-                <h2 className="text-2xl font-bold text-white mb-2">
+                <motion.h2 
+                  key={mode}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-2xl font-bold text-white mb-2"
+                >
                   {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-                </h2>
+                </motion.h2>
                 <p className="text-gray-400 mb-6">
                   {mode === 'login' 
                     ? 'Login to access your dashboard' 
@@ -124,20 +183,30 @@ export function AuthModal({ isOpen, onClose, mode: initialMode }: AuthModalProps
                 </p>
                 
                 {error && (
-                  <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm"
+                  >
                     {error}
-                  </div>
+                  </motion.div>
                 )}
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {mode === 'register' && (
-                    <PremiumInput
-                      icon={User}
-                      placeholder="Username"
-                      value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      required
-                    />
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      <PremiumInput
+                        icon={User}
+                        placeholder="Username"
+                        value={formData.username}
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        required
+                      />
+                    </motion.div>
                   )}
                   
                   <PremiumInput
@@ -159,24 +228,69 @@ export function AuthModal({ isOpen, onClose, mode: initialMode }: AuthModalProps
                   />
                   
                   {mode === 'register' && (
-                    <PremiumInput
-                      icon={Lock}
-                      type="password"
-                      placeholder="Confirm Password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      required
-                    />
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      <PremiumInput
+                        icon={Lock}
+                        type="password"
+                        placeholder="Confirm Password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        required
+                      />
+                    </motion.div>
                   )}
                   
-                  <PremiumButton
-                    type="submit"
-                    variant="gradient"
-                    className="w-full"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Loading...' : mode === 'login' ? 'Login' : 'Register'}
-                  </PremiumButton>
+                  {/* Remember Me / I Agree Section */}
+                  <div className="space-y-3 py-2">
+                    {mode === 'login' && (
+                      <CustomCheckbox
+                        checked={formData.rememberMe}
+                        onChange={(checked) => setFormData({ ...formData, rememberMe: checked })}
+                      >
+                        <span>Remember me for 30 days</span>
+                      </CustomCheckbox>
+                    )}
+                    
+                    {mode === 'register' && (
+                      <CustomCheckbox
+                        checked={formData.agreeToTerms}
+                        onChange={(checked) => setFormData({ ...formData, agreeToTerms: checked })}
+                      >
+                        <span>
+                          I agree to the{' '}
+                          <a href="/terms" className="text-blue-400 hover:text-blue-300 underline" target="_blank">
+                            Terms of Service
+                          </a>
+                          {' '}and{' '}
+                          <a href="/privacy" className="text-blue-400 hover:text-blue-300 underline" target="_blank">
+                            Privacy Policy
+                          </a>
+                        </span>
+                      </CustomCheckbox>
+                    )}
+                  </div>
+                  
+                  <motion.div whileTap={{ scale: 0.98 }}>
+                    <PremiumButton
+                      type="submit"
+                      variant="gradient"
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-500 hover:to-purple-600"
+                      disabled={isLoading || (mode === 'register' && !formData.agreeToTerms)}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>{mode === 'login' ? 'Signing In...' : 'Creating Account...'}</span>
+                        </div>
+                      ) : (
+                        mode === 'login' ? 'Sign In' : 'Create Account'
+                      )}
+                    </PremiumButton>
+                  </motion.div>
                 </form>
                 
                 <div className="relative my-6">
@@ -184,31 +298,51 @@ export function AuthModal({ isOpen, onClose, mode: initialMode }: AuthModalProps
                     <div className="w-full border-t border-gray-800" />
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-black-secondary text-gray-400">Or</span>
+                    <span className="px-4 bg-black-secondary text-gray-400">Or continue with</span>
                   </div>
                 </div>
                 
-                <PremiumButton
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleWalletConnect}
-                  disabled={isLoading || isConnecting}
-                >
-                  <Wallet className="w-4 h-4 mr-2" />
-                  {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-                </PremiumButton>
+                <motion.div whileTap={{ scale: 0.98 }}>
+                  <PremiumButton
+                    variant="outline"
+                    className="w-full border-gray-700 hover:border-gray-600 hover:bg-gray-800/50"
+                    onClick={handleWalletConnect}
+                    disabled={isLoading || isConnecting}
+                  >
+                    <Wallet className="w-4 h-4 mr-2" />
+                    {isConnecting ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 border-2 border-gray-400 border-t-white rounded-full animate-spin" />
+                        <span>Connecting...</span>
+                      </div>
+                    ) : (
+                      'Connect Wallet'
+                    )}
+                  </PremiumButton>
+                </motion.div>
                 
-                <p className="text-center text-sm text-gray-400 mt-6">
+                <div className="text-center text-sm text-gray-400 mt-6">
                   {mode === 'login' ? "Don't have an account?" : "Already have an account?"}
                   {' '}
                   <button
                     type="button"
-                    onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                    className="text-accent-slate hover:text-accent-slate/80 transition-colors"
+                    onClick={() => {
+                      setMode(mode === 'login' ? 'register' : 'login')
+                      setError('')
+                      setFormData({
+                        email: '',
+                        username: '',
+                        password: '',
+                        confirmPassword: '',
+                        rememberMe: false,
+                        agreeToTerms: false
+                      })
+                    }}
+                    className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
                   >
-                    {mode === 'login' ? 'Register' : 'Login'}
+                    {mode === 'login' ? 'Sign Up' : 'Sign In'}
                   </button>
-                </p>
+                </div>
               </div>
             </PremiumCard>
           </motion.div>
