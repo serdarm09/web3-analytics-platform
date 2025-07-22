@@ -101,7 +101,11 @@ export function useAuth() {
       
       return response.json()
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      // Store the token in localStorage
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token)
+      }
       await refetch()
       router.push('/dashboard')
     }
@@ -123,7 +127,11 @@ export function useAuth() {
       
       return response.json()
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      // Store the token in localStorage
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token)
+      }
       await refetch()
       router.push('/dashboard')
     }

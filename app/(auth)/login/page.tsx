@@ -49,18 +49,28 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const walletAddress = await connectWallet()
-      if (walletAddress) {
-        // Try to login with wallet
-        await login({
-          walletAddress: walletAddress,
-          loginMethod: 'wallet'
-        } as any)
-        router.push('/dashboard')
-      }
+      await connectWallet()
+      
+      // Wait a bit for the state to update
+      setTimeout(async () => {
+        if (address) {
+          // Try to login with wallet
+          try {
+            await login({
+              walletAddress: address,
+              loginMethod: 'wallet'
+            } as any)
+            router.push('/dashboard')
+          } catch (error: any) {
+            setError('Failed to login with wallet. Please try again.')
+          }
+        } else {
+          setError('Failed to connect wallet. Please try again.')
+        }
+        setIsLoading(false)
+      }, 1000)
     } catch (error: any) {
       setError('Failed to connect wallet. Please try again.')
-    } finally {
       setIsLoading(false)
     }
   }
