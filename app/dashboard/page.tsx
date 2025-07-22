@@ -85,10 +85,10 @@ export default function DashboardPage() {
 
   const fetchTrendingData = async () => {
     try {
-      const response = await fetch('/api/trending?limit=5')
+      const response = await fetch('/api/market-data/trending')
       if (response.ok) {
         const data = await response.json()
-        setTrendingCoins(data.data || [])
+        setTrendingCoins(data.coins || [])
       }
     } catch (error) {
       console.error('Error fetching trending data:', error)

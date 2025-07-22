@@ -47,29 +47,30 @@ export default function Home() {
       }
     }
     
-    const fetchTrendingData = async () => {
+    const fetchLandingData = async () => {
       try {
-        const response = await fetch('/api/trending?limit=3')
+        const response = await fetch('/api/landing-data')
         if (response.ok) {
           const data = await response.json()
-          setLiveData(prev => ({
-            ...prev,
-            trending: data.data || []
-          }))
+          setLiveData({
+            topGainers: data.topGainers || [],
+            trending: data.trending || [],
+            newListings: data.newListings || []
+          })
         }
       } catch (error) {
-        console.error('Error fetching trending data:', error)
+        console.error('Error fetching landing data:', error)
       }
     }
     
     // Fetch immediately
     fetchStats()
-    fetchTrendingData()
+    fetchLandingData()
     
     // Refresh every 30 seconds
     const interval = setInterval(() => {
       fetchStats()
-      fetchTrendingData()
+      fetchLandingData()
     }, 30000)
     
     return () => clearInterval(interval)
@@ -264,115 +265,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* Live Data Showcase */}
-        <section className="relative z-10 container-relaxed section-comfortable">
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="text-center mb-16 space-y-6"
-            >
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white">
-                Live Market <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">Intelligence</span>
-              </h2>
-            </motion.div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <PremiumCard className="p-6 bg-gray-900/50 border-gray-800">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Top Gainers</h3>
-                    <TrendingUp className="w-5 h-5 text-green-500" />
-                  </div>
-                  <div className="space-y-3">
-                    {liveData.topGainers.length > 0 ? (
-                      liveData.topGainers.map((coin, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-gray-400">{coin.symbol.toUpperCase()}</span>
-                          <span className="text-green-500 font-mono">+{coin.price_change_percentage_24h.toFixed(2)}%</span>
-                        </div>
-                      ))
-                    ) : (
-                      [1, 2, 3].map((i) => (
-                        <div key={i} className="animate-pulse flex justify-between items-center">
-                          <div className="h-4 bg-gray-800 rounded w-16"></div>
-                          <div className="h-4 bg-gray-800 rounded w-12"></div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </PremiumCard>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-              >
-                <PremiumCard className="p-6 bg-gray-900/50 border-gray-800">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Trending Now</h3>
-                    <AlertCircle className="w-5 h-5 text-yellow-500" />
-                  </div>
-                  <div className="space-y-3">
-                    {liveData.trending.length > 0 ? (
-                      liveData.trending.map((coin, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-gray-400">{coin.symbol}</span>
-                          <span className="text-yellow-500 font-mono text-sm">#{coin.marketCapRank}</span>
-                        </div>
-                      ))
-                    ) : (
-                      [1, 2, 3].map((i) => (
-                        <div key={i} className="animate-pulse flex justify-between items-center">
-                          <div className="h-4 bg-gray-800 rounded w-16"></div>
-                          <div className="h-4 bg-gray-800 rounded w-20"></div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </PremiumCard>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 }}
-              >
-                <PremiumCard className="p-6 bg-gray-900/50 border-gray-800">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">New Listings</h3>
-                    <Sparkles className="w-5 h-5 text-gray-400" />
-                  </div>
-                  <div className="space-y-3">
-                    {liveData.newListings.length > 0 ? (
-                      liveData.newListings.map((coin, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-gray-400">{coin.symbol.toUpperCase()}</span>
-                          <span className="text-gray-500 text-sm">${coin.current_price.toFixed(4)}</span>
-                        </div>
-                      ))
-                    ) : (
-                      [1, 2, 3].map((i) => (
-                        <div key={i} className="animate-pulse flex justify-between items-center">
-                          <div className="h-4 bg-gray-800 rounded w-16"></div>
-                          <div className="h-4 bg-gray-800 rounded w-16"></div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </PremiumCard>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
       </main>
       
       <AuthModal 

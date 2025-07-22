@@ -7,9 +7,17 @@ import { rateLimitPresets } from '@/lib/middleware/rateLimiter'
 export async function POST(request: NextRequest) {
   return rateLimitPresets.auth(request, async (req) => {
   try {
+    console.log('🔐 Login attempt started')
     await dbConnect()
 
     const body = await req.json()
+    console.log('📋 Login data received:', {
+      email: body.email ? 'PROVIDED' : 'NOT PROVIDED',
+      password: body.password ? 'PROVIDED' : 'NOT PROVIDED',
+      walletAddress: body.walletAddress ? 'PROVIDED' : 'NOT PROVIDED',
+      loginMethod: body.loginMethod
+    })
+    
     const { email, password, walletAddress, loginMethod } = body
 
     // Validate based on login method
@@ -100,9 +108,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Find user by email
+      console.log('🔍 Looking for user with email:', email?.toLowerCase())
       const user = await User.findOne({ email: email.toLowerCase() })
 
       if (!user) {
+        console.log('❌ User not found with email:', email?.toLowerCase())
         return NextResponse.json(
           { 
             error: 'Invalid email or password',
@@ -111,9 +121,13 @@ export async function POST(request: NextRequest) {
           { status: 401 }
         )
       }
+      
+      console.log('✅ User found:', { id: user._id, email: user.email, username: user.username, registrationMethod: user.registrationMethod })
 
       // Check password
+      console.log('🔐 Checking password...')
       const isPasswordValid = await user.comparePassword(password)
+      console.log('🔐 Password check result:', isPasswordValid)
 
       if (!isPasswordValid) {
         return NextResponse.json(

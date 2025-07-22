@@ -70,7 +70,7 @@ export interface TrendingCoin {
 export async function getTopCryptos(limit: number = 100): Promise<CryptoPrice[]> {
   try {
     const response = await fetch(
-      `${COINGECKO_API_BASE}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=1&sparkline=false&locale=en`
+      `/api/market-data?per_page=${limit}&sparkline=false`
     )
     
     if (!response.ok) {
@@ -87,9 +87,7 @@ export async function getTopCryptos(limit: number = 100): Promise<CryptoPrice[]>
 // Get specific crypto details
 export async function getCryptoDetails(id: string): Promise<CryptoDetail | null> {
   try {
-    const response = await fetch(
-      `${COINGECKO_API_BASE}/coins/${id}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`
-    )
+    const response = await fetch(`/api/market-data/${id}`)
     
     if (!response.ok) {
       throw new Error('Failed to fetch crypto details')
@@ -105,7 +103,7 @@ export async function getCryptoDetails(id: string): Promise<CryptoDetail | null>
 // Get trending cryptocurrencies
 export async function getTrendingCryptos(): Promise<TrendingCoin[]> {
   try {
-    const response = await fetch(`${COINGECKO_API_BASE}/search/trending`)
+    const response = await fetch('/api/market-data/trending')
     
     if (!response.ok) {
       throw new Error('Failed to fetch trending data')
@@ -126,7 +124,7 @@ export async function getCryptoPriceHistory(
 ): Promise<{ prices: [number, number][] }> {
   try {
     const response = await fetch(
-      `${COINGECKO_API_BASE}/coins/${id}/market_chart?vs_currency=usd&days=${days}&interval=daily`
+      `/api/market-data/${id}/history?days=${days}&vs_currency=usd&interval=daily`
     )
     
     if (!response.ok) {
@@ -143,7 +141,7 @@ export async function getCryptoPriceHistory(
 // Search cryptocurrencies
 export async function searchCryptos(query: string): Promise<any[]> {
   try {
-    const response = await fetch(`${COINGECKO_API_BASE}/search?query=${encodeURIComponent(query)}`)
+    const response = await fetch(`/api/market-data/search?query=${encodeURIComponent(query)}`)
     
     if (!response.ok) {
       throw new Error('Failed to search cryptos')
@@ -160,7 +158,7 @@ export async function searchCryptos(query: string): Promise<any[]> {
 // Get global crypto market data
 export async function getGlobalMarketData() {
   try {
-    const response = await fetch(`${COINGECKO_API_BASE}/global`)
+    const response = await fetch('/api/market-data/global')
     
     if (!response.ok) {
       throw new Error('Failed to fetch global market data')
@@ -179,7 +177,7 @@ export async function getCryptoPrices(ids: string[]): Promise<Record<string, any
   try {
     const idsString = ids.join(',')
     const response = await fetch(
-      `${COINGECKO_API_BASE}/simple/price?ids=${idsString}&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true`
+      `/api/market-data/prices?ids=${idsString}&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true`
     )
     
     if (!response.ok) {

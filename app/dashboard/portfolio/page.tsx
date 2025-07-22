@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, TrendingUp, TrendingDown, DollarSign, PieChart } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, TrendingUp, TrendingDown, DollarSign, PieChart, Wallet, Activity } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { usePortfolio } from '@/hooks/use-portfolio'
 import { PremiumCard } from '@/components/ui/premium-card'
@@ -9,31 +9,70 @@ import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumSkeleton } from '@/components/ui/premium-skeleton'
 import { AreaChart, PieChart as PieChartComponent } from '@/components/charts'
 import PortfolioCreationModal from '@/components/portfolio/PortfolioCreationModal'
+import PortfolioAssetManager from '@/components/portfolio/PortfolioAssetManager'
+
+interface Portfolio {
+  _id: string
+  name: string
+  description?: string
+  totalValue: number
+  totalCost: number
+  totalProfitLoss: number
+  totalProfitLossPercentage: number
+  assets: any[]
+  lastUpdated: string
+}
 
 export default function PortfolioPage() {
   const { portfolios, isLoading, createPortfolio, isCreating } = usePortfolio()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [selectedPortfolio, setSelectedPortfolio] = useState<Portfolio | null>(null)
+  const [viewMode, setViewMode] = useState<'overview' | 'detail'>('overview')
 
-  const totalValue = portfolios?.reduce((sum, p) => sum + p.totalValue, 0) || 0
-  const totalCost = portfolios?.reduce((sum, p) => sum + p.totalCost, 0) || 0
+  const totalValue = portfolios?.reduce((sum: number, p: any) => sum + p.totalValue, 0) || 0
+  const totalCost = portfolios?.reduce((sum: number, p: any) => sum + p.totalCost, 0) || 0
   const totalProfitLoss = totalValue - totalCost
   const totalProfitLossPercentage = totalCost > 0 ? (totalProfitLoss / totalCost) * 100 : 0
 
+  // Enhanced mock chart data with more realistic portfolio tracking
   const mockChartData = [
-    { name: 'Jan', value: 45000 },
-    { name: 'Feb', value: 52000 },
-    { name: 'Mar', value: 48000 },
-    { name: 'Apr', value: 61000 },
-    { name: 'May', value: 58000 },
-    { name: 'Jun', value: 67000 },
-    { name: 'Jul', value: 72000 }
+    { name: 'Jan', value: totalCost * 0.8 },
+    { name: 'Feb', value: totalCost * 0.9 },
+    { name: 'Mar', value: totalCost * 0.85 },
+    { name: 'Apr', value: totalCost * 1.1 },
+    { name: 'May', value: totalCost * 1.05 },
+    { name: 'Jun', value: totalCost * 1.2 },
+    { name: 'Jul', value: totalValue }
   ]
 
-  const pieData = portfolios?.map(p => ({
+  const pieData = portfolios?.map((p: any, index: number) => ({
     name: p.name,
     value: p.totalValue,
-    color: `#${Math.floor(Math.random()*16777215).toString(16)}`
+    color: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][index % 5]
   })) || []
+
+  const handlePortfolioSelect = (portfolio: Portfolio) => {
+    setSelectedPortfolio(portfolio)
+    setViewMode('detail')
+  }
+
+  const handleBackToOverview = () => {
+    setSelectedPortfolio(null)
+    setViewMode('overview')
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount)
+  }
+
+  const formatPercentage = (percentage: number) => {
+    return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`
+  }
 
   if (isLoading) {
     return (
@@ -45,6 +84,132 @@ export default function PortfolioPage() {
           ))}
         </div>
         <PremiumSkeleton className="h-96" />
+      </div>
+    )
+  }
+
+  if (viewMode === 'detail' && selectedPortfolio) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <button
+              onClick={handleBackToOverview}
+              className="text-accent-slate hover:text-white transition-colors mb-2 text-sm"
+            >
+              ← Back to Overview
+            </button>
+            <h1 className="text-3xl font-bold text-white">{selectedPortfolio.name}</h1>
+            {selectedPortfolio.description && (
+              <p className="text-gray-400 mt-1">{selectedPortfolio.description}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Portfolio Stats */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <PremiumCard className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Value</p>
+                  <p className="text-2xl font-bold text-white mt-1">
+                    {formatCurrency(selectedPortfolio.totalValue)}
+                  </p>
+                </div>
+                <div className="p-3 bg-accent-slate/20 rounded-lg">
+                  <DollarSign className="w-6 h-6 text-accent-slate" />
+                </div>
+              </div>
+            </PremiumCard>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <PremiumCard className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Cost</p>
+                  <p className="text-2xl font-bold text-white mt-1">
+                    {formatCurrency(selectedPortfolio.totalCost)}
+                  </p>
+                </div>
+                <div className="p-3 bg-blue-500/20 rounded-lg">
+                  <Wallet className="w-6 h-6 text-blue-400" />
+                </div>
+              </div>
+            </PremiumCard>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <PremiumCard className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Profit/Loss</p>
+                  <p className={`text-2xl font-bold mt-1 ${
+                    selectedPortfolio.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {formatCurrency(Math.abs(selectedPortfolio.totalProfitLoss))}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  selectedPortfolio.totalProfitLoss >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
+                }`}>
+                  {selectedPortfolio.totalProfitLoss >= 0 ? (
+                    <TrendingUp className="w-6 h-6 text-green-400" />
+                  ) : (
+                    <TrendingDown className="w-6 h-6 text-red-400" />
+                  )}
+                </div>
+              </div>
+            </PremiumCard>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <PremiumCard className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">P&L Percentage</p>
+                  <p className={`text-2xl font-bold mt-1 ${
+                    selectedPortfolio.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {formatPercentage(selectedPortfolio.totalProfitLossPercentage)}
+                  </p>
+                </div>
+                <div className={`p-3 rounded-lg ${
+                  selectedPortfolio.totalProfitLossPercentage >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
+                }`}>
+                  <Activity className="w-6 h-6 text-accent-slate" />
+                </div>
+              </div>
+            </PremiumCard>
+          </motion.div>
+        </div>
+
+        {/* Asset Manager */}
+        <PortfolioAssetManager
+          portfolioId={selectedPortfolio._id}
+          assets={selectedPortfolio.assets}
+          onAssetsUpdate={() => {
+            // Refresh portfolio data
+            window.location.reload()
+          }}
+        />
       </div>
     )
   }
@@ -73,7 +238,7 @@ export default function PortfolioPage() {
               <div>
                 <p className="text-sm text-gray-400">Total Value</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(totalValue)}
                 </p>
               </div>
               <div className="p-3 bg-accent-slate/20 rounded-lg">
@@ -93,7 +258,7 @@ export default function PortfolioPage() {
               <div>
                 <p className="text-sm text-gray-400">Total Cost</p>
                 <p className="text-2xl font-bold text-white mt-1">
-                  ${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(totalCost)}
                 </p>
               </div>
               <div className="p-3 bg-blue-500/20 rounded-lg">
@@ -113,7 +278,7 @@ export default function PortfolioPage() {
               <div>
                 <p className="text-sm text-gray-400">Profit/Loss</p>
                 <p className={`text-2xl font-bold mt-1 ${totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  ${Math.abs(totalProfitLoss).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(Math.abs(totalProfitLoss))}
                 </p>
               </div>
               <div className={`p-3 rounded-lg ${totalProfitLoss >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
@@ -137,7 +302,7 @@ export default function PortfolioPage() {
               <div>
                 <p className="text-sm text-gray-400">ROI</p>
                 <p className={`text-2xl font-bold mt-1 ${totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {totalProfitLossPercentage >= 0 ? '+' : ''}{totalProfitLossPercentage.toFixed(2)}%
+                  {formatPercentage(totalProfitLossPercentage)}
                 </p>
               </div>
               <div className="p-3 bg-accent-teal/20 rounded-lg">
@@ -185,8 +350,12 @@ export default function PortfolioPage() {
           <h2 className="text-xl font-semibold text-white mb-4">Your Portfolios</h2>
           {portfolios && portfolios.length > 0 ? (
             <div className="space-y-4">
-              {portfolios.map((portfolio) => (
-                <div key={portfolio.id} className="border border-gray-800 rounded-lg p-4 hover:border-accent-slate/50 transition-colors">
+              {portfolios.map((portfolio: any) => (
+                <div 
+                  key={portfolio._id || portfolio.id} 
+                  className="border border-gray-800 rounded-lg p-4 hover:border-accent-slate/50 transition-colors cursor-pointer"
+                  onClick={() => handlePortfolioSelect(portfolio)}
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-medium text-white">{portfolio.name}</h3>
@@ -198,10 +367,10 @@ export default function PortfolioPage() {
                           {portfolio.assets.length} assets
                         </span>
                         <span className="text-sm text-gray-400">
-                          Value: ${portfolio.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          Value: {formatCurrency(portfolio.totalValue)}
                         </span>
                         <span className={`text-sm ${portfolio.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {portfolio.totalProfitLossPercentage >= 0 ? '+' : ''}{portfolio.totalProfitLossPercentage.toFixed(2)}%
+                          {formatPercentage(portfolio.totalProfitLossPercentage)}
                         </span>
                       </div>
                     </div>
@@ -226,6 +395,7 @@ export default function PortfolioPage() {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={() => {
+          setShowCreateModal(false)
           // Refresh portfolios after creation
           window.location.reload()
         }}

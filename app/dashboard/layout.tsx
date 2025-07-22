@@ -18,13 +18,30 @@ export default function DashboardLayout({
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // Remove the redirect logic from here since middleware handles it
+  useEffect(() => {
+    console.log('🔐 Dashboard Layout Auth Check:', { user: !!user, isLoading, isAuthenticated })
+    
+    if (!isLoading && !isAuthenticated) {
+      console.log('❌ User not authenticated, redirecting to login')
+      router.push('/login')
+      return
+    }
+  }, [user, isLoading, isAuthenticated, router])
 
   // Show loading state
   if (isLoading) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-slate"></div>
+      </div>
+    );
+  }
+
+  // Show redirect state  
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Redirecting to login...</div>
       </div>
     );
   }

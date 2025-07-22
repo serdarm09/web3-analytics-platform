@@ -24,6 +24,15 @@ export async function POST(request: NextRequest) {
     console.log('✅ Database connected successfully')
 
     const body = await req.json()
+    console.log('📋 Registration data received:', {
+      email: body.email ? 'PROVIDED' : 'NOT PROVIDED',
+      username: body.username,
+      password: body.password ? 'PROVIDED' : 'NOT PROVIDED',
+      name: body.name,
+      walletAddress: body.walletAddress ? 'PROVIDED' : 'NOT PROVIDED',
+      registrationMethod: body.registrationMethod
+    })
+    
     const { email, username, password, name, walletAddress, registrationMethod } = body
 
     // Validate username for both registration methods
@@ -38,8 +47,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if username already exists
+    console.log('🔍 Checking if username exists:', username)
     const existingUsername = await User.findOne({ username })
     if (existingUsername) {
+      console.log('❌ Username already exists:', username)
       return NextResponse.json(
         { 
           error: 'Username is already taken',
@@ -48,6 +59,7 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       )
     }
+    console.log('✅ Username is available:', username)
 
     // Validate required fields based on registration method
     if (registrationMethod === 'wallet') {
@@ -108,8 +120,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if user already exists (only for email registration)
+      console.log('🔍 Checking if email exists:', email?.toLowerCase())
       const existingUser = await User.findOne({ email: email.toLowerCase() })
       if (existingUser) {
+        console.log('❌ Email already exists:', email?.toLowerCase())
         return NextResponse.json(
           { 
             error: 'User with this email already exists',
@@ -118,6 +132,7 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         )
       }
+      console.log('✅ Email is available:', email?.toLowerCase())
     } else {
       return NextResponse.json(
         { 

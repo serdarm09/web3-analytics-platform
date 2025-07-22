@@ -44,21 +44,29 @@ export function useAuth() {
         // Get token from localStorage
         const token = localStorage.getItem('auth_token')
         
+        console.log('🔍 Auth token from localStorage:', token ? 'EXISTS' : 'NOT FOUND')
+        
         if (!token) {
+          console.log('❌ No token found, user not authenticated')
           return null
         }
         
+        console.log('🚀 Making request to /api/auth/me with token')
         const response = await fetch('/api/auth/me', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           },
           credentials: 'include'
         })
         
+        console.log('📡 Auth response status:', response.status)
+        
         if (!response.ok) {
-          console.log('Auth response status:', response.status)
+          console.log('❌ Auth response not ok:', response.status)
           if (response.status === 401 || response.status === 404) {
             // Token is invalid, remove it
+            console.log('🗑️ Removing invalid token')
             localStorage.removeItem('auth_token')
             return null
           }
@@ -71,6 +79,7 @@ export function useAuth() {
         }
         
         const data = await response.json()
+        console.log('✅ User data received:', data.user ? 'SUCCESS' : 'NO USER')
         return data.user
       } catch (error) {
         console.error('Error fetching user:', error)
@@ -101,7 +110,7 @@ export function useAuth() {
       
       return response.json()
     },
-    onSuccess: async (data) => {
+    onSuccess: async (data: any) => {
       // Store the token in localStorage
       if (data.token) {
         localStorage.setItem('auth_token', data.token)
@@ -127,7 +136,7 @@ export function useAuth() {
       
       return response.json()
     },
-    onSuccess: async (data) => {
+    onSuccess: async (data: any) => {
       // Store the token in localStorage
       if (data.token) {
         localStorage.setItem('auth_token', data.token)
