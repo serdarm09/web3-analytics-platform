@@ -55,7 +55,8 @@ export default function RegisterPage() {
         username: formData.name,
         name: formData.name,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        registrationMethod: 'email'
       })
       router.push('/dashboard')
     } catch (error: any) {
@@ -71,12 +72,28 @@ export default function RegisterPage() {
 
     try {
       await connectWallet()
-      if (address) {
-        router.push('/dashboard')
-      }
+      
+      // Wait a bit for the state to update
+      setTimeout(async () => {
+        if (address) {
+          try {
+            // Register with wallet
+            await register({
+              username: `User-${address.slice(0, 6)}`,
+              walletAddress: address,
+              registrationMethod: 'wallet'
+            } as any)
+            router.push('/dashboard')
+          } catch (error: any) {
+            setError(error.message || 'Failed to register with wallet.')
+          }
+        } else {
+          setError('Failed to connect wallet. Please try again.')
+        }
+        setIsLoading(false)
+      }, 1000)
     } catch (error: any) {
       setError('Failed to connect wallet. Please try again.')
-    } finally {
       setIsLoading(false)
     }
   }
