@@ -33,7 +33,8 @@ export default function LoginPage() {
     try {
       await login({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        loginMethod: 'email'
       })
       router.push('/dashboard')
     } catch (error: any) {
@@ -48,8 +49,13 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      await connectWallet()
-      if (address) {
+      const walletAddress = await connectWallet()
+      if (walletAddress) {
+        // Try to login with wallet
+        await login({
+          walletAddress: walletAddress,
+          loginMethod: 'wallet'
+        } as any)
         router.push('/dashboard')
       }
     } catch (error: any) {

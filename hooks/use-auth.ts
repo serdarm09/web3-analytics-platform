@@ -22,6 +22,7 @@ interface User {
 interface LoginData {
   email: string
   password: string
+  loginMethod?: 'email' | 'wallet'
 }
 
 interface RegisterData extends LoginData {
