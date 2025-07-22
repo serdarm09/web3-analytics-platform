@@ -22,6 +22,7 @@ export interface IPortfolio extends Document {
   totalProfitLoss: number
   totalProfitLossPercentage: number
   lastUpdated: Date
+  calculateMetrics(): void
 }
 
 const assetSchema = new Schema<IAsset>({

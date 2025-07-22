@@ -131,45 +131,6 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-        // Return mock data for now
-        const mockWalletData = {
-          address: address.toLowerCase(),
-          ens: undefined,
-          totalValue: 0,
-          totalChange24h: 0,
-          transactionCount: 0,
-          firstSeen: new Date(),
-          lastActive: new Date(),
-          isContract: false,
-          tags: [],
-          holdings: [],
-          recentTransactions: [],
-          profitLoss: 0,
-          realizedPnL: 0,
-          unrealizedPnL: 0,
-          trackingUsers: userId ? [userId] : [],
-          chain: 'ethereum'
-        }
-        
-        return NextResponse.json(mockWalletData)
-      }
-    } else {
-      // Add user to tracking if not already tracking
-      if (userId && !wallet.trackingUsers.includes(userId)) {
-        wallet.trackingUsers.push(userId)
-        await wallet.save()
-      }
-    }
-
-    return NextResponse.json(wallet)
-  } catch (error) {
-    console.error('Error fetching wallet:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch wallet' },
-      { status: 500 }
-    )
-  }
-}
 
 export async function POST(request: NextRequest) {
   try {

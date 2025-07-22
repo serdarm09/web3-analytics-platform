@@ -145,7 +145,7 @@ class WalletService {
       
       const walletData: WalletData = {
         address,
-        ens,
+        ens: ens || undefined,
         totalValue,
         totalChange24h,
         transactionCount,

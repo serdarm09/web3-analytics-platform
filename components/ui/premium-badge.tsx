@@ -4,7 +4,7 @@ import { HTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface PremiumBadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'success' | 'warning' | 'error' | 'info' | 'default' | 'outline' | 'gradient'
+  variant?: 'success' | 'warning' | 'error' | 'info' | 'default' | 'outline' | 'gradient' | 'primary' | 'gold'
   size?: 'sm' | 'md' | 'lg'
   pulse?: boolean
 }
@@ -32,7 +32,9 @@ export function PremiumBadge({
     info: 'bg-gray-500/20 text-gray-400 border border-gray-500/30 backdrop-blur-sm',
     default: 'bg-black-tertiary/80 text-white border border-gray-600 backdrop-blur-sm',
     outline: 'bg-transparent text-gray-400 border border-gray-500/50 backdrop-blur-sm hover:bg-gray-500/10',
-    gradient: 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border border-white/10 backdrop-blur-sm'
+    gradient: 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border border-white/10 backdrop-blur-sm',
+    primary: 'bg-blue-500/20 text-blue-400 border border-blue-500/30 backdrop-blur-sm',
+    gold: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 backdrop-blur-sm'
   }
   
   return (

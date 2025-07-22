@@ -4,10 +4,10 @@ const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const { searchParams } = new URL(request.url)
     const days = searchParams.get('days') || '7'
     const vsCurrency = searchParams.get('vs_currency') || 'usd'
