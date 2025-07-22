@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { useAuth } from "@/hooks/use-auth"
+import { toast } from "sonner"
 import {
   User,
   Bell,
@@ -93,9 +95,26 @@ const mockSettings: UserSettings = {
 }
 
 export default function SettingsPage() {
+  const { user } = useAuth()
   const [settings, setSettings] = useState<UserSettings>(mockSettings)
   const [activeSection, setActiveSection] = useState("profile")
   const [unsavedChanges, setUnsavedChanges] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      setSettings(prev => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          name: user.username || '',
+          email: user.email || '',
+          username: user.username || '',
+          walletAddress: user.walletAddress || ''
+        }
+      }))
+    }
+  }, [user])
 
   const sections = [
     { id: "profile", label: "Profile", icon: User },

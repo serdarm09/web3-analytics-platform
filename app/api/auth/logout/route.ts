@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withAuth } from '@/lib/auth/middleware'
 
-async function handler(request: NextRequest): Promise<NextResponse> {
+export async function POST(request: NextRequest) {
   try {
     // Create response
     const response = NextResponse.json(
@@ -21,6 +20,15 @@ async function handler(request: NextRequest): Promise<NextResponse> {
       path: '/'
     })
 
+    // Also clear any other auth-related cookies
+    response.cookies.set('auth_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/'
+    })
+
     return response
   } catch (error) {
     console.error('Logout error:', error)
@@ -33,5 +41,3 @@ async function handler(request: NextRequest): Promise<NextResponse> {
     )
   }
 }
-
-export const POST = withAuth(handler)

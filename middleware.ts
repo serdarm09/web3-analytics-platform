@@ -3,26 +3,37 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value
+  const pathname = request.nextUrl.pathname
 
-  // Check if the user is trying to access a protected route
-  if (request.nextUrl.pathname.startsWith('/dashboard')) {
-    if (!token) {
-      // Redirect to login if no token
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
+  // List of protected routes
+  const protectedRoutes = ['/dashboard', '/portfolio', '/projects', '/analytics', '/watchlist', '/alerts', '/settings']
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+
+  // Auth routes
+  const authRoutes = ['/login', '/register']
+  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
+
+  // Check if the user is trying to access a protected route without token
+  if (isProtectedRoute && !token) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Check if the user is trying to access auth routes while logged in
-  if (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')) {
-    if (token) {
-      // Redirect to dashboard if already logged in
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-  }
-
+  // Don't redirect from auth pages even if token exists
+  // Let the auth pages handle their own logic
+  
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/register']
+  matcher: [
+    '/dashboard/:path*', 
+    '/portfolio/:path*',
+    '/projects/:path*',
+    '/analytics/:path*',
+    '/watchlist/:path*',
+    '/alerts/:path*',
+    '/settings/:path*',
+    '/login', 
+    '/register'
+  ]
 }

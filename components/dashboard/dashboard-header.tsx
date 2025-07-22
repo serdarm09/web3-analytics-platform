@@ -4,6 +4,7 @@ import { Bell, User, Menu } from 'lucide-react'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '@/hooks/use-auth'
 
 interface DashboardHeaderProps {
   onMenuClick?: () => void;
@@ -12,6 +13,7 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const { user, logout } = useAuth()
 
   const notifications = [
     {
@@ -122,8 +124,8 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                     <User className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-medium text-white">John Doe</p>
-                    <p className="text-xs text-gray-400">john@example.com</p>
+                    <p className="font-medium text-white">{user?.username || 'User'}</p>
+                    <p className="text-xs text-gray-400">{user?.email || 'No email'}</p>
                   </div>
                 </div>
                 <div className="pt-3 space-y-2">
@@ -133,7 +135,10 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                   <a href="/dashboard/settings#billing" className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-secondary rounded-lg transition-colors">
                     Billing & Plans
                   </a>
-                  <button className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-secondary rounded-lg transition-colors">
+                  <button 
+                    onClick={() => logout()}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-secondary rounded-lg transition-colors"
+                  >
                     Sign Out
                   </button>
                 </div>
