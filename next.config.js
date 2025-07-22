@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost', 'assets.coingecko.com', 'cryptologos.cc'],
+    domains: ['localhost', 'assets.coingecko.com', 'cryptologos.cc', 'ui-avatars.com'],
   },
   eslint: {
     ignoreDuringBuilds: true,

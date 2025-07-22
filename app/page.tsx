@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, BarChart3, TrendingUp, Shield, Activity, Zap, Users, Lock, Globe, ChartLine, Database, Rocket, Search, Bell, Wallet, LineChart, DollarSign, Coins, Sparkles, Star, Crown, Gem, Eye, AlertCircle, PieChart } from 'lucide-react'
 import { PremiumButton } from '@/components/ui/premium-button'
@@ -8,11 +9,12 @@ import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { Navbar } from '@/components/layout/navbar'
 import { AuthModal } from '@/components/auth/AuthModal'
-import { SplineScene } from '@/components/ui/spline'
+// import { SplineScene } from '@/components/ui/spline'
 import { Web3Hero } from '@/components/ui/web3-hero'
-import { cryptoDataService } from '@/lib/services/cryptoDataService'
+// import { cryptoDataService } from '@/lib/services/cryptoDataService'
 
 export default function Home() {
+  const router = useRouter()
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({ 
     isOpen: false, 
     mode: 'register' 
@@ -45,35 +47,50 @@ export default function Home() {
       }
     }
     
+    const fetchTrendingData = async () => {
+      try {
+        const response = await fetch('/api/trending?limit=3')
+        if (response.ok) {
+          const data = await response.json()
+          setLiveData(prev => ({
+            ...prev,
+            trending: data.data || []
+          }))
+        }
+      } catch (error) {
+        console.error('Error fetching trending data:', error)
+      }
+    }
+    
     // Fetch immediately
     fetchStats()
-    fetchLiveData()
+    fetchTrendingData()
     
     // Refresh every 30 seconds
     const interval = setInterval(() => {
       fetchStats()
-      fetchLiveData()
+      fetchTrendingData()
     }, 30000)
     
     return () => clearInterval(interval)
   }, [])
 
-  const fetchLiveData = async () => {
-    try {
-      const [gainersLosers, trending] = await Promise.all([
-        cryptoDataService.getTopGainersLosers(3),
-        cryptoDataService.getTrendingCryptos()
-      ])
+  // const fetchLiveData = async () => {
+  //   try {
+  //     const [gainersLosers, trending] = await Promise.all([
+  //       cryptoDataService.getTopGainersLosers(3),
+  //       cryptoDataService.getTrendingCryptos()
+  //     ])
 
-      setLiveData({
-        topGainers: gainersLosers.gainers.slice(0, 3),
-        trending: trending.slice(0, 3),
-        newListings: gainersLosers.gainers.slice(3, 6) // Temporary - ideally would be actual new listings
-      })
-    } catch (error) {
-      console.error('Error fetching live data:', error)
-    }
-  }
+  //     setLiveData({
+  //       topGainers: gainersLosers.gainers.slice(0, 3),
+  //       trending: trending.slice(0, 3),
+  //       newListings: gainersLosers.gainers.slice(3, 6) // Temporary - ideally would be actual new listings
+  //     })
+  //   } catch (error) {
+  //     console.error('Error fetching live data:', error)
+  //   }
+  // }
 
   const features = [
     {
@@ -131,69 +148,10 @@ export default function Home() {
           title1="Real-Time Crypto"
           title2="Analytics Platform"
           description="Track 20,000+ tokens across all major chains • Analyze whale movements • Professional trading tools • DeFi ecosystem insights"
-          onLaunchApp={() => setAuthModal({ isOpen: true, mode: 'register' })}
-          onViewDemo={() => setAuthModal({ isOpen: true, mode: 'login' })}
+          onLaunchApp={() => router.push('/register')}
+          onViewDemo={() => router.push('/login')}
         />
 
-        {/* 3D Visualization Section */}
-        <section className="relative z-10 container-relaxed py-12">
-          <div className="max-w-7xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="relative"
-            >
-              <div className="bg-black/50 backdrop-blur-xl rounded-2xl border border-gray-800 overflow-hidden">
-                <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[500px]">
-                  {/* Left content */}
-                  <div className="p-8 lg:p-12 flex flex-col justify-center">
-                    <motion.div
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.8 }}
-                    >
-                      <PremiumBadge variant="outline" className="mb-4 inline-flex">
-                        <Zap className="w-3 h-3 mr-1" />
-                        Interactive Experience
-                      </PremiumBadge>
-                      <h2 className="text-3xl lg:text-4xl font-bold mb-4 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                        Visualize the Web3 Ecosystem
-                      </h2>
-                      <p className="text-gray-400 mb-6 leading-relaxed">
-                        Experience real-time data visualization with our interactive 3D interface. 
-                        Track market movements, analyze trends, and discover opportunities in an immersive environment.
-                      </p>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-accent-teal rounded-full"></div>
-                          <span className="text-gray-300">Real-time market data</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-accent-teal rounded-full"></div>
-                          <span className="text-gray-300">Interactive 3D charts</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-accent-teal rounded-full"></div>
-                          <span className="text-gray-300">Smart analytics engine</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-
-                  {/* Right content - 3D Scene */}
-                  <div className="relative h-[500px] lg:h-auto">
-                    <div className="absolute inset-0 bg-gradient-to-br from-accent-slate/20 to-accent-teal/20"></div>
-                    <SplineScene 
-                      scene="https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode"
-                      className="w-full h-full"
-                    />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
 
         {/* Stats Section */}
         <section className="relative z-10 container-relaxed section-comfortable">
@@ -366,8 +324,8 @@ export default function Home() {
                     {liveData.trending.length > 0 ? (
                       liveData.trending.map((coin, i) => (
                         <div key={i} className="flex justify-between items-center">
-                          <span className="text-gray-400">{coin.item.symbol}</span>
-                          <span className="text-yellow-500 font-mono text-sm">#{coin.item.market_cap_rank}</span>
+                          <span className="text-gray-400">{coin.symbol}</span>
+                          <span className="text-yellow-500 font-mono text-sm">#{coin.marketCapRank}</span>
                         </div>
                       ))
                     ) : (
@@ -415,55 +373,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="relative z-10 container-relaxed section-loose">
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1, duration: 0.5 }}
-            >
-              <PremiumCard variant="gradient" className="text-center bg-gradient-to-r from-gray-900 to-black border-gray-800 relative overflow-hidden">
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                  animate={{ x: [-1000, 1000] }}
-                  transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
-                />
-                <motion.h2 
-                  className="text-4xl font-bold text-white mb-4"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8 }}
-                >
-                  Ready to Start?
-                </motion.h2>
-                <motion.p 
-                  className="text-xl text-gray-400 mb-8"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                >
-                  Get instant access to professional crypto analytics
-                </motion.p>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <PremiumButton 
-                    size="lg" 
-                    variant="glow" 
-                    className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 group"
-                    onClick={() => setAuthModal({ isOpen: true, mode: 'register' })}
-                  >
-                    <Sparkles className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-                    Launch App
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </PremiumButton>
-                </motion.div>
-              </PremiumCard>
-            </motion.div>
-          </div>
-        </section>
       </main>
       
       <AuthModal 

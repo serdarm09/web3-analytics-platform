@@ -113,11 +113,15 @@ export default function RegisterPage() {
         return
       }
 
-      // Store token in localStorage
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, data.token)
+      // Store token in localStorage if provided
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token)
+      }
       
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Wait a bit for auth state to update
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 100)
     } catch (error) {
       setErrors({ ...errors, general: 'Something went wrong. Please try again.' })
     } finally {

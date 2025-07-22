@@ -1,9 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { DashboardHeader } from '@/components/dashboard/dashboard-header'
 import { motion } from 'framer-motion'
+import { useAuth } from '@/hooks/use-auth'
+import { toast } from 'sonner'
 
 export default function DashboardLayout({
   children,
@@ -12,6 +15,19 @@ export default function DashboardLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  // Remove the redirect logic from here since middleware handles it
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-black flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-black-primary">

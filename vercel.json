@@ -3,6 +3,10 @@
     {
       "path": "/api/cron",
       "schedule": "0 */30 * * * *"
+    },
+    {
+      "path": "/api/cron/sync-trending",
+      "schedule": "0 */15 * * * *"
     }
   ],
   "functions": {
@@ -11,6 +15,12 @@
     },
     "app/api/cron/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/cron/sync-trending/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/trending/route.ts": {
+      "maxDuration": 30
     }
   }
 }

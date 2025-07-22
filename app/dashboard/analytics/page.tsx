@@ -132,20 +132,6 @@ export default function AnalyticsPage() {
                 Deep insights into market trends and portfolio performance
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <PremiumButton variant="outline" size="sm">
-                <Calendar className="h-4 w-4 mr-2" />
-                Date Range
-              </PremiumButton>
-              <PremiumButton variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </PremiumButton>
-              <PremiumButton size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </PremiumButton>
-            </div>
           </div>
         </motion.div>
 

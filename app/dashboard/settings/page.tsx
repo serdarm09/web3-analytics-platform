@@ -221,9 +221,6 @@ export default function SettingsPage() {
                         <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-gray-900"></div>
                       </div>
                       <div>
-                        <PremiumButton variant="outline" size="sm">
-                          Change Avatar
-                        </PremiumButton>
                         <p className="text-sm text-gray-400 mt-1">
                           JPG, PNG or GIF. Max 2MB
                         </p>
@@ -281,14 +278,6 @@ export default function SettingsPage() {
                 <PremiumCard className="p-6 bg-gray-900/50 backdrop-blur-xl border border-gray-700">
                   <h3 className="text-lg font-semibold mb-4 text-white">Account Actions</h3>
                   <div className="space-y-3">
-                    <PremiumButton variant="outline" className="w-full justify-start text-white hover:text-white">
-                      <Key className="h-4 w-4 mr-2" />
-                      Change Password
-                    </PremiumButton>
-                    <PremiumButton variant="ghost" className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
-                    </PremiumButton>
                   </div>
                 </PremiumCard>
               </motion.div>
@@ -540,15 +529,8 @@ export default function SettingsPage() {
                                 Created {key.created.toLocaleDateString()} • Last used {key.lastUsed.toLocaleDateString()}
                               </p>
                             </div>
-                            <PremiumButton size="sm" variant="ghost">
-                              <X className="h-4 w-4" />
-                            </PremiumButton>
                           </div>
                         ))}
-                        <PremiumButton variant="outline" className="w-full">
-                          <Key className="h-4 w-4 mr-2" />
-                          Generate New API Key
-                        </PremiumButton>
                       </div>
                     </div>
                   </div>
@@ -583,12 +565,6 @@ export default function SettingsPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <PremiumButton className="w-full">
-                        Upgrade to Enterprise
-                      </PremiumButton>
-                      <PremiumButton variant="outline" className="w-full">
-                        Manage Billing
-                      </PremiumButton>
                     </div>
 
                     <div className="pt-4 border-t">

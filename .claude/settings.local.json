@@ -59,7 +59,8 @@
       "Bash(wc:*)",
       "Bash(sed:*)",
       "Bash(del C:UsersuserDesktopWeb3Platformweb3-analytics-platformlibdatabasetemporary-adapter.ts)",
-      "Bash(del \"C:\\Users\\user\\Desktop\\Web3Platform\\web3-analytics-platform\\config\\database.js\")"
+      "Bash(del \"C:\\Users\\user\\Desktop\\Web3Platform\\web3-analytics-platform\\config\\database.js\")",
+      "Bash(head:*)"
     ],
     "deny": []
   }

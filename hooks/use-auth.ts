@@ -34,15 +34,33 @@ export function useAuth() {
     queryKey: ['user'],
     queryFn: async () => {
       try {
+        // Get token from localStorage
+        const token = localStorage.getItem('auth_token')
+        
+        if (!token) {
+          return null
+        }
+        
         const response = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
           credentials: 'include'
         })
         
         if (!response.ok) {
-          if (response.status === 401) {
+          console.log('Auth response status:', response.status)
+          if (response.status === 401 || response.status === 404) {
+            // Token is invalid, remove it
+            localStorage.removeItem('auth_token')
             return null
           }
-          throw new Error('Failed to fetch user')
+          if (response.status >= 500) {
+            console.error('Server error while fetching user')
+            return null
+          }
+          // Handle all other error cases
+          return null
         }
         
         const data = await response.json()
@@ -118,6 +136,9 @@ export function useAuth() {
       return response.json()
     },
     onSuccess: () => {
+      // Clear localStorage
+      localStorage.removeItem('auth_token')
+      // Clear query cache
       queryClient.setQueryData(['user'], null)
       queryClient.clear()
       router.push('/login')

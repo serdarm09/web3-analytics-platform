@@ -205,9 +205,6 @@ export default function PortfolioPage() {
                         </span>
                       </div>
                     </div>
-                    <PremiumButton variant="outline" size="sm">
-                      View Details
-                    </PremiumButton>
                   </div>
                 </div>
               ))}

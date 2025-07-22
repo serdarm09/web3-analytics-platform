@@ -2,16 +2,16 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, BarChart3, TrendingUp, Home, ArrowRight } from 'lucide-react'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { useState } from 'react'
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
 
   const navItems = [
     { label: 'Features', href: '#features' },
-    { label: 'Pricing', href: '#pricing' },
     { label: 'About', href: '#about' },
     { label: 'Contact', href: '#contact' },
   ]
@@ -20,10 +20,88 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black-primary/80 glassmorphism-dark">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg" />
-            <span className="text-xl font-bold text-white">Web3Analytics</span>
+          {/* Enhanced Logo */}
+          <Link 
+            href="/" 
+            className="flex items-center space-x-3 group"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            {/* Logo Icon Container */}
+            <motion.div 
+              className="relative w-10 h-10 flex items-center justify-center"
+              animate={{ 
+                scale: isHovered ? 1.1 : 1,
+                rotate: isHovered ? 5 : 0 
+              }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              {/* Background glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-500/20 via-gray-600/20 to-gray-700/20 rounded-xl blur-lg group-hover:blur-xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+              
+              {/* Main logo container */}
+              <div className="relative bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl p-2 border border-gray-600/30 group-hover:border-gray-500/50 transition-all duration-300 overflow-hidden">
+                {/* Pulse effect */}
+                <motion.div
+                  className="absolute inset-0 bg-white/10 rounded-xl"
+                  animate={isHovered ? {
+                    scale: [1, 1.5, 2],
+                    opacity: [0.3, 0.1, 0]
+                  } : {}}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+                
+                {/* Icon */}
+                <motion.div className="relative flex items-center justify-center">
+                  <BarChart3 className="w-5 h-5 text-white" />
+                  
+                  {/* Animated bars */}
+                  <motion.div className="absolute inset-0 flex items-end justify-center gap-0.5">
+                    {[0.3, 0.7, 0.5, 0.9].map((height, i) => (
+                      <motion.div
+                        key={i}
+                        className="w-0.5 bg-gray-300/60"
+                        animate={{
+                          height: isHovered ? `${height * 16}px` : '2px',
+                          opacity: isHovered ? 1 : 0
+                        }}
+                        transition={{ 
+                          delay: i * 0.1,
+                          duration: 0.3,
+                          ease: "easeOut"
+                        }}
+                      />
+                    ))}
+                  </motion.div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Logo Text */}
+            <div className="flex flex-col">
+              <motion.span 
+                className="text-xl font-bold"
+                animate={{
+                  backgroundImage: isHovered 
+                    ? "linear-gradient(to right, #60a5fa, #ffffff, #a78bfa)"
+                    : "linear-gradient(to right, #ffffff, #e5e7eb, #dbeafe)"
+                }}
+                style={{
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent"
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                {isHovered ? "Analytics Pro" : "Web3Analytics"}
+              </motion.span>
+              <motion.span 
+                className="text-xs text-gray-500/70 group-hover:text-gray-400 transition-colors duration-300 -mt-1"
+                animate={{ opacity: isHovered ? 1 : 0.7 }}
+              >
+                Powered by 0xBenzen
+              </motion.span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
@@ -41,13 +119,46 @@ export function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-comfortable">
+            <Link href="/">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <PremiumButton 
+                  variant="outline" 
+                  size="sm"
+                  className="group relative overflow-hidden"
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: 0 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                  <span className="relative flex items-center gap-2">
+                    <Home className="w-4 h-4" />
+                    Landing Page
+                    <motion.div
+                      animate={{ x: [0, 3, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <ArrowRight className="w-3 h-3" />
+                    </motion.div>
+                  </span>
+                </PremiumButton>
+              </motion.div>
+            </Link>
             <Link href="/login">
               <PremiumButton variant="ghost" size="sm">
                 Sign In
               </PremiumButton>
             </Link>
             <Link href="/register">
-              <PremiumButton variant="gradient" size="sm">
+              <PremiumButton 
+                variant="gradient" 
+                size="sm"
+                className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600"
+              >
                 Get Started
               </PremiumButton>
             </Link>
@@ -72,6 +183,14 @@ export function Navbar() {
           className="md:hidden bg-gray-primary border-t border-gray-border"
         >
           <div className="container-comfortable py-6 space-y-relaxed">
+            <Link 
+              href="/" 
+              className="flex items-center gap-2 text-white-secondary hover:text-white transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Home className="w-4 h-4" />
+              Landing Page
+            </Link>
             {navItems.map((item) => (
               <Link
                 key={item.label}
@@ -89,7 +208,11 @@ export function Navbar() {
                 </PremiumButton>
               </Link>
               <Link href="/register" className="block">
-                <PremiumButton variant="gradient" size="sm" className="w-full">
+                <PremiumButton 
+                  variant="gradient" 
+                  size="sm" 
+                  className="w-full bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600"
+                >
                   Get Started
                 </PremiumButton>
               </Link>

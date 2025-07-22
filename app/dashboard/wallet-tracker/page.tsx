@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@/hooks/use-auth"
 import { 
   Wallet, 
   ArrowUpRight, 
@@ -73,88 +74,14 @@ interface WalletData {
   unrealizedPnL: number
 }
 
-const mockWalletData: WalletData = {
-  address: "0x742d35Cc6634C0532925a3b844Bc9e7595f8fA34",
-  ens: "vitalik.eth",
-  totalValue: 2543678.45,
-  totalChange24h: 5.67,
-  transactionCount: 45678,
-  firstSeen: new Date("2015-07-30"),
-  lastActive: new Date(Date.now() - 1000 * 60 * 30),
-  isContract: false,
-  tags: ["Early Adopter", "DeFi User", "NFT Collector"],
-  holdings: [
-    {
-      symbol: "ETH",
-      name: "Ethereum",
-      address: "0x0000000000000000000000000000000000000000",
-      balance: 523.45,
-      value: 1285676.50,
-      price: 2456.78,
-      change24h: -2.15,
-      allocation: 50.5
-    },
-    {
-      symbol: "USDC",
-      name: "USD Coin",
-      address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-      balance: 456789.23,
-      value: 456789.23,
-      price: 1.00,
-      change24h: 0.01,
-      allocation: 17.9
-    },
-    {
-      symbol: "UNI",
-      name: "Uniswap",
-      address: "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-      balance: 12345.67,
-      value: 234567.73,
-      price: 19.00,
-      change24h: 8.45,
-      allocation: 9.2
-    }
-  ],
-  recentTransactions: [
-    {
-      id: "1",
-      type: "receive",
-      token: "ETH",
-      tokenAddress: "0x0000000000000000000000000000000000000000",
-      amount: 10.5,
-      value: 25795.19,
-      from: "0x1234567890123456789012345678901234567890",
-      to: "0x742d35Cc6634C0532925a3b844Bc9e7595f8fA34",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30),
-      txHash: "0xabc123def456789abc123def456789abc123def456789abc123def456789",
-      gasUsed: 21000,
-      status: "success"
-    },
-    {
-      id: "2",
-      type: "swap",
-      token: "UNI",
-      tokenAddress: "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
-      amount: 500,
-      value: 9500,
-      from: "0x742d35Cc6634C0532925a3b844Bc9e7595f8fA34",
-      to: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      txHash: "0xdef456789abc123def456789abc123def456789abc123def456789abc123",
-      gasUsed: 145000,
-      status: "success"
-    }
-  ],
-  profitLoss: 567890.23,
-  realizedPnL: 234567.89,
-  unrealizedPnL: 333322.34
-}
 
 export default function WalletTrackerPage() {
+  const { user, isLoading: authLoading } = useAuth()
   const [searchAddress, setSearchAddress] = useState("")
-  const [currentWallet, setCurrentWallet] = useState<WalletData | null>(mockWalletData)
-  const [trackedWallets, setTrackedWallets] = useState<string[]>(["0x742d35Cc6634C0532925a3b844Bc9e7595f8fA34"])
+  const [currentWallet, setCurrentWallet] = useState<WalletData | null>(null)
+  const [trackedWallets, setTrackedWallets] = useState<WalletData[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadingTracked, setLoadingTracked] = useState(true)
   const [activeTab, setActiveTab] = useState<"overview" | "holdings" | "transactions" | "analytics">("overview")
 
   const formatAddress = (address: string, ens?: string) => {
@@ -183,18 +110,106 @@ export default function WalletTrackerPage() {
     toast.success("Address copied to clipboard")
   }
 
-  const handleSearch = () => {
-    if (!searchAddress) return
-    setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setCurrentWallet(mockWalletData)
-      if (!trackedWallets.includes(searchAddress)) {
-        setTrackedWallets([...trackedWallets, searchAddress])
-        toast.success("Wallet added to tracking list")
+  // Fetch tracked wallets on mount
+  useEffect(() => {
+    if (user) {
+      fetchTrackedWallets()
+    }
+  }, [user])
+
+  const fetchTrackedWallets = async () => {
+    try {
+      const response = await fetch('/api/wallets/tracked', {
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setTrackedWallets(data.wallets)
       }
+    } catch (error) {
+      console.error('Error fetching tracked wallets:', error)
+      toast.error('Failed to fetch tracked wallets')
+    } finally {
+      setLoadingTracked(false)
+    }
+  }
+
+  const handleSearch = async () => {
+    if (!searchAddress || !user) return
+    
+    setLoading(true)
+    try {
+      // Fetch wallet data
+      const response = await fetch(`/api/wallets?address=${encodeURIComponent(searchAddress)}`, {
+        credentials: 'include'
+      })
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          toast.error('Wallet not found')
+        } else {
+          toast.error('Failed to fetch wallet data')
+        }
+        return
+      }
+      
+      const walletData = await response.json()
+      
+      // Transform data to match frontend interface
+      const transformedWallet: WalletData = {
+        address: walletData.address,
+        ens: walletData.ens,
+        totalValue: walletData.totalValue || 0,
+        totalChange24h: walletData.totalChange24h || 0,
+        transactionCount: walletData.transactionCount || 0,
+        firstSeen: new Date(walletData.firstSeen),
+        lastActive: new Date(walletData.lastActive),
+        isContract: walletData.isContract || false,
+        tags: walletData.tags || [],
+        holdings: walletData.holdings || [],
+        recentTransactions: walletData.recentTransactions || [],
+        profitLoss: walletData.profitLoss || 0,
+        realizedPnL: walletData.realizedPnL || 0,
+        unrealizedPnL: walletData.unrealizedPnL || 0
+      }
+      
+      setCurrentWallet(transformedWallet)
+      
+      // Add to tracked wallets if not already tracked
+      const isTracked = trackedWallets.some(w => w.address.toLowerCase() === searchAddress.toLowerCase())
+      if (!isTracked) {
+        setTrackedWallets([...trackedWallets, transformedWallet])
+        toast.success('Wallet added to tracking list')
+      }
+    } catch (error) {
+      console.error('Error searching wallet:', error)
+      toast.error('Failed to search wallet')
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
+  }
+
+  const removeFromTracking = async (address: string) => {
+    try {
+      const response = await fetch(`/api/wallets?address=${encodeURIComponent(address)}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        setTrackedWallets(trackedWallets.filter(w => w.address.toLowerCase() !== address.toLowerCase()))
+        if (currentWallet?.address.toLowerCase() === address.toLowerCase()) {
+          setCurrentWallet(null)
+        }
+        toast.success('Wallet removed from tracking')
+      } else {
+        toast.error('Failed to remove wallet')
+      }
+    } catch (error) {
+      console.error('Error removing wallet:', error)
+      toast.error('Failed to remove wallet')
+    }
   }
 
   const getTransactionIcon = (type: string) => {
@@ -250,7 +265,7 @@ export default function WalletTrackerPage() {
             <div className="flex items-center gap-2">
               <PremiumBadge variant="outline" className="px-4 py-2">
                 <Eye className="h-4 w-4 mr-2" />
-                {trackedWallets.length} Tracking
+                {loadingTracked ? 'Loading...' : `${trackedWallets.length} Tracking`}
               </PremiumBadge>
             </div>
           </div>
@@ -277,6 +292,69 @@ export default function WalletTrackerPage() {
             </PremiumButton>
           </div>
         </motion.div>
+
+        {/* No Wallets Message */}
+        {!currentWallet && !loadingTracked && trackedWallets.length === 0 && (
+          <motion.div variants={itemVariants}>
+            <PremiumCard className="p-12 text-center">
+              <Wallet className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2">No Wallets Tracked</h3>
+              <p className="text-muted-foreground mb-6">
+                Start tracking wallet addresses to monitor their activity and holdings
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Enter a wallet address or ENS name in the search bar above to get started
+              </p>
+            </PremiumCard>
+          </motion.div>
+        )}
+
+        {/* Tracked Wallets List */}
+        {!currentWallet && trackedWallets.length > 0 && (
+          <motion.div variants={itemVariants}>
+            <PremiumCard className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Tracked Wallets</h3>
+              <div className="space-y-3">
+                {trackedWallets.map((wallet) => (
+                  <div
+                    key={wallet.address}
+                    className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => setCurrentWallet(wallet)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-slate to-accent-teal flex items-center justify-center">
+                        <Wallet className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">{formatAddress(wallet.address, wallet.ens)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatValue(wallet.totalValue)} • {wallet.holdings?.length || 0} tokens
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <p className={`text-sm ${wallet.totalChange24h > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {wallet.totalChange24h > 0 ? '+' : ''}{wallet.totalChange24h.toFixed(2)}%
+                        </p>
+                        <p className="text-xs text-muted-foreground">24h</p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeFromTracking(wallet.address)
+                        }}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <AlertCircle className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </PremiumCard>
+          </motion.div>
+        )}
 
         {currentWallet && (
           <>
@@ -305,10 +383,23 @@ export default function WalletTrackerPage() {
                       </div>
                     </div>
                   </div>
-                  <PremiumButton size="sm" variant="outline">
-                    <Star className="h-4 w-4 mr-2" />
-                    Watch
-                  </PremiumButton>
+                  <div className="flex gap-2">
+                    <PremiumButton 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setCurrentWallet(null)}
+                    >
+                      Back
+                    </PremiumButton>
+                    <PremiumButton 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => removeFromTracking(currentWallet.address)}
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Untrack
+                    </PremiumButton>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
