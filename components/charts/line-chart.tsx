@@ -2,10 +2,9 @@
 
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { PremiumCard } from '@/components/ui/premium-card'
-import { ChartDataPoint } from '@/types/charts'
 
 interface LineChartProps {
-  data: ChartDataPoint[]
+  data: any[]
   dataKey: string
   xDataKey?: string
   title?: string

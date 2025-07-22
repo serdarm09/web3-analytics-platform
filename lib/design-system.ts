@@ -22,13 +22,12 @@ export const colors = {
   },
   // Accent colors
   accent: {
-    purple: '#9B99FE',
-    teal: '#2BC8B7',
-    blue: '#3b82f6',
+    gray: '#6b7280',
+    silver: '#9ca3af',
+    slate: '#475569',
     green: '#10b981',
     orange: '#f59e0b',
     red: '#ef4444',
-    pink: '#ec4899',
   },
 } as const;
 
@@ -100,19 +99,19 @@ export const effects = {
     },
   },
   glow: {
-    purple: '0 0 40px -10px rgba(155, 153, 254, 0.6)',
-    teal: '0 0 40px -10px rgba(43, 200, 183, 0.6)',
-    blue: '0 0 40px -10px rgba(59, 130, 246, 0.6)',
+    gray: '0 0 40px -10px rgba(107, 114, 128, 0.6)',
+    silver: '0 0 40px -10px rgba(156, 163, 175, 0.6)',
+    slate: '0 0 40px -10px rgba(71, 85, 105, 0.6)',
     primary: `
-      0 0 20px rgba(155, 153, 254, 0.4),
-      0 0 40px rgba(43, 200, 183, 0.2),
-      0 0 80px rgba(59, 130, 246, 0.1)
+      0 0 20px rgba(107, 114, 128, 0.4),
+      0 0 40px rgba(156, 163, 175, 0.2),
+      0 0 80px rgba(71, 85, 105, 0.1)
     `,
   },
   gradient: {
-    primary: 'linear-gradient(135deg, #9B99FE 0%, #2BC8B7 100%)',
-    secondary: 'linear-gradient(135deg, #3b82f6 0%, #9B99FE 100%)',
-    tertiary: 'linear-gradient(135deg, #2BC8B7 0%, #10b981 100%)',
+    primary: 'linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)',
+    secondary: 'linear-gradient(135deg, #475569 0%, #6b7280 100%)',
+    tertiary: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)',
   },
 } as const;
 

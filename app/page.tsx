@@ -1,45 +1,73 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, BarChart3, TrendingUp, Shield, Activity, Zap, Users, Lock, Globe } from 'lucide-react'
+import { ArrowRight, BarChart3, TrendingUp, Shield, Activity, Zap, Users, Lock, Globe, ChartLine, Database, Rocket } from 'lucide-react'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { Navbar } from '@/components/layout/navbar'
-import Link from 'next/link'
+import { AuthModal } from '@/components/auth/AuthModal'
 
 export default function Home() {
+  const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({ 
+    isOpen: false, 
+    mode: 'register' 
+  })
+  const [stats, setStats] = useState({
+    activeUsers: '50K+',
+    projectsTracked: '10K+',
+    totalVolume: '$2.5B',
+    whaleWallets: '5K+'
+  })
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats')
+        if (response.ok) {
+          const data = await response.json()
+          setStats(data)
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+      }
+    }
+    fetchStats()
+  }, [])
+
   const features = [
     {
       icon: BarChart3,
       title: 'Advanced Analytics',
       description: 'Real-time market data and technical indicators for informed trading decisions',
-      color: 'text-accent-blue'
+      color: 'text-gray-300'
     },
     {
       icon: TrendingUp,
       title: 'Trend Detection',
       description: 'AI-powered algorithms to identify trending projects before they explode',
-      color: 'text-accent-green'
+      color: 'text-gray-300'
     },
     {
       icon: Shield,
       title: 'Whale Tracking',
       description: 'Monitor large wallet movements and copy successful trading strategies',
-      color: 'text-accent-purple'
+      color: 'text-gray-300'
     }
   ]
 
   return (
-    <main className="min-h-screen bg-black-primary overflow-hidden">
-      <Navbar />
+    <>
+      <main className="min-h-screen bg-black overflow-hidden">
+        <Navbar />
       
-      {/* Background Effects */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-accent-purple/30 rounded-full blur-[128px]" />
-        <div className="absolute -top-4 right-0 w-96 h-96 bg-accent-blue/20 rounded-full blur-[128px]" />
-        <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-accent-green/20 rounded-full blur-[128px]" />
-      </div>
+        {/* Background Effects */}
+        <div className="fixed inset-0 z-0">
+          <div className="absolute top-0 -left-4 w-72 h-72 bg-gray-800/30 rounded-full blur-[128px]" />
+          <div className="absolute -top-4 right-0 w-96 h-96 bg-gray-700/20 rounded-full blur-[128px]" />
+          <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-gray-800/20 rounded-full blur-[128px]" />
+        </div>
 
       {/* Hero Section */}
       <section className="relative z-10 container-relaxed section-loose">
@@ -56,9 +84,9 @@ export default function Home() {
             </PremiumBadge>
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
-              <span className="text-gradient">Web3 Analytics</span>
+              <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">Web3 Analytics</span>
               <br />
-              <span className="text-white">Redefined</span>
+              <span className="text-white">Platform</span>
             </h1>
             
             <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
@@ -66,17 +94,22 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-comfortable justify-center pt-8">
-              <Link href="/register">
-                <PremiumButton size="md" variant="gradient" className="w-full sm:w-auto">
-                  Get Started Free
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </PremiumButton>
-              </Link>
-              <Link href="/dashboard">
-                <PremiumButton size="md" variant="outline" className="w-full sm:w-auto">
-                  View Demo
-                </PremiumButton>
-              </Link>
+              <PremiumButton 
+                size="md" 
+                variant="gradient" 
+                className="w-full sm:w-auto bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800"
+                onClick={() => setAuthModal({ isOpen: true, mode: 'register' })}
+              >
+                Get Started 
+              </PremiumButton>
+              <PremiumButton 
+                size="md" 
+                variant="outline" 
+                className="w-full sm:w-auto border-gray-700 hover:border-gray-600"
+                onClick={() => setAuthModal({ isOpen: true, mode: 'login' })}
+              >
+                Open
+              </PremiumButton>
             </div>
           </motion.div>
         </div>
@@ -92,20 +125,20 @@ export default function Home() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-relaxed"
           >
             {[
-              { label: 'Active Users', value: '50K+' },
-              { label: 'Projects Tracked', value: '10K+' },
-              { label: 'Total Volume', value: '$2.5B' },
-              { label: 'Whale Wallets', value: '5K+' }
-            ].map((stat, index) => (
+              { label: 'Active Users', value: stats.activeUsers },
+              { label: 'Projects Tracked', value: stats.projectsTracked },
+              { label: 'Total Volume', value: stats.totalVolume },
+              { label: 'Whale Wallets', value: stats.whaleWallets }
+M            ].map((stat, index) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + index * 0.1, duration: 0.5 }}
               >
-                <PremiumCard variant="glass" className="text-center p-6">
-                  <h3 className="text-2xl md:text-3xl font-bold text-gradient">{stat.value}</h3>
-                  <p className="text-gray-400 mt-2 text-sm">{stat.label}</p>
+                <PremiumCard variant="glass" className="text-center p-6 bg-gray-900/50 border-gray-800">
+                  <h3 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">{stat.value}</h3>
+                  <p className="text-gray-500 mt-2 text-sm">{stat.label}</p>
                 </PremiumCard>
               </motion.div>
             ))}
@@ -123,7 +156,7 @@ export default function Home() {
             className="text-center mb-16 space-y-6"
           >
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white">
-              Powerful Features for <span className="text-gradient">Web3 Success</span>
+              Powerful Features for <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">Web3 Success</span>
             </h2>
             <p className="text-lg text-gray-400 max-w-3xl mx-auto leading-relaxed">
               Everything you need to track, analyze, and succeed in the Web3 ecosystem
@@ -138,10 +171,10 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 + index * 0.1, duration: 0.5 }}
               >
-                <PremiumCard variant="hover-lift" className="h-full p-8">
+                <PremiumCard variant="hover-lift" className="h-full p-8 bg-gray-900/50 border-gray-800 hover:bg-gray-900/70">
                   <feature.icon className={`w-10 h-10 ${feature.color} mb-6`} />
                   <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
-                  <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+                  <p className="text-gray-500 leading-relaxed">{feature.description}</p>
                 </PremiumCard>
               </motion.div>
             ))}
@@ -230,9 +263,9 @@ export default function Home() {
                   <div className="text-center mb-6">
                     <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                     <p className="text-gray-400 mb-4">{plan.description}</p>
-                    <div className="text-4xl font-bold text-gradient mb-1">
+                    <div className="text-4xl font-bold bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent mb-1">
                       {plan.price}
-                      {plan.price !== 'Custom' && <span className="text-lg text-gray-400">/month</span>}
+                      {plan.price !== 'Custom' && <span className="text-lg text-gray-500">/month</span>}
                     </div>
                   </div>
                   
@@ -247,11 +280,19 @@ export default function Home() {
                     ))}
                   </ul>
                   
-                  <Link href="/register">
-                    <PremiumButton variant={plan.buttonVariant} className="w-full">
-                      {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
-                    </PremiumButton>
-                  </Link>
+                  <PremiumButton 
+                    variant={plan.buttonVariant} 
+                    className={`w-full ${
+                      plan.buttonVariant === 'gradient' 
+                        ? 'bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800' 
+                        : plan.buttonVariant === 'outline'
+                        ? 'border-gray-700 hover:border-gray-600'
+                        : ''
+                    }`}
+                    onClick={() => setAuthModal({ isOpen: true, mode: 'register' })}
+                  >
+                    {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
+                  </PremiumButton>
                 </PremiumCard>
               </motion.div>
             ))}
@@ -269,16 +310,16 @@ export default function Home() {
             className="text-center mb-16 space-y-6"
           >
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white">
-              Everything You Need to <span className="text-gradient">Succeed</span>
+              Everything You Need to <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">Succeed</span>
             </h2>
           </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Zap, title: 'Real-time Data', description: 'Live price updates and market movements' },
+              { icon: ChartLine, title: 'Real-time Data', description: 'Live price updates and market movements' },
               { icon: Lock, title: 'Secure Platform', description: 'Bank-level security for your data' },
-              { icon: Users, title: 'Community Insights', description: 'Learn from successful traders' },
-              { icon: Globe, title: 'Global Coverage', description: 'Track projects across all chains' },
+              { icon: Database, title: 'Data Analytics', description: 'Advanced metrics and insights' },
+              { icon: Rocket, title: 'Fast Performance', description: 'Lightning-fast data processing' },
             ].map((item, index) => (
               <motion.div
                 key={item.title}
@@ -286,12 +327,12 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 + index * 0.1, duration: 0.5 }}
               >
-                <PremiumCard variant="glass" className="p-6 text-center h-full">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-accent-purple/20 to-accent-teal/20 flex items-center justify-center mx-auto mb-4">
-                    <item.icon className="w-6 h-6 text-accent-purple" />
+                <PremiumCard variant="glass" className="p-6 text-center h-full bg-gray-900/50 border-gray-800">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-700/50 to-gray-800/50 flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="w-6 h-6 text-gray-300" />
                   </div>
                   <h4 className="text-lg font-semibold text-white mb-2">{item.title}</h4>
-                  <p className="text-sm text-gray-400">{item.description}</p>
+                  <p className="text-sm text-gray-500">{item.description}</p>
                 </PremiumCard>
               </motion.div>
             ))}
@@ -307,22 +348,32 @@ export default function Home() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 1, duration: 0.5 }}
           >
-            <PremiumCard variant="gradient" className="text-center">
+            <PremiumCard variant="gradient" className="text-center bg-gradient-to-r from-gray-900 to-gray-800 border-gray-700">
               <h2 className="text-4xl font-bold text-white mb-4">
                 Start Your Journey Today
               </h2>
-              <p className="text-xl text-gray-200 mb-8">
+              <p className="text-xl text-gray-300 mb-8">
                 Join thousands of traders making smarter decisions with our platform
               </p>
-              <Link href="/register">
-                <PremiumButton size="lg" variant="glow">
-                  Create Free Account
-                </PremiumButton>
-              </Link>
+              <PremiumButton 
+                size="lg" 
+                variant="glow" 
+                className="bg-gray-700 hover:bg-gray-600"
+                onClick={() => setAuthModal({ isOpen: true, mode: 'register' })}
+              >
+                Create Free Account
+              </PremiumButton>
             </PremiumCard>
           </motion.div>
         </div>
       </section>
-    </main>
+      </main>
+      
+      <AuthModal 
+        isOpen={authModal.isOpen}
+        onClose={() => setAuthModal({ ...authModal, isOpen: false })}
+        mode={authModal.mode}
+      />
+    </>
   )
 }
