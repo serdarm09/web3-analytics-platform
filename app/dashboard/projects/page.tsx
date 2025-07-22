@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus } from 'lucide-react'
+import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Heart, HeartOff } from 'lucide-react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { PremiumCard } from '@/components/ui/premium-card'
@@ -17,6 +17,7 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showTrendingProjects, setShowTrendingProjects] = useState(false)
   
   const { projects, loading, error, refetch } = useProjects({
     search: searchQuery,
@@ -25,6 +26,38 @@ export default function ProjectsPage() {
 
   const handleProjectCreated = () => {
     refetch()
+  }
+
+  const handleTrackProject = async (projectId: string) => {
+    try {
+      const response = await fetch('/api/projects/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ projectId }),
+      })
+
+      if (response.ok) {
+        refetch()
+      }
+    } catch (error) {
+      console.error('Error tracking project:', error)
+    }
+  }
+
+  const handleUntrackProject = async (projectId: string) => {
+    try {
+      const response = await fetch(`/api/projects/track?projectId=${projectId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        refetch()
+      }
+    } catch (error) {
+      console.error('Error untracking project:', error)
+    }
   }
 
   const formatMarketCap = (value: number) => {
@@ -111,16 +144,61 @@ export default function ProjectsPage() {
         <div className="grid gap-4">
           {projects.length === 0 ? (
             <PremiumCard className="p-12 text-center">
-              <p className="text-gray-400 text-lg">No projects found</p>
-              <p className="text-gray-500 text-sm mt-2">Try adjusting your search or filters, or add a new project</p>
-              <PremiumButton
-                variant="gradient"
-                className="mt-4"
-                onClick={() => setIsModalOpen(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add First Project
-              </PremiumButton>
+              <p className="text-gray-400 text-lg">No tracked projects found</p>
+              <p className="text-gray-500 text-sm mt-2">Start tracking projects to see them here</p>
+              <div className="flex gap-4 justify-center mt-6">
+                <PremiumButton
+                  variant="gradient"
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Project
+                </PremiumButton>
+                <PremiumButton
+                  variant="outline"
+                  onClick={() => setShowTrendingProjects(!showTrendingProjects)}
+                >
+                  {showTrendingProjects ? 'Hide' : 'Browse'} Trending Projects
+                </PremiumButton>
+              </div>
+              
+              {showTrendingProjects && (
+                <div className="mt-8 text-left">
+                  <h3 className="text-lg font-semibold text-white mb-4">Trending Projects</h3>
+                  <p className="text-gray-400 text-sm mb-4">Popular projects you can track:</p>
+                  {/* Burada trending projeler için basit bir liste gösterebiliriz */}
+                  <div className="grid gap-3">
+                    {[
+                      { name: 'Bitcoin', symbol: 'BTC', category: 'Layer1' },
+                      { name: 'Ethereum', symbol: 'ETH', category: 'Layer1' },
+                      { name: 'Solana', symbol: 'SOL', category: 'Layer1' },
+                      { name: 'Cardano', symbol: 'ADA', category: 'Layer1' },
+                      { name: 'Polygon', symbol: 'MATIC', category: 'Layer2' }
+                    ].map((trendingProject, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">
+                              {trendingProject.symbol.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">{trendingProject.name}</p>
+                            <p className="text-gray-400 text-sm">{trendingProject.symbol} • {trendingProject.category}</p>
+                          </div>
+                        </div>
+                        <PremiumButton
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsModalOpen(true)}
+                        >
+                          Track
+                        </PremiumButton>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </PremiumCard>
           ) : (
             projects.map((project, index) => (
@@ -182,6 +260,13 @@ export default function ProjectsPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
+                        <button 
+                          className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+                          onClick={() => handleUntrackProject(project._id)}
+                          title="Remove from tracking"
+                        >
+                          <HeartOff className="w-5 h-5" />
+                        </button>
                         <button className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
                           <Star className="w-5 h-5" />
                         </button>

@@ -13,6 +13,7 @@ export interface IUser extends Document {
   isVerified: boolean
   twoFactorEnabled: boolean
   subscription: 'free' | 'pro' | 'enterprise'
+  trackedProjects: Types.ObjectId[]
   createdAt: Date
   updatedAt: Date
   comparePassword(candidatePassword: string): Promise<boolean>
@@ -108,6 +109,10 @@ const userSchema = new Schema<IUser>(
       },
       default: 'free',
     },
+    trackedProjects: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Project'
+    }],
   },
   {
     timestamps: true,

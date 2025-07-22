@@ -7,6 +7,12 @@ import { rateLimitPresets } from '@/lib/middleware/rateLimiter'
 export async function GET(request: NextRequest) {
   return rateLimitPresets.read(request, async (req) => {
   try {
+    // Authenticate user to get tracked projects
+    const authResult = await verifyAuth(req)
+    if (!authResult.authenticated) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(req.url)
     const category = searchParams.get('category')
     const search = searchParams.get('search')
@@ -16,7 +22,26 @@ export async function GET(request: NextRequest) {
 
     await dbConnect()
 
-    const query: any = {}
+    // Get user's tracked projects
+    const User = (await import('@/models/User')).default
+    const user = await User.findById(authResult.userId).select('trackedProjects')
+    
+    if (!user || !user.trackedProjects || user.trackedProjects.length === 0) {
+      // Return empty result if user has no tracked projects
+      return NextResponse.json({
+        projects: [],
+        pagination: {
+          page: 1,
+          limit,
+          total: 0,
+          totalPages: 0
+        }
+      })
+    }
+
+    const query: any = {
+      _id: { $in: user.trackedProjects }
+    }
     
     if (category && category !== 'All') {
       query.category = category
@@ -187,6 +212,13 @@ export async function POST(request: NextRequest) {
       },
       lastUpdated: new Date()
     })
+
+    // Add project to user's tracked projects
+    const User = (await import('@/models/User')).default
+    await User.findByIdAndUpdate(
+      auth.userId,
+      { $addToSet: { trackedProjects: project._id } }
+    )
 
     return NextResponse.json(project, { status: 201 })
   } catch (error) {
