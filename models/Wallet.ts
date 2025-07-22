@@ -121,6 +121,8 @@ const walletSchema = new Schema<IWallet>(
 )
 
 // Indexes for better query performance
+// Note: address field already has an index due to unique: true
+// Compound index for address + chain queries
 walletSchema.index({ address: 1, chain: 1 })
 walletSchema.index({ totalValue: -1 })
 walletSchema.index({ lastActive: -1 })

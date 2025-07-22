@@ -121,7 +121,7 @@ const whaleWalletSchema = new Schema<IWhaleWallet>(
 )
 
 // Indexes for better query performance
-whaleWalletSchema.index({ address: 1 })
+// Note: address field already has an index due to unique: true
 whaleWalletSchema.index({ balanceUSD: -1 })
 whaleWalletSchema.index({ lastActivity: -1 })
 whaleWalletSchema.index({ 'transactions.timestamp': -1 })
