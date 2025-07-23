@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, 
@@ -10,12 +10,31 @@ import {
   TrendingUp,
   TrendingDown,
   Edit,
-  Trash2
+  Trash2,
+  Search,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  Bitcoin
 } from 'lucide-react'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumInput } from '@/components/ui/premium-input'
 import { toast } from 'sonner'
+import { useRealTimePrices } from '@/hooks/useRealTimePrices'
+
+// Simple debounce implementation
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout
+  return function executedFunction(...args: any[]) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
 
 interface Asset {
   _id?: string
@@ -30,6 +49,31 @@ interface Asset {
   profitLossPercentage?: number
 }
 
+// Format helpers
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6
+  }).format(amount).replace('US$', '$')
+}
+
+const formatPercentage = (percentage: number): string => {
+  return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`
+}
+
+interface SearchResult {
+  id: string
+  symbol: string
+  name: string
+  price: number
+  change24h: number
+  logo?: string
+  marketCap?: number
+  volume24h?: number
+}
+
 interface PortfolioAssetManagerProps {
   portfolioId: string
   assets: Asset[]
@@ -40,12 +84,179 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [selectedCoin, setSelectedCoin] = useState<SearchResult | null>(null)
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false)
+  const [manualEntry, setManualEntry] = useState(false)
+  const [displayLimit, setDisplayLimit] = useState(10)
   const [formData, setFormData] = useState({
     symbol: '',
     amount: '',
     purchasePrice: '',
     purchaseDate: new Date().toISOString().split('T')[0]
   })
+
+  // Get symbols from assets for real-time price updates
+  const assetSymbols = assets.map(asset => asset.symbol.toUpperCase())
+  
+  // Real-time price updates
+  const { prices, loading: pricesLoading, lastUpdate, refreshPrices } = useRealTimePrices({
+    symbols: assetSymbols,
+    refreshInterval: 60000, // Update every minute
+    enabled: assetSymbols.length > 0
+  })
+
+  // Calculate portfolio totals with real-time prices
+  const portfolioTotals = useMemo(() => {
+    let totalCurrentValue = 0
+    let totalPurchaseValue = 0
+
+    assets.forEach(asset => {
+      const realTimePrice = prices[asset.symbol.toUpperCase()]
+      const currentPrice = realTimePrice?.price || asset.currentPrice || asset.purchasePrice
+      const currentValue = asset.amount * currentPrice
+      const purchaseValue = asset.amount * asset.purchasePrice
+
+      totalCurrentValue += currentValue
+      totalPurchaseValue += purchaseValue
+    })
+
+    const totalProfitLoss = totalCurrentValue - totalPurchaseValue
+    const totalProfitLossPercentage = totalPurchaseValue > 0 ? (totalProfitLoss / totalPurchaseValue) * 100 : 0
+
+    return {
+      totalCurrentValue,
+      totalPurchaseValue,
+      totalProfitLoss,
+      totalProfitLossPercentage
+    }
+  }, [assets, prices])
+
+  // Search for cryptocurrencies
+  const searchCrypto = useCallback(
+    debounce(async (query: string) => {
+      if (!query || query.length < 1) {
+        setSearchResults([])
+        setManualEntry(false)
+        return
+      }
+
+      setIsSearching(true)
+      try {
+        // Use our API endpoint which handles CoinGecko calls server-side
+        const response = await fetch(`/api/crypto/search?q=${encodeURIComponent(query)}&limit=50`)
+        const data = await response.json()
+        
+        if (data.success && data.data && data.data.length > 0) {
+          setSearchResults(data.data)
+          setShowSearchDropdown(true)
+          setManualEntry(false)
+        } else {
+          // No results found, enable manual entry
+          setSearchResults([])
+          setManualEntry(true)
+          setShowSearchDropdown(false)
+        }
+      } catch (error) {
+        console.error('Error searching crypto:', error)
+        setSearchResults([])
+        setManualEntry(true)
+        setShowSearchDropdown(false)
+      } finally {
+        setIsSearching(false)
+      }
+    }, 300),
+    []
+  )
+
+  // Check if entered symbol exists
+  const checkSymbol = async (symbol: string) => {
+    if (!symbol) return
+    
+    try {
+      const response = await fetch('/api/crypto/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol })
+      })
+      
+      const data = await response.json()
+      if (data.success && data.data) {
+        if (!data.data.custom && data.data.price > 0) {
+          setSelectedCoin(data.data)
+          setFormData(prev => ({
+            ...prev,
+            symbol: data.data.symbol,
+            purchasePrice: data.data.price.toFixed(2)
+          }))
+        } else {
+          // Custom coin entry
+          setSelectedCoin({
+            id: symbol.toLowerCase(),
+            symbol: symbol.toUpperCase(),
+            name: symbol.toUpperCase(),
+            price: 0,
+            change24h: 0
+          })
+          setFormData(prev => ({
+            ...prev,
+            symbol: symbol.toUpperCase()
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error checking symbol:', error)
+    }
+  }
+
+  useEffect(() => {
+    setDisplayLimit(10) // Reset display limit when search query changes
+    searchCrypto(searchQuery)
+  }, [searchQuery, searchCrypto])
+
+  const handleCoinSelect = async (coin: SearchResult) => {
+    setSelectedCoin(coin)
+    setSearchQuery(coin.name)
+    setShowSearchDropdown(false)
+    
+    // If price is not available, try to get it from our API
+    if (!coin.price || coin.price === 0) {
+      try {
+        const response = await fetch('/api/crypto/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbol: coin.symbol })
+        })
+        
+        const data = await response.json()
+        if (data.success && data.data && data.data.price > 0) {
+          const updatedCoin = {
+            ...coin,
+            price: data.data.price,
+            change24h: data.data.change24h || 0
+          }
+          setSelectedCoin(updatedCoin)
+          setFormData({
+            ...formData,
+            symbol: coin.symbol,
+            purchasePrice: data.data.price.toFixed(data.data.price < 1 ? 6 : 2)
+          })
+          return
+        }
+      } catch (error) {
+        console.error('Error fetching coin price from API:', error)
+      }
+    }
+    
+    // Use existing price if available
+    setFormData({
+      ...formData,
+      symbol: coin.symbol,
+      purchasePrice: coin.price ? coin.price.toFixed(coin.price < 1 ? 6 : 2) : ''
+    })
+  }
 
   const resetForm = () => {
     setFormData({
@@ -56,6 +267,11 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
     })
     setEditingAsset(null)
     setShowAddForm(false)
+    setSearchQuery('')
+    setSelectedCoin(null)
+    setSearchResults([])
+    setManualEntry(false)
+    setDisplayLimit(10)
   }
 
   const handleAddAsset = async (e: React.FormEvent) => {
@@ -63,13 +279,34 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
     setIsLoading(true)
 
     try {
+      // If manual entry and no symbol set, use search query
+      const symbol = formData.symbol || (manualEntry ? searchQuery.toUpperCase() : '')
+      
+      if (!symbol) {
+        toast.error('Lütfen bir coin seçin veya sembol girin')
+        setIsLoading(false)
+        return
+      }
+
+      // Get auth token
+      const token = localStorage.getItem('auth_token')
+      
+      console.log('Adding asset:', {
+        portfolioId,
+        symbol,
+        amount: formData.amount,
+        purchasePrice: formData.purchasePrice,
+        token: token ? 'exists' : 'missing'
+      })
+      
       const response = await fetch(`/api/portfolios/${portfolioId}/assets`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
         },
         body: JSON.stringify({
-          symbol: formData.symbol.toUpperCase(),
+          symbol: symbol.toUpperCase(),
           amount: parseFloat(formData.amount),
           purchasePrice: parseFloat(formData.purchasePrice),
           purchaseDate: formData.purchaseDate
@@ -77,16 +314,28 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to add asset')
+        const errorText = await response.text()
+        let error
+        try {
+          error = JSON.parse(errorText)
+        } catch {
+          error = { error: errorText }
+        }
+        console.error('Asset add error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: error,
+          url: response.url
+        })
+        throw new Error(error.error || 'Varlık eklenemedi')
       }
 
-      toast.success('Asset added successfully!')
+      toast.success('Varlık başarıyla eklendi!')
       resetForm()
       onAssetsUpdate()
     } catch (error) {
       console.error('Error adding asset:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to add asset')
+      toast.error(error instanceof Error ? error.message : 'Varlık eklenemedi')
     } finally {
       setIsLoading(false)
     }
@@ -110,10 +359,13 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
     setIsLoading(true)
 
     try {
+      const token = localStorage.getItem('auth_token')
+      
       const response = await fetch(`/api/portfolios/${portfolioId}/assets`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
         },
         body: JSON.stringify({
           assetId: editingAsset._id,
@@ -125,69 +377,112 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to update asset')
+        throw new Error(error.error || 'Varlık güncellenemedi')
       }
 
-      toast.success('Asset updated successfully!')
+      toast.success('Varlık başarıyla güncellendi!')
       resetForm()
       onAssetsUpdate()
     } catch (error) {
       console.error('Error updating asset:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to update asset')
+      toast.error(error instanceof Error ? error.message : 'Varlık güncellenemedi')
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleDeleteAsset = async (assetId: string) => {
-    if (!confirm('Are you sure you want to remove this asset?')) return
+    if (!confirm('Bu varlığı kaldırmak istediğinizden emin misiniz?')) return
 
     setIsLoading(true)
 
     try {
+      const token = localStorage.getItem('auth_token')
+      
       const response = await fetch(`/api/portfolios/${portfolioId}/assets?assetId=${assetId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to delete asset')
+        throw new Error(error.error || 'Varlık kaldırılamadı')
       }
 
-      toast.success('Asset removed successfully!')
+      toast.success('Varlık başarıyla kaldırıldı!')
       onAssetsUpdate()
     } catch (error) {
       console.error('Error deleting asset:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to remove asset')
+      toast.error(error instanceof Error ? error.message : 'Varlık kaldırılamadı')
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount)
-  }
-
-  const formatPercentage = (percentage: number) => {
-    return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold text-white">Portfolio Assets</h3>
+        <div className="flex-1">
+          <h3 className="text-xl font-semibold text-white">Portföy Varlıkları</h3>
+          <div className="flex items-center gap-4 mt-1">
+            <p className="text-gray-400 text-sm">Kripto varlıklarınızı takip edin ve yönetin</p>
+            {lastUpdate && (
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${pricesLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
+                <p className="text-xs text-gray-500">
+                  Son güncelleme: {lastUpdate.toLocaleTimeString('tr-TR')}
+                </p>
+                <button
+                  onClick={refreshPrices}
+                  className="text-xs text-blue-400 hover:text-blue-300 underline"
+                  disabled={pricesLoading}
+                >
+                  Yenile
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Portfolio Summary */}
+          {assets.length > 0 && (
+            <div className="mt-4 grid grid-cols-4 gap-4">
+              <div className="bg-gray-800/50 rounded-lg p-3">
+                <p className="text-gray-400 text-xs">Toplam Değer</p>
+                <p className="text-white font-semibold">
+                  {formatCurrency(portfolioTotals.totalCurrentValue)}
+                </p>
+              </div>
+              <div className="bg-gray-800/50 rounded-lg p-3">
+                <p className="text-gray-400 text-xs">Toplam Maliyet</p>
+                <p className="text-white font-semibold">
+                  {formatCurrency(portfolioTotals.totalPurchaseValue)}
+                </p>
+              </div>
+              <div className="bg-gray-800/50 rounded-lg p-3">
+                <p className="text-gray-400 text-xs">Kar/Zarar</p>
+                <p className={`font-semibold ${portfolioTotals.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatCurrency(Math.abs(portfolioTotals.totalProfitLoss))}
+                </p>
+              </div>
+              <div className="bg-gray-800/50 rounded-lg p-3">
+                <p className="text-gray-400 text-xs">Performans</p>
+                <p className={`font-semibold ${portfolioTotals.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {formatPercentage(portfolioTotals.totalProfitLossPercentage)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
         <PremiumButton 
           onClick={() => setShowAddForm(true)}
           disabled={isLoading}
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Asset
+          Varlık Ekle
         </PremiumButton>
       </div>
 
@@ -203,7 +498,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-medium text-white">
-                  {editingAsset ? 'Edit Asset' : 'Add New Asset'}
+                  {editingAsset ? 'Varlığı Düzenle' : 'Yeni Varlık Ekle'}
                 </h4>
                 <button
                   onClick={resetForm}
@@ -213,74 +508,279 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                 </button>
               </div>
 
-              <form onSubmit={editingAsset ? handleUpdateAsset : handleAddAsset} className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <form onSubmit={editingAsset ? handleUpdateAsset : handleAddAsset} className="space-y-6">
+                {/* Coin Search Section */}
+                {!editingAsset && (
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Kripto Para Seç veya Sembol Gir
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all"
+                        placeholder="Örn: Bitcoin, BTC, PEPE, SHIB..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => searchResults.length > 0 && setShowSearchDropdown(true)}
+                        onBlur={(e) => {
+                          // Delay to allow click on dropdown
+                          setTimeout(() => {
+                            if (manualEntry && searchQuery) {
+                              checkSymbol(searchQuery)
+                            }
+                            setShowSearchDropdown(false)
+                          }, 200)
+                        }}
+                      />
+                      {isSearching && (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500 animate-spin" />
+                      )}
+                    </div>
+
+                    {/* Search Results Dropdown */}
+                    <AnimatePresence>
+                      {showSearchDropdown && searchResults.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute z-50 w-full mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl overflow-hidden max-h-96 overflow-y-auto"
+                        >
+                          {searchResults.slice(0, displayLimit).map((coin) => (
+                            <button
+                              key={coin.id}
+                              type="button"
+                              onClick={() => handleCoinSelect(coin)}
+                              className="w-full px-4 py-3 hover:bg-gray-800 transition-colors flex items-center justify-between group"
+                            >
+                              <div className="flex items-center gap-3">
+                                {coin.logo ? (
+                                  <img 
+                                    src={coin.logo} 
+                                    alt={coin.name} 
+                                    className="w-10 h-10 rounded-full"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none'
+                                      e.currentTarget.nextElementSibling?.classList.remove('hidden')
+                                    }}
+                                  />
+                                ) : null}
+                                <div className={`w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center ${coin.logo ? 'hidden' : ''}`}>
+                                  <Bitcoin className="w-5 h-5 text-gray-400" />
+                                </div>
+                                <div className="text-left">
+                                  <p className="text-white font-medium">{coin.name}</p>
+                                  <p className="text-gray-400 text-sm">{coin.symbol}</p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                {coin.price > 0 ? (
+                                  <>
+                                    <p className="text-white font-medium">
+                                      ${coin.price.toFixed(coin.price < 1 ? 6 : 2)}
+                                    </p>
+                                    <p className={`text-sm ${coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                      {coin.change24h >= 0 ? '+' : ''}{coin.change24h.toFixed(2)}%
+                                    </p>
+                                  </>
+                                ) : (
+                                  <p className="text-gray-500 text-sm">Fiyat alınıyor...</p>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                          {searchResults.length > displayLimit && (
+                            <button
+                              type="button"
+                              onClick={() => setDisplayLimit(prev => prev + 20)}
+                              className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 transition-colors text-center text-blue-400 hover:text-blue-300 font-medium border-t border-gray-700"
+                            >
+                              Daha fazla göster ({searchResults.length - displayLimit} coin daha)
+                            </button>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    {/* Manual Entry Notice */}
+                    {manualEntry && searchQuery && !selectedCoin && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute z-40 w-full mt-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg"
+                      >
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-yellow-500" />
+                          <p className="text-sm text-yellow-200">
+                            "{searchQuery.toUpperCase()}" bulunamadı. Manuel olarak ekleyebilirsiniz.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+                {/* Selected Coin Info */}
+                {selectedCoin && !editingAsset && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                        <div>
+                          <p className="text-white font-medium">{selectedCoin.name} seçildi</p>
+                          {selectedCoin.price > 0 ? (
+                            <p className="text-gray-400 text-sm">
+                              Güncel fiyat: ${selectedCoin.price.toFixed(selectedCoin.price < 1 ? 6 : 2)}
+                              {selectedCoin.change24h !== 0 && (
+                                <span className={`ml-2 ${selectedCoin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  ({selectedCoin.change24h >= 0 ? '+' : ''}{selectedCoin.change24h.toFixed(2)}%)
+                                </span>
+                              )}
+                            </p>
+                          ) : (
+                            <p className="text-yellow-400 text-sm">Fiyat bilgisi bulunamadı, manuel giriş yapınız</p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCoin(null)
+                          setSearchQuery('')
+                          setFormData({ ...formData, symbol: '', purchasePrice: '' })
+                          setManualEntry(false)
+                        }}
+                        className="text-gray-400 hover:text-white transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {editingAsset && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Sembol
+                      </label>
+                      <PremiumInput
+                        type="text"
+                        value={formData.symbol}
+                        disabled
+                        className="opacity-60"
+                      />
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Symbol
+                      Miktar
                     </label>
-                    <PremiumInput
-                      type="text"
-                      placeholder="BTC, ETH, etc."
-                      value={formData.symbol}
-                      onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
-                      required
-                      disabled={!!editingAsset}
-                    />
+                    <div className="relative">
+                      <PremiumInput
+                        type="number"
+                        step="any"
+                        placeholder="0.00"
+                        value={formData.amount}
+                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                        required
+                        className="pr-16"
+                      />
+                      {formData.symbol && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                          {formData.symbol}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Amount
+                      Alış Fiyatı ($)
                     </label>
-                    <PremiumInput
-                      type="number"
-                      step="any"
-                      placeholder="0.00"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      required
-                    />
+                    <div className="relative">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <PremiumInput
+                        type="number"
+                        step="any"
+                        placeholder="0.00"
+                        value={formData.purchasePrice}
+                        onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                        required
+                        className="pl-10"
+                      />
+                    </div>
+                    {selectedCoin && !editingAsset && selectedCoin.price > 0 && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Güncel fiyat: ${selectedCoin.price.toFixed(selectedCoin.price < 1 ? 6 : 2)}
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Purchase Price ($)
+                      Alış Tarihi
                     </label>
-                    <PremiumInput
-                      type="number"
-                      step="any"
-                      placeholder="0.00"
-                      value={formData.purchasePrice}
-                      onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Purchase Date
-                    </label>
-                    <PremiumInput
-                      type="date"
-                      value={formData.purchaseDate}
-                      onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
-                      required
-                    />
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <PremiumInput
+                        type="date"
+                        value={formData.purchaseDate}
+                        onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                        required
+                        className="pl-10"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex gap-3">
-                  <PremiumButton type="submit" disabled={isLoading}>
-                    {isLoading ? 'Saving...' : (editingAsset ? 'Update Asset' : 'Add Asset')}
-                  </PremiumButton>
+                {/* Total Cost Preview */}
+                {formData.amount && formData.purchasePrice && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="p-4 bg-gray-800/50 rounded-lg border border-gray-700"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-blue-400" />
+                        <span className="text-gray-300">Toplam Maliyet:</span>
+                      </div>
+                      <span className="text-xl font-bold text-white">
+                        ${(parseFloat(formData.amount) * parseFloat(formData.purchasePrice)).toFixed(2)}
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+
+                <div className="flex gap-3 justify-end">
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-all hover:shadow-lg"
                   >
-                    Cancel
+                    İptal
                   </button>
+                  <PremiumButton 
+                    type="submit" 
+                    disabled={isLoading || (!editingAsset && !formData.symbol)}
+                    className="min-w-[150px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Kaydediliyor...</span>
+                      </div>
+                    ) : (
+                      editingAsset ? 'Güncelle' : 'Portföye Ekle'
+                    )}
+                  </PremiumButton>
                 </div>
               </form>
             </PremiumCard>
@@ -294,118 +794,142 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
           <PremiumCard className="p-8 text-center">
             <div className="text-gray-400">
               <DollarSign className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg mb-2">No assets in this portfolio yet</p>
-              <p className="text-sm">Add your first crypto asset to start tracking your portfolio performance</p>
+              <p className="text-lg mb-2">Henüz portföyünüzde varlık yok</p>
+              <p className="text-sm">Portföy performansınızı takip etmek için ilk kripto varlığınızı ekleyin</p>
             </div>
           </PremiumCard>
         ) : (
-          assets.map((asset, index) => (
-            <motion.div
-              key={asset._id || index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <PremiumCard className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-accent-slate/20 rounded-lg flex items-center justify-center">
-                      <span className="text-accent-slate font-bold text-sm">
-                        {asset.symbol}
-                      </span>
+          assets.map((asset, index) => {
+            // Get real-time price data for this asset
+            const realTimePrice = prices[asset.symbol.toUpperCase()]
+            const currentPrice = realTimePrice?.price || asset.currentPrice || asset.purchasePrice
+            const currentValue = asset.amount * currentPrice
+            const profitLoss = currentValue - (asset.amount * asset.purchasePrice)
+            const profitLossPercentage = asset.purchasePrice > 0 ? (profitLoss / (asset.amount * asset.purchasePrice)) * 100 : 0
+            
+            return (
+              <motion.div
+                key={asset._id || index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <PremiumCard className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-accent-slate/20 rounded-lg flex items-center justify-center">
+                        <span className="text-accent-slate font-bold text-sm">
+                          {asset.symbol}
+                        </span>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-lg font-semibold text-white">
+                          {asset.symbol}
+                        </h4>
+                        <p className="text-gray-400 text-sm">
+                          {asset.amount} adet
+                        </p>
+                      </div>
                     </div>
-                    
-                    <div>
-                      <h4 className="text-lg font-semibold text-white">
-                        {asset.symbol}
-                      </h4>
-                      <p className="text-gray-400 text-sm">
-                        {asset.amount} tokens
-                      </p>
+
+                    <div className="flex items-center gap-6">
+                      <div className="text-right">
+                        <p className="text-white font-medium">
+                          {formatCurrency(currentValue)}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          Güncel Değer
+                          {realTimePrice && (
+                            <span className="ml-1 text-green-400 text-xs">●</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="text-white font-medium">
+                          {formatCurrency(asset.amount * asset.purchasePrice)}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          Maliyet
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className={`font-medium flex items-center gap-1 ${
+                          profitLoss >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {profitLoss >= 0 ? (
+                            <TrendingUp className="w-4 h-4" />
+                          ) : (
+                            <TrendingDown className="w-4 h-4" />
+                          )}
+                          {formatCurrency(Math.abs(profitLoss))}
+                        </p>
+                        <p className={`text-sm ${
+                          profitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {formatPercentage(profitLossPercentage)}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditAsset(asset)}
+                          className="p-2 text-gray-400 hover:text-accent-slate transition-colors"
+                          disabled={isLoading}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => asset._id && handleDeleteAsset(asset._id)}
+                          className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+                          disabled={isLoading}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <p className="text-white font-medium">
-                        {formatCurrency(asset.currentValue || (asset.amount * asset.purchasePrice))}
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        Current Value
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-white font-medium">
-                        {formatCurrency(asset.amount * asset.purchasePrice)}
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        Cost Basis
-                      </p>
-                    </div>
-
-                    <div className="text-right">
-                      <p className={`font-medium flex items-center gap-1 ${
-                        (asset.profitLoss || 0) >= 0 ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        {(asset.profitLoss || 0) >= 0 ? (
-                          <TrendingUp className="w-4 h-4" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4" />
-                        )}
-                        {formatCurrency(Math.abs(asset.profitLoss || 0))}
-                      </p>
-                      <p className={`text-sm ${
-                        (asset.profitLossPercentage || 0) >= 0 ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        {formatPercentage(asset.profitLossPercentage || 0)}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEditAsset(asset)}
-                        className="p-2 text-gray-400 hover:text-accent-slate transition-colors"
-                        disabled={isLoading}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => asset._id && handleDeleteAsset(asset._id)}
-                        className="p-2 text-gray-400 hover:text-red-400 transition-colors"
-                        disabled={isLoading}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                  <div className="mt-4 pt-4 border-t border-gray-800">
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-400">Alış Fiyatı</p>
+                        <p className="text-white font-medium">
+                          {formatCurrency(asset.purchasePrice)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400">
+                          Güncel Fiyat
+                          {realTimePrice && (
+                            <span className="ml-1 text-green-400 text-xs">●</span>
+                          )}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-medium">
+                            {formatCurrency(currentPrice)}
+                          </p>
+                          {realTimePrice && realTimePrice.change24h !== 0 && (
+                            <span className={`text-xs ${realTimePrice.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              ({realTimePrice.change24h >= 0 ? '+' : ''}{realTimePrice.change24h.toFixed(2)}%)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-gray-400">Alış Tarihi</p>
+                        <p className="text-white font-medium">
+                          {new Date(asset.purchaseDate).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-gray-800">
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-400">Purchase Price</p>
-                      <p className="text-white font-medium">
-                        {formatCurrency(asset.purchasePrice)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Current Price</p>
-                      <p className="text-white font-medium">
-                        {formatCurrency(asset.currentPrice || asset.purchasePrice)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Purchase Date</p>
-                      <p className="text-white font-medium">
-                        {new Date(asset.purchaseDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </PremiumCard>
-            </motion.div>
-          ))
+                </PremiumCard>
+              </motion.div>
+            )
+          })
         )}
       </div>
     </div>

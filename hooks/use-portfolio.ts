@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from './use-auth'
+import { fetchWithAuth } from '@/lib/api/fetch-with-auth'
 
 interface Asset {
   symbol: string
@@ -52,9 +53,7 @@ export function usePortfolio() {
   const { data: portfolios, isLoading } = useQuery<Portfolio[]>({
     queryKey: ['portfolios', user?.id],
     queryFn: async () => {
-      const response = await fetch('/api/portfolios', {
-        credentials: 'include'
-      })
+      const response = await fetchWithAuth('/api/portfolios')
       
       if (!response.ok) {
         throw new Error('Failed to fetch portfolios')
@@ -68,11 +67,10 @@ export function usePortfolio() {
 
   const createPortfolioMutation = useMutation({
     mutationFn: async (data: CreatePortfolioData) => {
-      const response = await fetch('/api/portfolios', {
+      const response = await fetchWithAuth('/api/portfolios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-        credentials: 'include'
+        body: JSON.stringify(data)
       })
       
       if (!response.ok) {
@@ -89,9 +87,8 @@ export function usePortfolio() {
 
   const deletePortfolioMutation = useMutation({
     mutationFn: async (portfolioId: string) => {
-      const response = await fetch(`/api/portfolios/${portfolioId}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const response = await fetchWithAuth(`/api/portfolios/${portfolioId}`, {
+        method: 'DELETE'
       })
       
       if (!response.ok) {
@@ -107,11 +104,10 @@ export function usePortfolio() {
 
   const addAssetMutation = useMutation({
     mutationFn: async ({ portfolioId, ...assetData }: AddAssetData) => {
-      const response = await fetch(`/api/portfolios/${portfolioId}/assets`, {
+      const response = await fetchWithAuth(`/api/portfolios/${portfolioId}/assets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(assetData),
-        credentials: 'include'
+        body: JSON.stringify(assetData)
       })
       
       if (!response.ok) {
@@ -128,11 +124,10 @@ export function usePortfolio() {
 
   const updateAssetMutation = useMutation({
     mutationFn: async ({ portfolioId, assetSymbol, ...updateData }: UpdateAssetData) => {
-      const response = await fetch(`/api/portfolios/${portfolioId}/assets/${assetSymbol}`, {
+      const response = await fetchWithAuth(`/api/portfolios/${portfolioId}/assets/${assetSymbol}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData),
-        credentials: 'include'
+        body: JSON.stringify(updateData)
       })
       
       if (!response.ok) {
@@ -149,9 +144,8 @@ export function usePortfolio() {
 
   const removeAssetMutation = useMutation({
     mutationFn: async ({ portfolioId, assetSymbol }: { portfolioId: string; assetSymbol: string }) => {
-      const response = await fetch(`/api/portfolios/${portfolioId}/assets/${assetSymbol}`, {
-        method: 'DELETE',
-        credentials: 'include'
+      const response = await fetchWithAuth(`/api/portfolios/${portfolioId}/assets/${assetSymbol}`, {
+        method: 'DELETE'
       })
       
       if (!response.ok) {
@@ -167,9 +161,8 @@ export function usePortfolio() {
 
   const refreshPricesMutation = useMutation({
     mutationFn: async (portfolioId: string) => {
-      const response = await fetch(`/api/portfolios/${portfolioId}/refresh-prices`, {
-        method: 'POST',
-        credentials: 'include'
+      const response = await fetchWithAuth(`/api/portfolios/${portfolioId}/refresh-prices`, {
+        method: 'POST'
       })
       
       if (!response.ok) {

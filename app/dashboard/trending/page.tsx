@@ -196,7 +196,6 @@ export default function TrendingPage() {
             <div className="flex items-center gap-4">
               <Link href="/dashboard/projects">
                 <PremiumButton variant="gradient">
-                  <Rocket className="h-4 w-4 mr-2" />
                   Add Project
                 </PremiumButton>
               </Link>
@@ -314,7 +313,6 @@ export default function TrendingPage() {
               <p className="text-gray-400 mb-4">Be the first to add a project!</p>
               <Link href="/dashboard/projects">
                 <PremiumButton variant="gradient">
-                  <Rocket className="h-4 w-4 mr-2" />
                   Add Project
                 </PremiumButton>
               </Link>

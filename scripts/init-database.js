@@ -17,7 +17,7 @@ const initDatabase = async () => {
     console.log('\n📋 Existing collections:', collections.map(c => c.name).join(', ') || 'None');
 
     // Create collections if they don't exist
-    const requiredCollections = ['users', 'projects', 'portfolios', 'alerts', 'whalewallets'];
+    const requiredCollections = ['users', 'projects', 'portfolios', 'whalewallets'];
     
     for (const collectionName of requiredCollections) {
       const exists = collections.some(c => c.name === collectionName);
@@ -67,14 +67,6 @@ const initDatabase = async () => {
     await createIndexSafe(portfoliosCollection, { userId: 1, createdAt: -1 });
     await createIndexSafe(portfoliosCollection, { totalValue: -1 });
     console.log('✅ Processed indexes for portfolios collection');
-
-    // Alert indexes
-    const alertsCollection = db.collection('alerts');
-    await createIndexSafe(alertsCollection, { userId: 1, isActive: 1 });
-    await createIndexSafe(alertsCollection, { type: 1, isActive: 1 });
-    await createIndexSafe(alertsCollection, { projectId: 1 });
-    await createIndexSafe(alertsCollection, { whaleWalletId: 1 });
-    console.log('✅ Processed indexes for alerts collection');
 
     // WhaleWallet indexes
     const whaleWalletsCollection = db.collection('whalewallets');

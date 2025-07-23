@@ -110,10 +110,16 @@ portfolioSchema.methods.calculateMetrics = function () {
 
   this.assets.forEach((asset: IAsset) => {
     const cost = asset.amount * asset.purchasePrice
-    const value = asset.currentValue || 0
+    // Use currentValue if available, otherwise use purchase price * amount
+    const value = asset.currentValue || (asset.amount * (asset.currentPrice || asset.purchasePrice))
     
     totalCost += cost
     totalValue += value
+    
+    // Update asset's currentValue
+    asset.currentValue = value
+    asset.profitLoss = value - cost
+    asset.profitLossPercentage = cost > 0 ? ((value - cost) / cost) * 100 : 0
   })
 
   this.totalValue = totalValue

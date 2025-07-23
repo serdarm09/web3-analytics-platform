@@ -1,46 +1,76 @@
 # Web3 Analytics Platform
 
-A modern Web3 analytics platform for tracking crypto projects, monitoring whale movements, analyzing trends, and managing portfolios.
+**Kripto proje takip ve analiz platformu** - Yeni nesil Web3 projelerini keşfedin, takip edin ve yönetin.
 
-## Features
+## 🚀 Proje Hakkında
 
-- **Advanced Analytics**: Real-time market data and technical indicators
-- **Portfolio Management**: Track and manage your crypto investments
-- **Whale Tracking**: Monitor large wallet movements and copy trading strategies
-- **Trend Detection**: AI-powered algorithms to identify trending projects
-- **Price Alerts**: Set custom alerts for price movements
-- **Dark Theme**: Sleek, modern interface with glassmorphism effects
+Web3 Analytics Platform, kripto para dünyasındaki projeleri, özellikle **yeni çıkan Testnet projelerini** sistematik bir şekilde keşfetmenizi ve yönetmenizi sağlayan kapsamlı bir analiz platformudur.
 
-## Tech Stack
+### ✨ Temel Özellikler
+
+- **🔍 Proje Keşfi**: Yeni kripto projelerini keşfedin ve toplulukla paylaşın
+- **📊 Portföy Yönetimi**: Kripto varlıklarınızı gerçek zamanlı takip edin
+- **🐋 Whale Tracking**: Büyük cüzdan hareketlerini izleyin ve kopyala-trade stratejileri geliştirin
+- **📈 Trend Analizi**: AI destekli algoritmalarla trend projelerini keşfedin
+- **💼 Topluluk Paylaşımı**: Keşfettiğiniz projeleri toplulukla paylaşın
+- **📝 Not Sistemi**: Projeler hakkında kişisel notlarınızı tutun
+- **🎯 Watchlist**: İlgilendiğiniz projeleri takip listesine ekleyin
+
+### 🎯 Nasıl Çalışır?
+
+1. **Keşfet**: Topluluk üyeleri yeni projeleri keşfeder ve platforma ekler
+2. **Paylaş**: Projeler herkese açık şekilde paylaşılır
+3. **Takip Et**: İlgilendiğiniz projeleri kendi listenize ekleyebilirsiniz
+4. **Analiz Et**: Proje hakkında detaylı analizler ve notları inceleyebilirsiniz
+5. **Yönet**: Kendi notlarınızı ekleyerek projeleri kişiselleştirebilirsiniz
+
+### 🔮 Gelecek Özellikler
+
+- **🔐 Kod ile Giriş**: Alpha aşamasında davet kodu sistemi eklenecek
+- **🤖 AI Analiz**: Otomatik proje risk analizi
+- **📱 Mobil Uygulama**: iOS ve Android desteği
+- **🔔 Akıllı Bildirimler**: Önemli güncellemeler için otomatik uyarılar
+
+### 🎨 Platform Özellikleri
+
+### 🎨 Platform Özellikleri
+
+- **📊 Gerçek Zamanlı Analitik**: Anlık pazar verileri ve teknik göstergeler
+- **💰 Portföy Yönetimi**: Kripto yatırımlarınızı takip edin ve yönetin
+- **🐋 Whale Takibi**: Büyük cüzdan hareketlerini izleyin ve kopyala-trade stratejileri geliştirin
+- **📈 Trend Tespiti**: AI destekli algoritmalarla trend projeleri keşfedin
+- **🌙 Dark Tema**: Modern, şık arayüz ve glassmorphism efektleri
+
+## 🛠️ Teknoloji Stack'i
 
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS
-- **UI/UX**: Framer Motion for animations, Custom component library
-- **Backend**: Next.js API Routes, MongoDB with Mongoose
-- **Authentication**: JWT-based authentication
-- **Charts**: Recharts for data visualization
-- **Icons**: Lucide React
+- **UI/UX**: Framer Motion animasyonları, Özel component kütüphanesi
+- **Backend**: Next.js API Routes, MongoDB ve Mongoose
+- **Kimlik Doğrulama**: JWT tabanlı authentication
+- **Grafikler**: Recharts ile veri görselleştirme
+- **İkonlar**: Lucide React
 
-## Prerequisites
+## 📋 Gereksinimler
 
 - Node.js 16+ 
-- MongoDB (local or cloud instance)
-- npm or yarn
+- MongoDB (yerel veya cloud instance)
+- npm veya yarn
 
-## Installation
+## 🚀 Kurulum
 
-1. Clone the repository:
+1. Repository'yi klonlayın:
 ```bash
 git clone https://github.com/yourusername/web3-analytics-platform.git
 cd web3-analytics-platform
 ```
 
-2. Install dependencies:
+2. Bağımlılıkları yükleyin:
 ```bash
 npm install
 ```
 
-3. Set up environment variables:
-Create a `.env.local` file in the root directory with:
+3. Ortam değişkenlerini ayarlayın:
+Proje kök dizininde `.env.local` dosyası oluşturun:
 ```env
 # MongoDB
 MONGODB_URI=mongodb://localhost:27017/web3-analytics

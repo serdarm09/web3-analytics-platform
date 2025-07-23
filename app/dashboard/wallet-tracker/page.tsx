@@ -422,12 +422,14 @@ export default function WalletTrackerPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Transactions</p>
                     <p className="text-2xl font-bold">{formatNumber(currentWallet.transactionCount)}</p>
-                    <p className="text-sm text-gray-400">Since {currentWallet.firstSeen.getFullYear()}</p>
+                    <p className="text-sm text-gray-400">
+                      Since {currentWallet.firstSeen ? new Date(currentWallet.firstSeen).getFullYear() : 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Last Active</p>
                     <p className="text-sm font-medium">
-                      {new Date(currentWallet.lastActive).toLocaleString()}
+                      {currentWallet.lastActive ? new Date(currentWallet.lastActive).toLocaleString() : 'N/A'}
                     </p>
                     <div className="flex items-center gap-1 mt-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
@@ -535,7 +537,7 @@ export default function WalletTrackerPage() {
                           <div className="text-right">
                             <p className="font-medium">{formatValue(tx.value)}</p>
                             <p className="text-xs text-gray-400">
-                              {new Date(tx.timestamp).toLocaleTimeString()}
+                              {tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString() : 'N/A'}
                             </p>
                           </div>
                         </div>
@@ -681,7 +683,7 @@ export default function WalletTrackerPage() {
                                 </div>
                               </td>
                               <td className="p-4 text-right text-sm">
-                                {new Date(tx.timestamp).toLocaleString()}
+                                {tx.timestamp ? new Date(tx.timestamp).toLocaleString() : 'N/A'}
                               </td>
                               <td className="p-4 text-center">
                                 <PremiumBadge 

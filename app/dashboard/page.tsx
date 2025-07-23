@@ -525,7 +525,7 @@ export default function DashboardPage() {
                   <div className="space-y-4">
                     {recentActivities.map((activity: any, index: number) => (
                       <motion.div
-                        key={index}
+                        key={activity._id || activity.id || `activity-${index}-${activity.timestamp || Date.now()}`}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.1 * index }}
@@ -731,7 +731,7 @@ export default function DashboardPage() {
                     ) : trendingCoins.length > 0 ? (
                       trendingCoins.map((coin, index) => (
                         <motion.div
-                          key={coin.coinId}
+                          key={coin.coinId || coin.id || `trending-coin-${index}`}
                           initial={{ opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.1 * index }}

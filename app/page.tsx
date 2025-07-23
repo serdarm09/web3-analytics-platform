@@ -9,12 +9,14 @@ import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { Navbar } from '@/components/layout/navbar'
 import { AuthModal } from '@/components/auth/AuthModal'
+import { useAuth } from '@/hooks/use-auth'
 // import { SplineScene } from '@/components/ui/spline'
 import { Web3Hero } from '@/components/ui/web3-hero'
 // import { cryptoDataService } from '@/lib/services/cryptoDataService'
 
 export default function Home() {
   const router = useRouter()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({ 
     isOpen: false, 
     mode: 'register' 
@@ -31,6 +33,13 @@ export default function Home() {
     trending: [] as any[],
     newListings: [] as any[]
   })
+
+  // Redirect to dashboard if user is already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, authLoading, router])
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -149,8 +158,20 @@ export default function Home() {
           title1="Real-Time Crypto"
           title2="Analytics Platform"
           description="Track 20,000+ tokens across all major chains • Analyze whale movements • Professional trading tools • DeFi ecosystem insights"
-          onLaunchApp={() => router.push('/register')}
-          onViewDemo={() => router.push('/login')}
+          onLaunchApp={() => {
+            if (isAuthenticated) {
+              router.push('/dashboard')
+            } else {
+              setAuthModal({ isOpen: true, mode: 'register' })
+            }
+          }}
+          onViewDemo={() => {
+            if (isAuthenticated) {
+              router.push('/dashboard')
+            } else {
+              setAuthModal({ isOpen: true, mode: 'login' })
+            }
+          }}
         />
 
 

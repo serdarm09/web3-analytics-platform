@@ -2,71 +2,21 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Star, Plus, Trash2, Bell, TrendingUp, TrendingDown, Search, Filter, Eye } from "lucide-react"
+import { Star, Plus, Trash2, Bell, TrendingUp, TrendingDown, Search, Filter, Eye, Loader2 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumButton } from "@/components/ui/premium-button"
 import { PremiumInput } from "@/components/ui/premium-input"
 import { PremiumBadge } from "@/components/ui/premium-badge"
+import { PremiumSkeleton } from "@/components/ui/premium-skeleton"
+import { useWatchlist } from "@/hooks/use-watchlist"
+import { AddToWatchlistModal } from "@/components/watchlist/AddToWatchlistModal"
 
-interface WatchlistItem {
-  id: string
-  name: string
-  symbol: string
-  price: number
-  change24h: number
-  change7d: number
-  volume24h: number
-  marketCap: number
-  alertPrice?: number
-  notes?: string
-  addedAt: Date
-}
 
-const mockWatchlistItems: WatchlistItem[] = [
-  {
-    id: "1",
-    name: "Bitcoin",
-    symbol: "BTC",
-    price: 45234.56,
-    change24h: 5.34,
-    change7d: 12.45,
-    volume24h: 28456789012,
-    marketCap: 883456789012,
-    alertPrice: 50000,
-    notes: "Watching for breakout above 50k",
-    addedAt: new Date("2024-01-15")
-  },
-  {
-    id: "2",
-    name: "Ethereum",
-    symbol: "ETH",
-    price: 2456.78,
-    change24h: -2.15,
-    change7d: 8.23,
-    volume24h: 15678901234,
-    marketCap: 295678901234,
-    alertPrice: 2300,
-    notes: "Support level at 2300",
-    addedAt: new Date("2024-01-10")
-  },
-  {
-    id: "3",
-    name: "Chainlink",
-    symbol: "LINK",
-    price: 14.56,
-    change24h: 3.45,
-    change7d: -1.23,
-    volume24h: 567890123,
-    marketCap: 8765432109,
-    notes: "Oracle leader, long-term hold",
-    addedAt: new Date("2024-01-20")
-  }
-]
 
 export default function WatchlistPage() {
-  const [watchlist, setWatchlist] = useState<WatchlistItem[]>(mockWatchlistItems)
+  const { watchlist, isLoading, removeFromWatchlist, isRemoving } = useWatchlist()
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedItem, setSelectedItem] = useState<WatchlistItem | null>(null)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
   const [showAddModal, setShowAddModal] = useState(false)
 
   const formatPrice = (price: number) => {
@@ -84,8 +34,8 @@ export default function WatchlistPage() {
     return `$${(volume / 1e3).toFixed(2)}K`
   }
 
-  const removeFromWatchlist = (id: string) => {
-    setWatchlist(watchlist.filter(item => item.id !== id))
+  const handleRemove = (id: string) => {
+    removeFromWatchlist(id)
   }
 
   const containerVariants = {
@@ -110,10 +60,25 @@ export default function WatchlistPage() {
     }
   }
 
-  const filteredItems = watchlist.filter(item =>
+  const filteredItems = (watchlist || []).filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.symbol.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-4 md:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <PremiumSkeleton className="h-12 w-48" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <PremiumSkeleton key={i} className="h-32" />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
@@ -128,16 +93,16 @@ export default function WatchlistPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
-                My Watchlist
+                Watchlist
               </h1>
               <p className="text-muted-foreground mt-2">
-                Track your favorite cryptocurrencies and set price alerts
+                Favori kripto paralarınızı takip edin ve fiyat uyarıları ayarlayın
               </p>
             </div>
             <div className="flex items-center gap-2">
               <PremiumButton onClick={() => setShowAddModal(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Coin
+                Coin Ekle
               </PremiumButton>
             </div>
           </div>
@@ -146,7 +111,7 @@ export default function WatchlistPage() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <PremiumInput
-                placeholder="Search watchlist..."
+                placeholder="Watchlist'te ara..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 icon={Search}
@@ -155,55 +120,23 @@ export default function WatchlistPage() {
             <div className="flex gap-2">
               <PremiumBadge variant="outline" className="px-4 py-2">
                 <Eye className="h-4 w-4 mr-2" />
-                {watchlist.length} Watching
+                {watchlist?.length || 0} Takip Ediliyor
               </PremiumBadge>
               <PremiumBadge variant="outline" className="px-4 py-2">
                 <Bell className="h-4 w-4 mr-2" />
-                {watchlist.filter(item => item.alertPrice).length} Alerts
+                {watchlist?.filter(item => item.alertPrice).length || 0} Uyarı
               </PremiumBadge>
             </div>
           </div>
         </motion.div>
 
-        {/* Summary Cards */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <PremiumCard className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Total Portfolio Value</p>
-              <p className="text-2xl font-bold">$125,456.78</p>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                <span className="text-sm text-green-500">+5.67% (24h)</span>
-              </div>
-            </div>
-          </PremiumCard>
-
-          <PremiumCard className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Best Performer</p>
-              <p className="text-2xl font-bold">BTC</p>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                <span className="text-sm text-green-500">+12.45% (7d)</span>
-              </div>
-            </div>
-          </PremiumCard>
-
-          <PremiumCard className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Active Alerts</p>
-              <p className="text-2xl font-bold">2</p>
-              <p className="text-sm text-muted-foreground">Price targets pending</p>
-            </div>
-          </PremiumCard>
-        </motion.div>
 
         {/* Watchlist Grid */}
         <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <AnimatePresence>
             {filteredItems.map((item, index) => (
               <motion.div
-                key={item.id}
+                key={item._id}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -230,7 +163,7 @@ export default function WatchlistPage() {
                         variant="ghost"
                         onClick={(e) => {
                           e.stopPropagation()
-                          removeFromWatchlist(item.id)
+                          handleRemove(item._id)
                         }}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
@@ -240,10 +173,10 @@ export default function WatchlistPage() {
                     {/* Price Info */}
                     <div className="space-y-2">
                       <div className="flex items-end justify-between">
-                        <p className="text-2xl font-bold">{formatPrice(item.price)}</p>
+                        <p className="text-2xl font-bold">{formatPrice(item.currentPrice || 0)}</p>
                         <div className="text-right">
-                          <p className={`text-sm font-medium ${item.change24h > 0 ? "text-green-500" : "text-red-500"}`}>
-                            {item.change24h > 0 ? "+" : ""}{item.change24h.toFixed(2)}%
+                          <p className={`text-sm font-medium ${(item.priceChange24h || 0) > 0 ? "text-green-500" : "text-red-500"}`}>
+                            {(item.priceChange24h || 0) > 0 ? "+" : ""}{(item.priceChange24h || 0).toFixed(2)}%
                           </p>
                           <p className="text-xs text-muted-foreground">24h</p>
                         </div>
@@ -251,8 +184,8 @@ export default function WatchlistPage() {
 
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">7d:</span>
-                        <span className={item.change7d > 0 ? "text-green-500" : "text-red-500"}>
-                          {item.change7d > 0 ? "+" : ""}{item.change7d.toFixed(2)}%
+                        <span className={(item.priceChange7d || 0) > 0 ? "text-green-500" : "text-red-500"}>
+                          {(item.priceChange7d || 0) > 0 ? "+" : ""}{(item.priceChange7d || 0).toFixed(2)}%
                         </span>
                       </div>
 
@@ -292,19 +225,25 @@ export default function WatchlistPage() {
         {filteredItems.length === 0 && (
           <motion.div variants={itemVariants} className="text-center py-12">
             <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No items in watchlist</h3>
+            <h3 className="text-lg font-semibold mb-2">Watchlist boş</h3>
             <p className="text-muted-foreground mb-4">
-              {searchQuery ? "No items match your search" : "Start adding cryptocurrencies to track"}
+              {searchQuery ? "Aramanıza uygun sonuç bulunamadı" : "Takip etmek için kripto para ekleyin"}
             </p>
             {!searchQuery && (
               <PremiumButton onClick={() => setShowAddModal(true)}>
                 <Plus className="h-4 w-4 mr-2" />
-                Add First Coin
+                İlk Coin'i Ekle
               </PremiumButton>
             )}
           </motion.div>
         )}
       </motion.div>
+
+      {/* Add to Watchlist Modal */}
+      <AddToWatchlistModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+      />
     </div>
   )
 }

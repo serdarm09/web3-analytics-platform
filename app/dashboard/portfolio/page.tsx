@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, TrendingUp, TrendingDown, DollarSign, PieChart, Wallet, Activity } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, DollarSign, PieChart, Wallet, Activity, ArrowLeft } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { usePortfolio } from '@/hooks/use-portfolio'
 import { PremiumCard } from '@/components/ui/premium-card'
@@ -28,6 +28,7 @@ export default function PortfolioPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedPortfolio, setSelectedPortfolio] = useState<Portfolio | null>(null)
   const [viewMode, setViewMode] = useState<'overview' | 'detail'>('overview')
+  const [isInitializing, setIsInitializing] = useState(false)
 
   const totalValue = portfolios?.reduce((sum: number, p: any) => sum + p.totalValue, 0) || 0
   const totalCost = portfolios?.reduce((sum: number, p: any) => sum + p.totalCost, 0) || 0
@@ -61,6 +62,36 @@ export default function PortfolioPage() {
     setViewMode('overview')
   }
 
+  // Otomatik portföy oluştur
+  const createDefaultPortfolio = async () => {
+    setIsInitializing(true)
+    try {
+      await createPortfolio({
+        name: 'Ana Portföy',
+        description: 'Kripto varlıklarınızı takip edin'
+      })
+      window.location.reload()
+    } catch (error) {
+      console.error('Error creating default portfolio:', error)
+    } finally {
+      setIsInitializing(false)
+    }
+  }
+
+  // Eğer hiç portföy yoksa otomatik oluştur
+  useEffect(() => {
+    if (!isLoading && portfolios && portfolios.length === 0 && !isInitializing) {
+      createDefaultPortfolio()
+    }
+  }, [isLoading, portfolios, isInitializing])
+
+  // Eğer tek portföy varsa direkt onu seç
+  useEffect(() => {
+    if (!isLoading && portfolios && portfolios.length === 1 && !selectedPortfolio) {
+      handlePortfolioSelect(portfolios[0])
+    }
+  }, [isLoading, portfolios, selectedPortfolio])
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -74,16 +105,25 @@ export default function PortfolioPage() {
     return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`
   }
 
-  if (isLoading) {
+  if (isLoading || isInitializing) {
     return (
       <div className="space-y-6">
+        <div className="text-center py-12">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="inline-flex items-center gap-2 text-white"
+          >
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span>{isInitializing ? 'Portföyünüz oluşturuluyor...' : 'Yükleniyor...'}</span>
+          </motion.div>
+        </div>
         <PremiumSkeleton className="h-32" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <PremiumSkeleton key={i} className="h-24" />
           ))}
         </div>
-        <PremiumSkeleton className="h-96" />
       </div>
     )
   }
@@ -95,9 +135,10 @@ export default function PortfolioPage() {
           <div>
             <button
               onClick={handleBackToOverview}
-              className="text-accent-slate hover:text-white transition-colors mb-2 text-sm"
+              className="flex items-center gap-2 text-accent-slate hover:text-white transition-colors mb-2 text-sm"
             >
-              ← Back to Overview
+              <ArrowLeft className="w-4 h-4" />
+              Portföy Listesine Dön
             </button>
             <h1 className="text-3xl font-bold text-white">{selectedPortfolio.name}</h1>
             {selectedPortfolio.description && (
@@ -116,7 +157,7 @@ export default function PortfolioPage() {
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Total Value</p>
+                  <p className="text-sm text-gray-400">Toplam Değer</p>
                   <p className="text-2xl font-bold text-white mt-1">
                     {formatCurrency(selectedPortfolio.totalValue)}
                   </p>
@@ -136,7 +177,7 @@ export default function PortfolioPage() {
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Total Cost</p>
+                  <p className="text-sm text-gray-400">Toplam Maliyet</p>
                   <p className="text-2xl font-bold text-white mt-1">
                     {formatCurrency(selectedPortfolio.totalCost)}
                   </p>
@@ -156,7 +197,7 @@ export default function PortfolioPage() {
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Profit/Loss</p>
+                  <p className="text-sm text-gray-400">Kar/Zarar</p>
                   <p className={`text-2xl font-bold mt-1 ${
                     selectedPortfolio.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'
                   }`}>
@@ -184,7 +225,7 @@ export default function PortfolioPage() {
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">P&L Percentage</p>
+                  <p className="text-sm text-gray-400">K/Z Yüzdesi</p>
                   <p className={`text-2xl font-bold mt-1 ${
                     selectedPortfolio.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'
                   }`}>
@@ -218,13 +259,15 @@ export default function PortfolioPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Portfolio Overview</h1>
-          <p className="text-gray-400 mt-1">Track and manage your crypto investments</p>
+          <h1 className="text-3xl font-bold text-white">Portföy Yönetimi</h1>
+          <p className="text-gray-400 mt-1">Kripto yatırımlarınızı takip edin ve yönetin</p>
         </div>
-        <PremiumButton onClick={() => setShowCreateModal(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Portfolio
-        </PremiumButton>
+        {portfolios && portfolios.length > 1 && (
+          <PremiumButton onClick={() => setShowCreateModal(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Yeni Portföy
+          </PremiumButton>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -236,7 +279,7 @@ export default function PortfolioPage() {
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Total Value</p>
+                <p className="text-sm text-gray-400">Toplam Değer</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {formatCurrency(totalValue)}
                 </p>
@@ -256,7 +299,7 @@ export default function PortfolioPage() {
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Total Cost</p>
+                <p className="text-sm text-gray-400">Toplam Maliyet</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {formatCurrency(totalCost)}
                 </p>
@@ -276,7 +319,7 @@ export default function PortfolioPage() {
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Profit/Loss</p>
+                <p className="text-sm text-gray-400">Kar/Zarar</p>
                 <p className={`text-2xl font-bold mt-1 ${totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {formatCurrency(Math.abs(totalProfitLoss))}
                 </p>
@@ -300,7 +343,7 @@ export default function PortfolioPage() {
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">ROI</p>
+                <p className="text-sm text-gray-400">Getiri Oranı</p>
                 <p className={`text-2xl font-bold mt-1 ${totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {formatPercentage(totalProfitLossPercentage)}
                 </p>
@@ -322,7 +365,7 @@ export default function PortfolioPage() {
           <AreaChart
             data={mockChartData}
             dataKey="value"
-            title="Portfolio Performance"
+            title="Portföy Performansı"
             height={400}
             color="#64748b"
           />
@@ -335,7 +378,7 @@ export default function PortfolioPage() {
         >
           <PieChartComponent
             data={pieData}
-            title="Portfolio Distribution"
+            title="Portföy Dağılımı"
             height={400}
           />
         </motion.div>
@@ -347,7 +390,7 @@ export default function PortfolioPage() {
         transition={{ delay: 0.7 }}
       >
         <PremiumCard className="p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Your Portfolios</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">Portföyleriniz</h2>
           {portfolios && portfolios.length > 0 ? (
             <div className="space-y-4">
               {portfolios.map((portfolio: any) => (
@@ -364,10 +407,10 @@ export default function PortfolioPage() {
                       )}
                       <div className="flex items-center gap-4 mt-2">
                         <span className="text-sm text-gray-400">
-                          {portfolio.assets.length} assets
+                          {portfolio.assets.length} varlık
                         </span>
                         <span className="text-sm text-gray-400">
-                          Value: {formatCurrency(portfolio.totalValue)}
+                          Değer: {formatCurrency(portfolio.totalValue)}
                         </span>
                         <span className={`text-sm ${portfolio.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {formatPercentage(portfolio.totalProfitLossPercentage)}
@@ -380,10 +423,10 @@ export default function PortfolioPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-400 mb-4">No portfolios yet. Create your first portfolio to get started.</p>
+              <p className="text-gray-400 mb-4">Henüz portföyünüz yok. Başlamak için ilk portföyünüzü oluşturun.</p>
               <PremiumButton onClick={() => setShowCreateModal(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Your First Portfolio
+                İlk Portföyünüzü Oluşturun
               </PremiumButton>
             </div>
           )}

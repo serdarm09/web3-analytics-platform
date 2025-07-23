@@ -11,7 +11,6 @@ import {
   Eye,
   Activity,
   BarChart3,
-  Bell,
   Settings,
   LogOut,
   ChevronLeft,
@@ -58,11 +57,6 @@ const sidebarItems = [
     title: 'Analytics',
     icon: BarChart3,
     href: '/dashboard/analytics',
-  },
-  {
-    title: 'Alerts',
-    icon: Bell,
-    href: '/dashboard/alerts',
   },
   {
     title: 'Profile',

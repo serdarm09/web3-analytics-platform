@@ -24,7 +24,6 @@ export const API_ROUTES = {
   },
   PROJECTS: '/api/projects',
   PORTFOLIOS: '/api/portfolios',
-  ALERTS: '/api/alerts',
   WHALE_WALLETS: '/api/whale-wallets',
 } as const
 
@@ -37,7 +36,6 @@ export const ROUTES = {
     HOME: '/dashboard',
     PORTFOLIO: '/dashboard/portfolio',
     ANALYTICS: '/dashboard/analytics',
-    ALERTS: '/dashboard/alerts',
     PROJECTS: '/dashboard/projects',
     TRENDING: '/dashboard/trending',
     WATCHLIST: '/dashboard/watchlist',

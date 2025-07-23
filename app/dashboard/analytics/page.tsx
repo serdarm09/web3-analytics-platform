@@ -11,70 +11,20 @@ import {
   Calendar,
   Download,
   Filter,
-  Info
+  Info,
+  RefreshCw
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumButton } from "@/components/ui/premium-button"
 import { PremiumBadge } from "@/components/ui/premium-badge"
 import { LineChart, AreaChart, BarChart, PieChart as PieChartComponent } from "@/components/charts"
-
-interface MarketMetrics {
-  totalMarketCap: number
-  totalVolume24h: number
-  btcDominance: number
-  ethDominance: number
-  altcoinMarketCap: number
-  defiTVL: number
-}
-
-interface PerformanceData {
-  date: string
-  portfolio: number
-  bitcoin: number
-  ethereum: number
-  sp500: number
-}
-
-const mockMarketMetrics: MarketMetrics = {
-  totalMarketCap: 1876543210987,
-  totalVolume24h: 98765432109,
-  btcDominance: 48.5,
-  ethDominance: 18.2,
-  altcoinMarketCap: 625432109876,
-  defiTVL: 45678901234
-}
-
-const mockPerformanceData: PerformanceData[] = [
-  { date: "Jan", portfolio: 100000, bitcoin: 35000, ethereum: 2200, sp500: 4200 },
-  { date: "Feb", portfolio: 112000, bitcoin: 38000, ethereum: 2400, sp500: 4250 },
-  { date: "Mar", portfolio: 125000, bitcoin: 42000, ethereum: 2800, sp500: 4300 },
-  { date: "Apr", portfolio: 118000, bitcoin: 40000, ethereum: 2600, sp500: 4280 },
-  { date: "May", portfolio: 135000, bitcoin: 45000, ethereum: 3000, sp500: 4350 },
-  { date: "Jun", portfolio: 142000, bitcoin: 43000, ethereum: 2900, sp500: 4400 },
-  { date: "Jul", portfolio: 155000, bitcoin: 45234, ethereum: 2456, sp500: 4450 }
-]
-
-const mockSectorData = [
-  { name: "DeFi", value: 35, color: "#8b5cf6" },
-  { name: "Gaming", value: 20, color: "#ec4899" },
-  { name: "Layer 1", value: 25, color: "#3b82f6" },
-  { name: "Layer 2", value: 10, color: "#10b981" },
-  { name: "Meme", value: 10, color: "#f59e0b" }
-]
-
-const mockVolumeData = [
-  { name: "Mon", volume: 85 },
-  { name: "Tue", volume: 92 },
-  { name: "Wed", volume: 78 },
-  { name: "Thu", volume: 95 },
-  { name: "Fri", volume: 88 },
-  { name: "Sat", volume: 72 },
-  { name: "Sun", volume: 68 }
-]
+import { useMarketAnalytics } from "@/hooks/use-market-analytics"
 
 export default function AnalyticsPage() {
   const [timeframe, setTimeframe] = useState("1M")
   const [chartType, setChartType] = useState<"area" | "line">("area")
+  
+  const { globalData, trendingCoins, defiData, chartData, loading, error, refetch } = useMarketAnalytics()
 
   const formatValue = (value: number, decimals = 0) => {
     return new Intl.NumberFormat("en-US", {
@@ -90,6 +40,74 @@ export default function AnalyticsPage() {
     if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`
     return `$${(value / 1e6).toFixed(2)}M`
   }
+
+  const formatPercentage = (value: number) => {
+    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Market Analytics</h1>
+            <p className="text-gray-400 mt-1">Comprehensive market data and insights</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <PremiumCard key={i} className="p-6">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-700 rounded w-1/2 mb-2"></div>
+                <div className="h-8 bg-gray-700 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-700 rounded w-1/3"></div>
+              </div>
+            </PremiumCard>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Market Analytics</h1>
+            <p className="text-gray-400 mt-1">Comprehensive market data and insights</p>
+          </div>
+          <PremiumButton onClick={refetch} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </PremiumButton>
+        </div>
+        
+        <PremiumCard className="p-6">
+          <div className="text-center">
+            <p className="text-red-400 mb-2">Failed to load market data</p>
+            <p className="text-gray-400 text-sm">{error}</p>
+          </div>
+        </PremiumCard>
+      </div>
+    )
+  }
+
+  // Sector data from DeFi categories
+  const sectorData = defiData?.categoryDistribution.slice(0, 5).map((category, index) => ({
+    name: category.name,
+    value: Math.round((category.tvl / (defiData?.totalTVL || 1)) * 100),
+    color: ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'][index]
+  })) || []
+
+  // Volume data from trending coins
+  const volumeData = trendingCoins.slice(0, 7).map(coin => ({
+    name: coin.symbol.toUpperCase(),
+    volume: Math.round(coin.volume_24h / 1000000) // Convert to millions
+  }))
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -141,10 +159,18 @@ export default function AnalyticsPage() {
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Total Market Cap</p>
-                <p className="text-2xl font-bold">{formatMarketCap(mockMarketMetrics.totalMarketCap)}</p>
+                <p className="text-2xl font-bold">
+                  {globalData ? formatMarketCap(globalData.totalMarketCap) : '$0'}
+                </p>
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-green-500">+5.34%</span>
+                  {globalData && globalData.marketCapChange24h >= 0 ? (
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500" />
+                  )}
+                  <span className={`text-sm ${globalData && globalData.marketCapChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {globalData ? formatPercentage(globalData.marketCapChange24h) : '0%'}
+                  </span>
                 </div>
               </div>
               <BarChart3 className="h-8 w-8 text-accent-slate" />
@@ -155,10 +181,14 @@ export default function AnalyticsPage() {
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">24h Volume</p>
-                <p className="text-2xl font-bold">{formatMarketCap(mockMarketMetrics.totalVolume24h)}</p>
+                <p className="text-2xl font-bold">
+                  {globalData ? formatMarketCap(globalData.totalVolume24h) : '$0'}
+                </p>
                 <div className="flex items-center gap-2">
-                  <TrendingDown className="h-4 w-4 text-red-500" />
-                  <span className="text-sm text-red-500">-2.15%</span>
+                  <Activity className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm text-gray-400">
+                    {globalData ? `${globalData.markets} markets` : '0 markets'}
+                  </span>
                 </div>
               </div>
               <Activity className="h-8 w-8 text-pink-500" />
@@ -169,10 +199,18 @@ export default function AnalyticsPage() {
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">DeFi TVL</p>
-                <p className="text-2xl font-bold">{formatMarketCap(mockMarketMetrics.defiTVL)}</p>
+                <p className="text-2xl font-bold">
+                  {defiData ? formatMarketCap(defiData.totalTVL) : '$0'}
+                </p>
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  <span className="text-sm text-green-500">+8.76%</span>
+                  {defiData && defiData.tvlChange24h >= 0 ? (
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500" />
+                  )}
+                  <span className={`text-sm ${defiData && defiData.tvlChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {defiData ? formatPercentage(defiData.tvlChange24h) : '0%'}
+                  </span>
                 </div>
               </div>
               <PieChart className="h-8 w-8 text-blue-500" />
@@ -207,10 +245,10 @@ export default function AnalyticsPage() {
               <div className="h-96">
                 {chartType === "area" ? (
                   <AreaChart
-                    data={mockPerformanceData}
-                    dataKey="portfolio"
+                    data={chartData}
+                    dataKey="bitcoin"
                     xDataKey="date"
-                    title="Portfolio Performance"
+                    title="Market Performance"
                     color="#8B5CF6"
                     height={384}
                     showGrid={true}
@@ -218,10 +256,10 @@ export default function AnalyticsPage() {
                   />
                 ) : (
                   <LineChart
-                    data={mockPerformanceData}
-                    dataKey="portfolio"
+                    data={chartData}
+                    dataKey="bitcoin"
                     xDataKey="date"
-                    title="Portfolio Performance"
+                    title="Market Performance"
                     color="#8B5CF6"
                     height={384}
                     showGrid={true}
@@ -257,8 +295,8 @@ export default function AnalyticsPage() {
             <div className="p-6">
               <div className="h-80">
                 <PieChartComponent
-                  data={mockSectorData}
-                  title="Portfolio Allocation"
+                  data={sectorData}
+                  title="DeFi Categories"
                   height={320}
                   showLegend={true}
                 />
@@ -269,12 +307,12 @@ export default function AnalyticsPage() {
           <PremiumCard>
             <div className="p-6 border-b">
               <h2 className="text-xl font-semibold">Trading Volume</h2>
-              <p className="text-sm text-muted-foreground">Daily trading volume (billions)</p>
+              <p className="text-sm text-muted-foreground">Top coins volume (millions)</p>
             </div>
             <div className="p-6">
               <div className="h-80">
                 <BarChart
-                  data={mockVolumeData}
+                  data={volumeData}
                   dataKey="volume"
                   xDataKey="name"
                   title="Trading Volume"
@@ -299,12 +337,12 @@ export default function AnalyticsPage() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-medium">Bitcoin Dominance</span>
-                    <span className="text-sm">{mockMarketMetrics.btcDominance}%</span>
+                    <span className="text-sm">{globalData?.btcDominance ? `${globalData.btcDominance.toFixed(1)}%` : 'Loading...'}</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${mockMarketMetrics.btcDominance}%` }}
+                      animate={{ width: `${globalData?.btcDominance || 0}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
                       className="h-full bg-gradient-to-r from-orange-500 to-orange-600"
                     />
@@ -313,12 +351,12 @@ export default function AnalyticsPage() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-medium">Ethereum Dominance</span>
-                    <span className="text-sm">{mockMarketMetrics.ethDominance}%</span>
+                    <span className="text-sm">{globalData?.ethDominance ? `${globalData.ethDominance.toFixed(1)}%` : 'Loading...'}</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${mockMarketMetrics.ethDominance}%` }}
+                      animate={{ width: `${globalData?.ethDominance || 0}%` }}
                       transition={{ duration: 1, ease: "easeOut", delay: 0.1 }}
                       className="h-full bg-gradient-to-r from-blue-500 to-blue-600"
                     />
@@ -327,12 +365,21 @@ export default function AnalyticsPage() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-medium">Altcoins</span>
-                    <span className="text-sm">{(100 - mockMarketMetrics.btcDominance - mockMarketMetrics.ethDominance).toFixed(1)}%</span>
+                    <span className="text-sm">
+                      {globalData?.btcDominance && globalData?.ethDominance 
+                        ? `${(100 - globalData.btcDominance - globalData.ethDominance).toFixed(1)}%`
+                        : 'Loading...'
+                      }
+                    </span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${100 - mockMarketMetrics.btcDominance - mockMarketMetrics.ethDominance}%` }}
+                      animate={{ 
+                        width: globalData?.btcDominance && globalData?.ethDominance 
+                          ? `${100 - globalData.btcDominance - globalData.ethDominance}%`
+                          : '0%'
+                      }}
                       transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
                       className="h-full bg-gradient-to-r from-accent-slate to-accent-teal"
                     />

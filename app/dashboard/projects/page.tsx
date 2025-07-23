@@ -78,7 +78,6 @@ export default function ProjectsPage() {
           variant="gradient"
           onClick={() => setIsModalOpen(true)}
         >
-          <Plus className="w-4 h-4 mr-2" />
           Add Project
         </PremiumButton>
       </div>
@@ -151,7 +150,6 @@ export default function ProjectsPage() {
                   variant="gradient"
                   onClick={() => setIsModalOpen(true)}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
                   Add Project
                 </PremiumButton>
                 <PremiumButton

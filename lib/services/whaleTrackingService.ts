@@ -259,9 +259,9 @@ class WhaleTrackingService {
   }
 
 
-  // Whale alert oluştur
-  async checkForWhaleAlerts(minValueUSD: number = 5000000): Promise<WhaleTransaction[]> {
-    const alerts: WhaleTransaction[] = []
+  // Whale işlem kontrolü
+  async checkForWhaleTransactions(minValueUSD: number = 5000000): Promise<WhaleTransaction[]> {
+    const transactions: WhaleTransaction[] = []
     
     try {
       // Ethereum ve BSC'den son transferleri al
@@ -275,13 +275,13 @@ class WhaleTrackingService {
       
       for (const tx of allTransfers) {
         if (tx.valueUSD >= minValueUSD) {
-          alerts.push(tx)
+          transactions.push(tx)
         }
       }
 
-      return alerts.sort((a, b) => b.valueUSD - a.valueUSD)
+      return transactions.sort((a, b) => b.valueUSD - a.valueUSD)
     } catch (error) {
-      console.error('Error checking whale alerts:', error)
+      console.error('Error checking whale transactions:', error)
       return []
     }
   }

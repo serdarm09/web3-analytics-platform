@@ -12,28 +12,44 @@ export async function POST(
   try {
     const authResult = await verifyAuth(request)
     if (!authResult.authenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.error('Auth failed in portfolio assets POST:', authResult)
+      return NextResponse.json({ error: 'Kimlik doğrulama başarısız. Lütfen tekrar giriş yapın.' }, { status: 401 })
     }
 
     const { portfolioId } = await params
+    console.log('POST /api/portfolios/[portfolioId]/assets - portfolioId:', portfolioId)
+    console.log('userId:', authResult.userId)
+    
     const body = await request.json()
     const { symbol, amount, purchasePrice, purchaseDate, projectId } = body
+    console.log('Request body:', { symbol, amount, purchasePrice, purchaseDate })
 
     if (!symbol || !amount || !purchasePrice) {
       return NextResponse.json(
-        { error: 'Symbol, amount, and purchase price are required' },
+        { error: 'Sembol, miktar ve alış fiyatı zorunludur' },
         { status: 400 }
       )
     }
 
     await dbConnect()
 
+    console.log('Looking for portfolio with:', {
+      _id: portfolioId,
+      userId: authResult.userId
+    })
+
     const portfolio = await Portfolio.findOne({
       _id: portfolioId,
       userId: authResult.userId
     })
 
+    console.log('Found portfolio:', portfolio ? 'YES' : 'NO')
+
     if (!portfolio) {
+      console.error('Portfolio not found:', {
+        portfolioId,
+        userId: authResult.userId
+      })
       return NextResponse.json({ error: 'Portfolio not found' }, { status: 404 })
     }
 
@@ -67,14 +83,17 @@ export async function POST(
     }
 
     // Create new asset
+    const parsedAmount = parseFloat(amount)
+    const parsedPrice = parseFloat(purchasePrice)
+    
     const newAsset = {
       projectId: new Types.ObjectId(validProjectId),
       symbol: symbol.toUpperCase(),
-      amount: parseFloat(amount),
-      purchasePrice: parseFloat(purchasePrice),
+      amount: parsedAmount,
+      purchasePrice: parsedPrice,
       purchaseDate: purchaseDate ? new Date(purchaseDate) : new Date(),
-      currentPrice: parseFloat(purchasePrice), // Will be updated with market data
-      currentValue: parseFloat(amount) * parseFloat(purchasePrice),
+      currentPrice: parsedPrice, // Will be updated with market data
+      currentValue: parsedAmount * parsedPrice,
       profitLoss: 0,
       profitLossPercentage: 0
     }
@@ -86,10 +105,19 @@ export async function POST(
     await portfolio.save()
 
     return NextResponse.json(portfolio, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error adding asset to portfolio:', error)
+    
+    // MongoDB duplicate key error
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { error: 'Bu varlık zaten portföyünüzde mevcut' },
+        { status: 409 }
+      )
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to add asset to portfolio' },
+      { error: error.message || 'Varlık portföye eklenirken hata oluştu' },
       { status: 500 }
     )
   }

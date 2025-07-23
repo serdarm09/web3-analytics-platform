@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // List of protected routes
-  const protectedRoutes = ['/dashboard', '/portfolio', '/projects', '/analytics', '/watchlist', '/alerts', '/settings', '/profile']
+  const protectedRoutes = ['/dashboard', '/portfolio', '/projects', '/analytics', '/watchlist', '/settings', '/profile']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Auth routes
@@ -18,8 +18,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Don't redirect from auth pages even if token exists
-  // Let the auth pages handle their own logic
+  // If user has token and trying to access auth pages, redirect to dashboard
+  if (isAuthRoute && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
   
   return NextResponse.next()
 }
@@ -31,7 +33,6 @@ export const config = {
     '/projects/:path*',
     '/analytics/:path*',
     '/watchlist/:path*',
-    '/alerts/:path*',
     '/settings/:path*',
     '/profile/:path*',
     '/login', 

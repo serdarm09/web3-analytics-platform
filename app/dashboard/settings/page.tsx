@@ -26,6 +26,7 @@ import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumButton } from "@/components/ui/premium-button"
 import { PremiumBadge } from "@/components/ui/premium-badge"
 import { PremiumInput } from "@/components/ui/premium-input"
+import ActivityHistory from "@/components/user/ActivityHistory"
 
 interface UserSettings {
   profile: {
@@ -396,6 +397,11 @@ export default function SettingsPage() {
                   <div className="space-y-3">
                   </div>
                 </PremiumCard>
+
+                {/* Activity History */}
+                <div className="mt-6">
+                  <ActivityHistory userId={user?.id || ''} />
+                </div>
               </motion.div>
             )}
 
