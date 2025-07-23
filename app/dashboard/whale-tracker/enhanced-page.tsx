@@ -26,7 +26,7 @@ import {
   Network
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
-import { PremiumButton } from "@/components/ui/premium-button"
+import { StarBorder } from "@/components/ui/star-border"
 import { PremiumBadge } from "@/components/ui/premium-badge"
 import { PremiumInput } from "@/components/ui/premium-input"
 import { toast } from "sonner"
@@ -154,21 +154,22 @@ function AddWalletModal({ isOpen, onClose, onAdd }: AddWalletModalProps) {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <PremiumButton
+            <StarBorder
+              as="button"
               type="button"
-              variant="outline"
               onClick={onClose}
-              className="flex-1"
+              className="flex-1 inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
             >
               Cancel
-            </PremiumButton>
-            <PremiumButton
+            </StarBorder>
+            <StarBorder
+              as="button"
               type="submit"
               disabled={loading || !address.trim()}
-              className="flex-1"
+              className="flex-1 inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
             >
               {loading ? 'Adding...' : 'Add Wallet'}
-            </PremiumButton>
+            </StarBorder>
           </div>
         </form>
       </motion.div>
@@ -260,18 +261,21 @@ export default function EnhancedWhaleTrackerPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            <PremiumButton
-              variant="outline"
+            <StarBorder
               onClick={handleRefresh}
               disabled={refreshing}
+              className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
               Refresh
-            </PremiumButton>
-            <PremiumButton onClick={() => setShowAddModal(true)}>
+            </StarBorder>
+            <StarBorder 
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Wallet
-            </PremiumButton>
+            </StarBorder>
           </div>
         </div>
 
@@ -400,15 +404,23 @@ export default function EnhancedWhaleTrackerPage() {
             ) : error ? (
               <div className="text-center py-8">
                 <p className="text-red-400 mb-4">{error}</p>
-                <PremiumButton onClick={() => fetchWallets()}>Try Again</PremiumButton>
+                <StarBorder 
+                  onClick={() => fetchWallets()}
+                  className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
+                >
+                  Try Again
+                </StarBorder>
               </div>
             ) : filteredWallets.length === 0 ? (
               <div className="text-center py-8">
                 <Wallet className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400 mb-4">No wallets found</p>
-                <PremiumButton onClick={() => setShowAddModal(true)}>
+                <StarBorder 
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
+                >
                   Add Your First Wallet
-                </PremiumButton>
+                </StarBorder>
               </div>
             ) : (
               <div className="space-y-4">
@@ -458,29 +470,26 @@ export default function EnhancedWhaleTrackerPage() {
                       </div>
 
                       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <PremiumButton
-                          variant="ghost"
-                          size="sm"
+                        <button
+                          className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors"
                           onClick={() => copyAddress(wallet.address)}
                         >
                           <Copy className="h-4 w-4" />
-                        </PremiumButton>
+                        </button>
                         
-                        <PremiumButton
-                          variant="ghost"
-                          size="sm"
+                        <button
+                          className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors"
                           onClick={() => window.open(getExplorerUrl(wallet.address, wallet.network), '_blank')}
                         >
                           <ExternalLink className="h-4 w-4" />
-                        </PremiumButton>
+                        </button>
                         
-                        <PremiumButton
-                          variant="ghost"
-                          size="sm"
+                        <button
+                          className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors"
                           onClick={() => setSelectedWallet(wallet)}
                         >
                           <Eye className="h-4 w-4" />
-                        </PremiumButton>
+                        </button>
                       </div>
                     </div>
 
@@ -547,13 +556,12 @@ export default function EnhancedWhaleTrackerPage() {
                       <span className="font-mono text-lg text-white">
                         {formatWalletAddress(selectedWallet.address, 12)}
                       </span>
-                      <PremiumButton
-                        variant="ghost"
-                        size="sm"
+                      <button
+                        className="p-1.5 rounded-lg hover:bg-gray-700 transition-colors"
                         onClick={() => copyAddress(selectedWallet.address)}
                       >
                         <Copy className="h-4 w-4" />
-                      </PremiumButton>
+                      </button>
                     </div>
                     <p className={`${getNetworkColor(selectedWallet.network)} font-medium`}>
                       {getNetworkDisplayName(selectedWallet.network)}

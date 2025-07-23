@@ -5,7 +5,7 @@ import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Hea
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { PremiumCard } from '@/components/ui/premium-card'
-import { PremiumButton } from '@/components/ui/premium-button'
+import { StarBorder } from '@/components/ui/star-border'
 import { PremiumInput } from '@/components/ui/premium-input'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import ProjectCreationModal from '@/components/ProjectCreationModal'
@@ -74,12 +74,12 @@ export default function ProjectsPage() {
           <h1 className="text-3xl font-bold text-white">Crypto Projects</h1>
           <p className="text-gray-400 mt-1">Discover and track cryptocurrency projects</p>
         </div>
-        <PremiumButton
-          variant="gradient"
+        <StarBorder
           onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
         >
           Add Project
-        </PremiumButton>
+        </StarBorder>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
@@ -92,10 +92,12 @@ export default function ProjectsPage() {
           />
         </div>
         <div className="flex gap-2">
-          <PremiumButton variant="outline">
+          <StarBorder
+            className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
+          >
             <Filter className="w-4 h-4 mr-2" />
             Filters
-          </PremiumButton>
+          </StarBorder>
         </div>
       </div>
 
@@ -146,18 +148,18 @@ export default function ProjectsPage() {
               <p className="text-gray-400 text-lg">No tracked projects found</p>
               <p className="text-gray-500 text-sm mt-2">Start tracking projects to see them here</p>
               <div className="flex gap-4 justify-center mt-6">
-                <PremiumButton
-                  variant="gradient"
+                <StarBorder
+                  className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
                   onClick={() => setIsModalOpen(true)}
                 >
                   Add Project
-                </PremiumButton>
-                <PremiumButton
-                  variant="outline"
+                </StarBorder>
+                <StarBorder
+                  className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
                   onClick={() => setShowTrendingProjects(!showTrendingProjects)}
                 >
                   {showTrendingProjects ? 'Hide' : 'Browse'} Trending Projects
-                </PremiumButton>
+                </StarBorder>
               </div>
               
               {showTrendingProjects && (
@@ -185,13 +187,12 @@ export default function ProjectsPage() {
                             <p className="text-gray-400 text-sm">{trendingProject.symbol} • {trendingProject.category}</p>
                           </div>
                         </div>
-                        <PremiumButton
-                          variant="outline"
-                          size="sm"
+                        <StarBorder
+                          className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3"
                           onClick={() => setIsModalOpen(true)}
                         >
                           Track
-                        </PremiumButton>
+                        </StarBorder>
                       </div>
                     ))}
                   </div>

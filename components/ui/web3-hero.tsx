@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Activity, TrendingUp, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { PremiumButton } from "@/components/ui/premium-button";
+import { StarBorder } from "@/components/ui/star-border";
 import { MorphingText } from "@/components/ui/morphing-text";
 
 function CryptoShape({
@@ -195,27 +195,23 @@ function Web3Hero({
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            <PremiumButton 
-                                size="lg" 
-                                variant="gradient" 
-                                className="w-full sm:w-auto bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800"
+                            <StarBorder 
+                                className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600 text-white shadow hover:bg-primary/90 h-11 px-8"
                                 onClick={onLaunchApp}
                             >
                                 Launch App
-                            </PremiumButton>
+                            </StarBorder>
                         </motion.div>
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            <PremiumButton 
-                                size="lg" 
-                                variant="outline" 
-                                className="w-full sm:w-auto border-gray-700 hover:border-gray-500 hover:bg-gray-900/50"
+                            <StarBorder 
+                                className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-gray-700 bg-transparent shadow-sm hover:border-gray-500 hover:bg-gray-900/50 hover:text-accent-foreground h-11 px-8"
                                 onClick={onViewDemo}
                             >
                                 View Demo
-                            </PremiumButton>
+                            </StarBorder>
                         </motion.div>
                     </motion.div>
 

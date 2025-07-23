@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Star, Plus, Trash2, Bell, TrendingUp, TrendingDown, Search, Filter, Eye, Loader2 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
-import { PremiumButton } from "@/components/ui/premium-button"
+import { StarBorder } from "@/components/ui/star-border"
 import { PremiumInput } from "@/components/ui/premium-input"
 import { PremiumBadge } from "@/components/ui/premium-badge"
 import { PremiumSkeleton } from "@/components/ui/premium-skeleton"
@@ -100,10 +100,13 @@ export default function WatchlistPage() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <PremiumButton onClick={() => setShowAddModal(true)}>
+              <StarBorder 
+                className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
+                onClick={() => setShowAddModal(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Coin Ekle
-              </PremiumButton>
+              </StarBorder>
             </div>
           </div>
 
@@ -158,16 +161,15 @@ export default function WatchlistPage() {
                           <p className="text-sm text-muted-foreground">{item.symbol}</p>
                         </div>
                       </div>
-                      <PremiumButton
-                        size="sm"
-                        variant="ghost"
+                      <button
+                        className="p-1.5 rounded-lg hover:bg-gray-secondary transition-colors"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleRemove(item._id)
                         }}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
-                      </PremiumButton>
+                      </button>
                     </div>
 
                     {/* Price Info */}
@@ -230,10 +232,13 @@ export default function WatchlistPage() {
               {searchQuery ? "Aramanıza uygun sonuç bulunamadı" : "Takip etmek için kripto para ekleyin"}
             </p>
             {!searchQuery && (
-              <PremiumButton onClick={() => setShowAddModal(true)}>
+              <StarBorder 
+                className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
+                onClick={() => setShowAddModal(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 İlk Coin'i Ekle
-              </PremiumButton>
+              </StarBorder>
             )}
           </motion.div>
         )}

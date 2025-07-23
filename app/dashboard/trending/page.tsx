@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { TrendingUp, TrendingDown, Star, DollarSign, BarChart3, Activity, RefreshCw, Filter } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
-import { PremiumButton } from "@/components/ui/premium-button"
+import { StarBorder } from "@/components/ui/star-border"
 import { PremiumBadge } from "@/components/ui/premium-badge"
 import { PremiumSkeleton } from "@/components/ui/premium-skeleton"
 import { useMarketData } from "@/hooks/use-market-data"
@@ -125,15 +125,14 @@ export default function TrendingPage() {
           <h1 className="text-3xl font-bold text-white">Trending Cryptocurrencies</h1>
           <p className="text-gray-400 mt-1">Discover trending and popular cryptocurrencies with real-time data from CoinGecko</p>
         </div>
-        <PremiumButton
+        <StarBorder
           onClick={handleRefresh}
-          variant="outline"
           disabled={refreshing}
-          className="flex items-center gap-2"
+          className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
         >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'Refreshing...' : 'Refresh'}
-        </PremiumButton>
+        </StarBorder>
       </div>
 
       {/* Global Market Stats */}

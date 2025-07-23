@@ -15,7 +15,7 @@ import {
   RefreshCw
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
-import { PremiumButton } from "@/components/ui/premium-button"
+import { StarBorder } from "@/components/ui/star-border"
 import { PremiumBadge } from "@/components/ui/premium-badge"
 import { PremiumSkeleton } from "@/components/ui/premium-skeleton"
 import { LineChart, AreaChart, BarChart, PieChart as PieChartComponent } from "@/components/charts"
@@ -135,19 +135,20 @@ export default function AnalyticsPage() {
           <p className="text-gray-400 mt-1">Comprehensive cryptocurrency market analysis and insights</p>
         </div>
         <div className="flex items-center gap-3">
-          <PremiumButton
+          <StarBorder
             onClick={handleRefresh}
-            variant="outline"
             disabled={refreshing}
-            className="flex items-center gap-2"
+            className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Refreshing...' : 'Refresh'}
-          </PremiumButton>
-          <PremiumButton variant="outline">
+          </StarBorder>
+          <StarBorder
+            className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
+          >
             <Download className="w-4 h-4 mr-2" />
             Export
-          </PremiumButton>
+          </StarBorder>
         </div>
       </div>
 

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Menu, X, BarChart3, TrendingUp, Home, ArrowRight } from 'lucide-react'
-import { PremiumButton } from '@/components/ui/premium-button'
+import { StarBorder } from '@/components/ui/star-border'
 import { useState } from 'react'
 
 export function Navbar() {
@@ -128,18 +128,18 @@ export function Navbar() {
               </motion.div>
             </Link>
             <Link href="/login">
-              <PremiumButton variant="ghost" size="sm">
+              <StarBorder 
+                className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 px-3"
+              >
                 Sign In
-              </PremiumButton>
+              </StarBorder>
             </Link>
             <Link href="/register">
-              <PremiumButton 
-                variant="gradient" 
-                size="sm"
-                className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600"
+              <StarBorder 
+                className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600 text-white shadow hover:bg-primary/90 h-8 px-3"
               >
                 Get Started
-              </PremiumButton>
+              </StarBorder>
             </Link>
           </div>
 
@@ -182,18 +182,18 @@ export function Navbar() {
             ))}
             <div className="pt-6 space-y-compact border-t border-gray-border">
               <Link href="/login" className="block">
-                <PremiumButton variant="outline" size="sm" className="w-full">
+                <StarBorder 
+                  className="w-full inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3"
+                >
                   Sign In
-                </PremiumButton>
+                </StarBorder>
               </Link>
               <Link href="/register" className="block">
-                <PremiumButton 
-                  variant="gradient" 
-                  size="sm" 
-                  className="w-full bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600"
+                <StarBorder 
+                  className="w-full inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600 text-white shadow hover:bg-primary/90 h-8 px-3"
                 >
                   Get Started
-                </PremiumButton>
+                </StarBorder>
               </Link>
             </div>
           </div>

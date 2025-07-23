@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/use-auth'
 import { usePortfolio } from '@/hooks/use-portfolio'
 import { PremiumCard } from '@/components/ui/premium-card'
-import { PremiumButton } from '@/components/ui/premium-button'
 import { StarBorder } from '@/components/ui/star-border'
 import { PremiumSkeleton } from '@/components/ui/premium-skeleton'
 import { AreaChart, PieChart as PieChartComponent } from '@/components/charts'
@@ -194,7 +193,7 @@ export default function PortfolioPage() {
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Toplam Değer</p>
+                  <p className="text-sm text-gray-400">Total Value</p>
                   <p className="text-2xl font-bold text-white mt-1">
                     {formatCurrency(selectedPortfolio.totalValue)}
                   </p>
@@ -214,7 +213,7 @@ export default function PortfolioPage() {
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Toplam Maliyet</p>
+                  <p className="text-sm text-gray-400">Total Cost</p>
                   <p className="text-2xl font-bold text-white mt-1">
                     {formatCurrency(selectedPortfolio.totalCost)}
                   </p>
@@ -234,7 +233,7 @@ export default function PortfolioPage() {
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">Kar/Zarar</p>
+                  <p className="text-sm text-gray-400">Profit/Loss</p>
                   <p className={`text-2xl font-bold mt-1 ${
                     selectedPortfolio.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'
                   }`}>
@@ -262,7 +261,7 @@ export default function PortfolioPage() {
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-400">K/Z Yüzdesi</p>
+                  <p className="text-sm text-gray-400">P/L Percentage</p>
                   <p className={`text-2xl font-bold mt-1 ${
                     selectedPortfolio.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'
                   }`}>
@@ -296,19 +295,18 @@ export default function PortfolioPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Portföy Yönetimi</h1>
+          <h1 className="text-3xl font-bold text-white">Portfolio Management</h1>
           <p className="text-gray-400 mt-1">Kripto yatırımlarınızı takip edin ve yönetin</p>
         </div>
         <div className="flex items-center gap-3">
-          <PremiumButton
+          <StarBorder
             onClick={handleRefresh}
-            variant="outline"
             disabled={refreshing}
-            className="flex items-center gap-2"
+            className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Güncelleniyor...' : 'Yenile'}
-          </PremiumButton>
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </StarBorder>
           {portfolios && portfolios.length > 1 && (
             <StarBorder
               as="button"
@@ -319,7 +317,7 @@ export default function PortfolioPage() {
             >
               <div className="flex items-center justify-center gap-2">
                 <Plus className="w-4 h-4" />
-                <span>Yeni Portföy</span>
+                <span>New Portfolio</span>
               </div>
             </StarBorder>
           )}
@@ -335,7 +333,7 @@ export default function PortfolioPage() {
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Toplam Değer</p>
+                <p className="text-sm text-gray-400">Total Value</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {formatCurrency(totalValue)}
                 </p>
@@ -355,7 +353,7 @@ export default function PortfolioPage() {
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Toplam Maliyet</p>
+                <p className="text-sm text-gray-400">Total Cost</p>
                 <p className="text-2xl font-bold text-white mt-1">
                   {formatCurrency(totalCost)}
                 </p>
@@ -375,7 +373,7 @@ export default function PortfolioPage() {
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Kar/Zarar</p>
+                <p className="text-sm text-gray-400">Profit/Loss</p>
                 <p className={`text-2xl font-bold mt-1 ${totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {formatCurrency(Math.abs(totalProfitLoss))}
                 </p>
@@ -399,7 +397,7 @@ export default function PortfolioPage() {
           <PremiumCard className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Getiri Oranı</p>
+                <p className="text-sm text-gray-400">Return Rate</p>
                 <p className={`text-2xl font-bold mt-1 ${totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {formatPercentage(totalProfitLossPercentage)}
                 </p>
@@ -421,7 +419,7 @@ export default function PortfolioPage() {
           <AreaChart
             data={chartData}
             dataKey="value"
-            title="Portföy Performansı"
+            title="Portfolio Performance"
             height={400}
             color="#64748b"
           />
@@ -434,7 +432,7 @@ export default function PortfolioPage() {
         >
           <PieChartComponent
             data={pieData}
-            title="Portföy Dağılımı"
+            title="Portfolio Distribution"
             height={400}
           />
         </motion.div>
@@ -446,7 +444,7 @@ export default function PortfolioPage() {
         transition={{ delay: 0.7 }}
       >
         <PremiumCard className="p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Portföyleriniz</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">Your Portfolios</h2>
           {portfolios && portfolios.length > 0 ? (
             <div className="space-y-4">
               {portfolios.map((portfolio: any) => (
@@ -463,10 +461,10 @@ export default function PortfolioPage() {
                       )}
                       <div className="flex items-center gap-4 mt-2">
                         <span className="text-sm text-gray-400">
-                          {portfolio.assets.length} varlık
+                          {portfolio.assets.length} assets
                         </span>
                         <span className="text-sm text-gray-400">
-                          Değer: {formatCurrency(portfolio.totalValue)}
+                          Value: {formatCurrency(portfolio.totalValue)}
                         </span>
                         <span className={`text-sm ${portfolio.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {formatPercentage(portfolio.totalProfitLossPercentage)}
@@ -479,7 +477,7 @@ export default function PortfolioPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-gray-400 mb-4">Henüz portföyünüz yok. Başlamak için ilk portföyünüzü oluşturun.</p>
+              <p className="text-gray-400 mb-4">You don't have any portfolios yet. Create your first portfolio to get started.</p>
               <StarBorder
                 as="button"
                 type="button"
@@ -489,7 +487,7 @@ export default function PortfolioPage() {
               >
                 <div className="flex items-center justify-center gap-2">
                   <Plus className="w-4 h-4" />
-                  <span>İlk Portföyünüzü Oluşturun</span>
+                  <span>Create Your First Portfolio</span>
                 </div>
               </StarBorder>
             </div>
