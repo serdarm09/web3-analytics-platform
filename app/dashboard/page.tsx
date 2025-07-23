@@ -81,7 +81,21 @@ export default function DashboardPage() {
     fetchPortfolioData()
     fetchTrendingData()
     fetchUserProjects()
+    fetchRecentActivities()
   }, [authUser])
+
+  const fetchRecentActivities = async () => {
+    try {
+      const response = await fetch('/api/dashboard/activities?limit=5')
+      if (response.ok) {
+        const data = await response.json()
+        setRecentActivities(data.activities || [])
+      }
+    } catch (error) {
+      console.error('Error fetching recent activities:', error)
+      // Keep default activities if API fails
+    }
+  }
 
   const fetchTrendingData = async () => {
     try {
@@ -212,7 +226,13 @@ export default function DashboardPage() {
 
   const refreshData = () => {
     toast.promise(
-      Promise.all([fetchMarketData(), fetchTrendingData()]), 
+      Promise.all([
+        fetchMarketData(), 
+        fetchTrendingData(), 
+        fetchPortfolioData(),
+        fetchUserProjects(),
+        fetchRecentActivities()
+      ]), 
       {
         loading: 'Refreshing market data...',
         success: 'Market data updated!',
@@ -221,12 +241,7 @@ export default function DashboardPage() {
     )
   }
 
-  const recentActivity = [
-    { type: 'buy', asset: 'BTC', amount: '0.5', value: '$22,500', time: '2 hours ago' },
-    { type: 'alert', message: 'ETH reached target price of $1,800', time: '4 hours ago' },
-    { type: 'whale', wallet: '0x742d...293f', amount: '10,000 ETH', time: '6 hours ago' },
-    { type: 'sell', asset: 'MATIC', amount: '1,000', value: '$1,200', time: '1 day ago' },
-  ]
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 relative">
@@ -508,7 +523,7 @@ export default function DashboardPage() {
                   </div>
                   
                   <div className="space-y-4">
-                    {recentActivity.map((activity, index) => (
+                    {recentActivities.map((activity: any, index: number) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: -20 }}
