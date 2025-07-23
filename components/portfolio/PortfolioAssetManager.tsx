@@ -19,9 +19,10 @@ import {
 } from 'lucide-react'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumButton } from '@/components/ui/premium-button'
+import { StarBorder } from '@/components/ui/star-border'
 import { PremiumInput } from '@/components/ui/premium-input'
 import { toast } from 'sonner'
-import { useRealTimePrices } from '@/hooks/useRealTimePrices'
+// Removed useRealTimePrices import - using direct API calls instead
 
 // Simple debounce implementation
 const debounce = (func: Function, wait: number) => {
@@ -101,12 +102,43 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
   // Get symbols from assets for real-time price updates
   const assetSymbols = assets.map(asset => asset.symbol.toUpperCase())
   
-  // Real-time price updates
-  const { prices, loading: pricesLoading, lastUpdate, refreshPrices } = useRealTimePrices({
-    symbols: assetSymbols,
-    refreshInterval: 60000, // Update every minute
-    enabled: assetSymbols.length > 0
-  })
+  // Fetch real-time prices from API
+  const [prices, setPrices] = useState<Record<string, any>>({});
+  const [pricesLoading, setPricesLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  const refreshPrices = useCallback(async () => {
+    if (assetSymbols.length === 0) return;
+    
+    setPricesLoading(true);
+    try {
+      const response = await fetch(`/api/crypto/market-data?symbols=${assetSymbols.join(',')}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        const priceMap: Record<string, any> = {};
+        data.data.forEach((coin: any) => {
+          priceMap[coin.symbol] = {
+            price: coin.price,
+            change24h: coin.change24h
+          };
+        });
+        setPrices(priceMap);
+        setLastUpdate(new Date());
+      }
+    } catch (error) {
+      console.error('Error fetching prices:', error);
+    } finally {
+      setPricesLoading(false);
+    }
+  }, [assetSymbols]);
+
+  // Auto-refresh prices
+  useEffect(() => {
+    refreshPrices();
+    const interval = setInterval(refreshPrices, 60000); // Refresh every minute
+    return () => clearInterval(interval);
+  }, [refreshPrices]);
 
   // Calculate portfolio totals with real-time prices
   const portfolioTotals = useMemo(() => {
@@ -134,11 +166,30 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
     }
   }, [assets, prices])
 
+  // Fetch popular coins when search is empty
+  const fetchPopularCoins = useCallback(async () => {
+    setIsSearching(true)
+    try {
+      const response = await fetch('/api/crypto/search?q=&limit=20')
+      const data = await response.json()
+      
+      if (data.success && data.data) {
+        setSearchResults(data.data)
+        setShowSearchDropdown(true)
+      }
+    } catch (error) {
+      console.error('Error fetching popular coins:', error)
+    } finally {
+      setIsSearching(false)
+    }
+  }, [])
+
   // Search for cryptocurrencies
   const searchCrypto = useCallback(
     debounce(async (query: string) => {
       if (!query || query.length < 1) {
-        setSearchResults([])
+        // Show popular coins instead of empty results
+        fetchPopularCoins()
         setManualEntry(false)
         return
       }
@@ -149,8 +200,12 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
         const response = await fetch(`/api/crypto/search?q=${encodeURIComponent(query)}&limit=50`)
         const data = await response.json()
         
+        console.log('Search response:', data) // Debug log
+        
         if (data.success && data.data && data.data.length > 0) {
+          // Results already include price data from the improved API
           setSearchResults(data.data)
+          
           setShowSearchDropdown(true)
           setManualEntry(false)
         } else {
@@ -168,7 +223,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
         setIsSearching(false)
       }
     }, 300),
-    []
+    [fetchPopularCoins]
   )
 
   // Check if entered symbol exists
@@ -476,14 +531,19 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
             </div>
           )}
         </div>
-        <PremiumButton 
+        <StarBorder
+          as="button"
+          type="button"
           onClick={() => setShowAddForm(true)}
           disabled={isLoading}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+          color="#3B82F6"
+          speed="4s"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Varlık Ekle
-        </PremiumButton>
+          <div className="flex items-center justify-center gap-2">
+            <Plus className="w-4 h-4" />
+            <span>Varlık Ekle</span>
+          </div>
+        </StarBorder>
       </div>
 
       {/* Add/Edit Asset Form */}
@@ -523,7 +583,13 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                         placeholder="Örn: Bitcoin, BTC, PEPE, SHIB..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        onFocus={() => searchResults.length > 0 && setShowSearchDropdown(true)}
+                        onFocus={() => {
+                          if (searchResults.length > 0) {
+                            setShowSearchDropdown(true)
+                          } else if (!searchQuery) {
+                            fetchPopularCoins()
+                          }
+                        }}
                         onBlur={(e) => {
                           // Delay to allow click on dropdown
                           setTimeout(() => {
@@ -568,7 +634,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                                   />
                                 ) : null}
                                 <div className={`w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center ${coin.logo ? 'hidden' : ''}`}>
-                                  <Bitcoin className="w-5 h-5 text-gray-400" />
+                                  <span className="text-xs font-bold text-gray-400">{coin.symbol.slice(0, 3)}</span>
                                 </div>
                                 <div className="text-left">
                                   <p className="text-white font-medium">{coin.name}</p>
@@ -767,20 +833,23 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                   >
                     İptal
                   </button>
-                  <PremiumButton 
-                    type="submit" 
+                  <StarBorder
+                    as="button"
+                    type="submit"
                     disabled={isLoading || (!editingAsset && !formData.symbol)}
-                    className="min-w-[150px] bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+                    color="#3B82F6"
+                    speed="4s"
+                    className="min-w-[150px]"
                   >
                     {isLoading ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
                         <span>Kaydediliyor...</span>
                       </div>
                     ) : (
-                      editingAsset ? 'Güncelle' : 'Portföye Ekle'
+                      <span>{editingAsset ? 'Güncelle' : 'Portföye Ekle'}</span>
                     )}
-                  </PremiumButton>
+                  </StarBorder>
                 </div>
               </form>
             </PremiumCard>

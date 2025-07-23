@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
-import { STORAGE_KEYS } from '@/lib/constants'
+import { useAuth } from '@/hooks/use-auth'
 
 const sidebarItems = [
   {
@@ -73,6 +73,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarProps) {
   const pathname = usePathname()
+  const { logout } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
@@ -91,8 +92,7 @@ export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarPr
   }, [isCollapsed, onCollapsedChange])
 
   const handleLogout = () => {
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN)
-    window.location.href = '/login'
+    logout()
   }
 
   return (

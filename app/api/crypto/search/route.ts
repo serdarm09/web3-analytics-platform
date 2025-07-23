@@ -3,151 +3,188 @@ import { NextRequest, NextResponse } from 'next/server'
 // CoinGecko API base URL
 const COINGECKO_API = 'https://api.coingecko.com/api/v3'
 
-// Cache for storing coin list
+// Cache for storing coin list and top coins
 let coinListCache: any[] = []
+let topCoinsCache: any[] = []
 let cacheTimestamp = 0
-const CACHE_DURATION = 3600000 // 1 hour in milliseconds
+let topCoinsCacheTimestamp = 0
+const CACHE_DURATION = 3600000 // 1 hour for coin list
+const TOP_COINS_CACHE_DURATION = 300000 // 5 minutes for top coins
+
+// Fetch and cache top coins by market cap
+async function fetchTopCoins() {
+  try {
+    const now = Date.now()
+    
+    // Check if cache is still valid
+    if (topCoinsCache.length > 0 && now - topCoinsCacheTimestamp < TOP_COINS_CACHE_DURATION) {
+      return topCoinsCache
+    }
+
+    // Fetch top 500 coins by market cap
+    const responses = await Promise.all([
+      fetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false`),
+      fetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&sparkline=false`)
+    ])
+
+    const [page1, page2] = await Promise.all(responses.map(r => r.ok ? r.json() : []))
+    
+    topCoinsCache = [...page1, ...page2].map(coin => ({
+      id: coin.id,
+      symbol: coin.symbol,
+      name: coin.name,
+      image: coin.image,
+      current_price: coin.current_price,
+      market_cap: coin.market_cap,
+      market_cap_rank: coin.market_cap_rank,
+      price_change_percentage_24h: coin.price_change_percentage_24h
+    }))
+    
+    topCoinsCacheTimestamp = now
+    return topCoinsCache
+  } catch (error) {
+    console.error('Error fetching top coins:', error)
+    return []
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const query = searchParams.get('q')?.toLowerCase() || ''
-    const symbols = searchParams.get('symbols')?.toLowerCase() || ''
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const query = searchParams.get('q')?.toLowerCase().trim() || ''
+    const limit = parseInt(searchParams.get('limit') || '50')
 
-    // Handle symbols parameter for bulk lookup
-    if (symbols) {
-      const symbolList = symbols.split(',').map(s => s.trim())
-      
-      // Check cache
-      const now = Date.now()
-      if (!coinListCache.length || now - cacheTimestamp > CACHE_DURATION) {
-        try {
-          const listResponse = await fetch(`${COINGECKO_API}/coins/list`)
-          if (listResponse.ok) {
-            coinListCache = await listResponse.json()
-            cacheTimestamp = now
-          }
-        } catch (error) {
-          console.error('Error fetching coin list:', error)
-        }
-      }
-
-      // Find matching coins
-      const matchedCoins = symbolList.map(symbol => {
-        return coinListCache.find(coin => 
-          coin.symbol.toLowerCase() === symbol.toLowerCase()
-        )
-      }).filter(Boolean).slice(0, limit)
-
-      if (matchedCoins.length > 0) {
-        return NextResponse.json({
-          success: true,
-          data: matchedCoins.map(coin => ({
-            id: coin.id,
-            symbol: coin.symbol.toUpperCase(),
-            name: coin.name,
-            price: 0, // Will be filled by price endpoint
-            change24h: 0
-          })),
-          timestamp: new Date().toISOString()
-        })
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: [],
-        timestamp: new Date().toISOString()
-      })
-    }
-
-    // If no query, return empty results
+    // If no query, return top coins
     if (!query || query.length < 1) {
+      const topCoins = await fetchTopCoins()
+      
       return NextResponse.json({
         success: true,
-        data: [],
+        data: topCoins.slice(0, limit).map(coin => ({
+          id: coin.id,
+          symbol: coin.symbol.toUpperCase(),
+          name: coin.name,
+          price: coin.current_price || 0,
+          change24h: coin.price_change_percentage_24h || 0,
+          marketCap: coin.market_cap || 0,
+          logo: coin.image,
+          rank: coin.market_cap_rank
+        })),
         timestamp: new Date().toISOString()
       })
     }
 
-    // Check if we need to refresh the coin list cache
+    // First, search in top coins (faster and includes prices)
+    const topCoins = await fetchTopCoins()
+    let matchedCoins = topCoins.filter(coin => 
+      coin.name.toLowerCase().includes(query) ||
+      coin.symbol.toLowerCase().includes(query) ||
+      coin.id.toLowerCase().includes(query)
+    )
+
+    // If we found matches in top coins, return them immediately
+    if (matchedCoins.length >= 10) {
+      return NextResponse.json({
+        success: true,
+        data: matchedCoins.slice(0, limit).map(coin => ({
+          id: coin.id,
+          symbol: coin.symbol.toUpperCase(),
+          name: coin.name,
+          price: coin.current_price || 0,
+          change24h: coin.price_change_percentage_24h || 0,
+          marketCap: coin.market_cap || 0,
+          logo: coin.image,
+          rank: coin.market_cap_rank
+        })),
+        timestamp: new Date().toISOString()
+      })
+    }
+
+    // If not enough results, search in full coin list
     const now = Date.now()
     if (!coinListCache.length || now - cacheTimestamp > CACHE_DURATION) {
       try {
-        // Fetch coin list from CoinGecko
-        const listResponse = await fetch(`${COINGECKO_API}/coins/list`)
+        const listResponse = await fetch(`${COINGECKO_API}/coins/list?include_platform=false`)
         if (listResponse.ok) {
           coinListCache = await listResponse.json()
           cacheTimestamp = now
+          console.log(`Cached ${coinListCache.length} coins`)
         }
       } catch (error) {
         console.error('Error fetching coin list:', error)
       }
     }
 
-    // Search in cached coin list
-    let matchedCoins = coinListCache.filter(coin => 
-      coin.name.toLowerCase().includes(query) ||
-      coin.symbol.toLowerCase().includes(query) ||
-      coin.id.toLowerCase().includes(query)
-    ).slice(0, limit)
-
-    // If we have matches, fetch their current prices
-    if (matchedCoins.length > 0) {
-      const coinIds = matchedCoins.map(coin => coin.id).join(',')
-      
-      try {
-        const priceResponse = await fetch(
-          `${COINGECKO_API}/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`
-        )
+    // Search in full coin list
+    if (coinListCache.length > 0) {
+      const additionalMatches = coinListCache.filter(coin => {
+        // Skip if already in top coins results
+        if (matchedCoins.some(mc => mc.id === coin.id)) return false
         
-        if (priceResponse.ok) {
-          const priceData = await priceResponse.json()
+        return coin.name.toLowerCase().includes(query) ||
+               coin.symbol.toLowerCase().includes(query) ||
+               coin.id.toLowerCase().includes(query)
+      }).slice(0, limit - matchedCoins.length)
+
+      // Fetch prices for additional matches
+      if (additionalMatches.length > 0) {
+        const coinIds = additionalMatches.map(coin => coin.id).join(',')
+        
+        try {
+          const priceResponse = await fetch(
+            `${COINGECKO_API}/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`
+          )
           
-          // Combine coin info with price data
-          const results = matchedCoins.map(coin => {
-            const data = priceData[coin.id] || {}
-            return {
+          if (priceResponse.ok) {
+            const priceData = await priceResponse.json()
+            
+            additionalMatches.forEach(coin => {
+              const data = priceData[coin.id] || {}
+              matchedCoins.push({
+                id: coin.id,
+                symbol: coin.symbol,
+                name: coin.name,
+                current_price: data.usd || 0,
+                price_change_percentage_24h: data.usd_24h_change || 0,
+                market_cap: data.usd_market_cap || 0,
+                image: null,
+                market_cap_rank: null
+              })
+            })
+          }
+        } catch (error) {
+          console.error('Error fetching prices for additional matches:', error)
+          // Add without prices if API fails
+          additionalMatches.forEach(coin => {
+            matchedCoins.push({
               id: coin.id,
-              symbol: coin.symbol.toUpperCase(),
+              symbol: coin.symbol,
               name: coin.name,
-              price: data.usd || 0,
-              change24h: data.usd_24h_change || 0,
-              marketCap: data.usd_market_cap || 0,
-              volume24h: data.usd_24h_vol || 0
-            }
-          }) // Don't filter out coins without price data - allow all coins
-          
-          return NextResponse.json({
-            success: true,
-            data: results,
-            timestamp: new Date().toISOString()
+              current_price: 0,
+              price_change_percentage_24h: 0,
+              market_cap: 0,
+              image: null,
+              market_cap_rank: null
+            })
           })
         }
-      } catch (error) {
-        console.error('Error fetching prices:', error)
       }
     }
 
-    // Fallback to mock data if API fails
-    const FALLBACK_CRYPTOS = [
-      { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin', price: 67890.45, change24h: 2.34 },
-      { id: 'ethereum', symbol: 'ETH', name: 'Ethereum', price: 3456.78, change24h: -1.23 },
-      { id: 'binancecoin', symbol: 'BNB', name: 'BNB', price: 567.89, change24h: 3.45 },
-      { id: 'solana', symbol: 'SOL', name: 'Solana', price: 156.78, change24h: 5.67 },
-      { id: 'cardano', symbol: 'ADA', name: 'Cardano', price: 0.5678, change24h: -2.34 }
-    ]
-
-    const fallbackResults = FALLBACK_CRYPTOS.filter(crypto => 
-      crypto.name.toLowerCase().includes(query) ||
-      crypto.symbol.toLowerCase().includes(query)
-    ).slice(0, limit)
-
+    // Return all matched coins
     return NextResponse.json({
       success: true,
-      data: fallbackResults,
-      timestamp: new Date().toISOString(),
-      fallback: true
+      data: matchedCoins.slice(0, limit).map(coin => ({
+        id: coin.id,
+        symbol: coin.symbol.toUpperCase(),
+        name: coin.name,
+        price: coin.current_price || 0,
+        change24h: coin.price_change_percentage_24h || 0,
+        marketCap: coin.market_cap || 0,
+        logo: coin.image,
+        rank: coin.market_cap_rank
+      })),
+      timestamp: new Date().toISOString()
     })
 
   } catch (error) {
@@ -155,14 +192,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to search cryptocurrencies' 
+        error: 'Failed to search cryptocurrencies',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )
   }
 }
 
-// Endpoint to search by exact symbol
+// Search by exact symbol
 export async function POST(request: NextRequest) {
   try {
     const { symbol } = await request.json()
@@ -174,11 +212,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Try to find by symbol in cache first
+    const searchSymbol = symbol.toLowerCase().trim()
+
+    // First check top coins
+    const topCoins = await fetchTopCoins()
+    const topCoin = topCoins.find(c => c.symbol.toLowerCase() === searchSymbol)
+    
+    if (topCoin) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          id: topCoin.id,
+          symbol: topCoin.symbol.toUpperCase(),
+          name: topCoin.name,
+          price: topCoin.current_price || 0,
+          change24h: topCoin.price_change_percentage_24h || 0,
+          logo: topCoin.image,
+          marketCap: topCoin.market_cap || 0,
+          rank: topCoin.market_cap_rank
+        }
+      })
+    }
+
+    // Check full coin list
     const now = Date.now()
     if (!coinListCache.length || now - cacheTimestamp > CACHE_DURATION) {
       try {
-        const listResponse = await fetch(`${COINGECKO_API}/coins/list`)
+        const listResponse = await fetch(`${COINGECKO_API}/coins/list?include_platform=false`)
         if (listResponse.ok) {
           coinListCache = await listResponse.json()
           cacheTimestamp = now
@@ -189,15 +249,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Find coin by symbol
-    const coin = coinListCache.find(c => 
-      c.symbol.toLowerCase() === symbol.toLowerCase()
-    )
+    const coin = coinListCache.find(c => c.symbol.toLowerCase() === searchSymbol)
 
     if (coin) {
       // Fetch price for this specific coin
       try {
         const priceResponse = await fetch(
-          `${COINGECKO_API}/simple/price?ids=${coin.id}&vs_currencies=usd&include_24hr_change=true`
+          `${COINGECKO_API}/simple/price?ids=${coin.id}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`
         )
         
         if (priceResponse.ok) {
@@ -211,7 +269,8 @@ export async function POST(request: NextRequest) {
               symbol: coin.symbol.toUpperCase(),
               name: coin.name,
               price: data.usd || 0,
-              change24h: data.usd_24h_change || 0
+              change24h: data.usd_24h_change || 0,
+              marketCap: data.usd_market_cap || 0
             }
           })
         }
@@ -220,15 +279,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If not found or API fails, allow custom entry
+    // Allow custom entry for unknown symbols
     return NextResponse.json({
       success: true,
       data: {
-        id: symbol.toLowerCase(),
+        id: searchSymbol,
         symbol: symbol.toUpperCase(),
         name: symbol.toUpperCase(),
         price: 0,
         change24h: 0,
+        marketCap: 0,
         custom: true
       }
     })

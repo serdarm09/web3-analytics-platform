@@ -25,7 +25,7 @@ export default function Home() {
     activeUsers: '0',
     projectsTracked: '0',
     totalVolume: '$0',
-    whaleWallets: '0'
+    walletTracker: '0'
   })
   const [statsLoading, setStatsLoading] = useState(true)
   const [liveData, setLiveData] = useState({
@@ -107,43 +107,49 @@ export default function Home() {
       icon: Search,
       title: 'Token Discovery',
       description: 'Search 20,000+ tokens across all major chains',
-      color: 'text-gray-300',
-      gradient: 'from-gray-600 to-gray-800'
+      color: 'text-gray-400',
+      gradient: 'from-gray-900 via-gray-800 to-black',
+      glow: 'group-hover:shadow-[0_0_30px_-5px_rgba(156,163,175,0.3)]'
     },
     {
       icon: LineChart,
       title: 'Live Charts',
       description: 'Professional TradingView charts with indicators',
-      color: 'text-gray-300',
-      gradient: 'from-gray-700 to-gray-900'
+      color: 'text-gray-400',
+      gradient: 'from-black via-gray-900 to-gray-800',
+      glow: 'group-hover:shadow-[0_0_30px_-5px_rgba(156,163,175,0.3)]'
     },
     {
       icon: Bell,
       title: 'Smart Alerts',
       description: 'Price alerts and whale movement notifications',
-      color: 'text-gray-300',
-      gradient: 'from-gray-800 to-black'
+      color: 'text-gray-400',
+      gradient: 'from-gray-800 via-black to-gray-900',
+      glow: 'group-hover:shadow-[0_0_30px_-5px_rgba(156,163,175,0.3)]'
     },
     {
       icon: Wallet,
       title: 'Portfolio Tracker',
       description: 'Connect wallet and track your P&L in real-time',
-      color: 'text-gray-300',
-      gradient: 'from-gray-600 to-gray-800'
+      color: 'text-gray-400',
+      gradient: 'from-gray-900 via-gray-800 to-black',
+      glow: 'group-hover:shadow-[0_0_30px_-5px_rgba(156,163,175,0.3)]'
     },
     {
       icon: Eye,
-      title: 'Whale Watcher',
-      description: 'Track smart money and large transactions',
-      color: 'text-gray-300',
-      gradient: 'from-gray-700 to-gray-900'
+      title: 'Wallet Tracker',
+      description: 'Track smart money and wallet movements',
+      color: 'text-gray-400',
+      gradient: 'from-black via-gray-900 to-gray-800',
+      glow: 'group-hover:shadow-[0_0_30px_-5px_rgba(156,163,175,0.3)]'
     },
     {
       icon: PieChart,
       title: 'DeFi Analytics',
       description: 'TVL, yield farming, and liquidity analysis',
-      color: 'text-gray-300',
-      gradient: 'from-gray-800 to-black'
+      color: 'text-gray-400',
+      gradient: 'from-gray-800 via-black to-gray-900',
+      glow: 'group-hover:shadow-[0_0_30px_-5px_rgba(156,163,175,0.3)]'
     }
   ]
 
@@ -200,7 +206,7 @@ export default function Home() {
                 { label: 'Active Users', value: stats.activeUsers },
                 { label: 'Projects Tracked', value: stats.projectsTracked },
                 { label: 'Total Volume', value: stats.totalVolume },
-                { label: 'Whale Wallets', value: stats.whaleWallets }
+                { label: 'Wallet Tracker', value: stats.walletTracker }
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
@@ -247,14 +253,14 @@ export default function Home() {
               className="text-center mb-16 space-y-6"
             >
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white">
-                Powerful Features for <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">Web3 Success</span>
+                Powerful Features for <span className="bg-gradient-to-r from-gray-300 via-gray-100 to-gray-300 bg-clip-text text-transparent">Web3 Success</span>
               </h2>
-              <p className="text-lg text-gray-400 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-lg text-gray-500 max-w-3xl mx-auto leading-relaxed">
                 Everything you need to track, analyze, and succeed in the Web3 ecosystem
               </p>
             </motion.div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-relaxed">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {features.map((feature, index) => (
                 <motion.div
                   key={feature.title}
@@ -263,23 +269,36 @@ export default function Home() {
                   transition={{ delay: 0.7 + index * 0.1, duration: 0.5 }}
                 >
                   <motion.div
-                    whileHover={{ y: -10 }}
+                    whileHover={{ y: -8 }}
                     transition={{ type: "spring", stiffness: 300 }}
+                    className="h-full"
                   >
-                    <PremiumCard variant="hover-lift" className="h-full p-8 bg-gray-900/50 border-gray-800 hover:bg-gray-900/70 group overflow-hidden relative">
+                    <div className={`h-full p-8 bg-gradient-to-br ${feature.gradient} border border-gray-900 rounded-2xl group overflow-hidden relative transition-all duration-500 ${feature.glow}`}>
+                      {/* Gradient overlay on hover */}
                       <motion.div
-                        className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}
+                        className="absolute inset-0 bg-gradient-to-br from-gray-800/0 via-gray-700/0 to-gray-600/0 group-hover:from-gray-800/20 group-hover:via-gray-700/10 group-hover:to-gray-600/5 transition-all duration-700"
                       />
+                      
+                      {/* Icon with glow effect */}
                       <motion.div
-                        whileHover={{ rotate: 360 }}
-                        transition={{ duration: 0.8 }}
-                        className="inline-block"
+                        whileHover={{ scale: 1.1 }}
+                        transition={{ duration: 0.3 }}
+                        className="relative inline-block mb-6"
                       >
-                        <feature.icon className={`w-12 h-12 ${feature.color} mb-6`} />
+                        <div className="absolute inset-0 bg-gray-600/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <feature.icon className={`w-12 h-12 ${feature.color} relative z-10 group-hover:text-gray-300 transition-colors duration-300`} />
                       </motion.div>
-                      <h3 className="text-xl font-bold text-white mb-4 group-hover:text-gray-100 transition-colors">{feature.title}</h3>
-                      <p className="text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors">{feature.description}</p>
-                    </PremiumCard>
+                      
+                      <h3 className="text-xl font-bold text-gray-200 mb-4 group-hover:text-white transition-colors duration-300">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-500 leading-relaxed group-hover:text-gray-400 transition-colors duration-300">
+                        {feature.description}
+                      </p>
+                      
+                      {/* Bottom gradient line */}
+                      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gray-700 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    </div>
                   </motion.div>
                 </motion.div>
               ))}

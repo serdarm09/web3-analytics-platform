@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, ArrowRight, Wallet, ArrowLeft, Check, Eye, EyeOff } from 'lucide-react'
 import { PremiumButton } from '@/components/ui/premium-button'
+import { StarBorder } from '@/components/ui/star-border'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumInput } from '@/components/ui/premium-input'
 import { useAuth } from '@/hooks/use-auth'
@@ -293,24 +294,26 @@ export default function RegisterPage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
               >
-                <PremiumButton
+                <StarBorder
+                  as="button"
                   type="submit"
-                  variant="gradient"
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-700 hover:from-blue-500 hover:to-purple-600"
+                  className="w-full"
+                  color="#3B82F6"
+                  speed="4s"
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       <span>Creating Account...</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <span>Create Account</span>
                       <ArrowRight className="w-4 h-4" />
                     </div>
                   )}
-                </PremiumButton>
+                </StarBorder>
               </motion.div>
             </form>
 
@@ -330,22 +333,27 @@ export default function RegisterPage() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.9 }}
             >
-              <PremiumButton
-                variant="outline"
-                className="w-full border-gray-700 hover:border-gray-600 hover:bg-gray-800/50"
+              <StarBorder
+                as="button"
+                type="button"
+                className="w-full"
+                color="#8B5CF6"
+                speed="5s"
                 onClick={handleWalletConnect}
                 disabled={isLoading || isConnecting}
               >
-                <Wallet className="w-4 h-4 mr-2" />
-                {isConnecting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 border-2 border-gray-400 border-t-white rounded-full animate-spin" />
-                    <span>Connecting...</span>
-                  </div>
-                ) : (
-                  'Connect Wallet'
-                )}
-              </PremiumButton>
+                <div className="flex items-center justify-center gap-2">
+                  <Wallet className="w-4 h-4" />
+                  {isConnecting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 border-2 border-gray-400 border-t-white rounded-full animate-spin" />
+                      <span>Connecting...</span>
+                    </div>
+                  ) : (
+                    'Connect Wallet'
+                  )}
+                </div>
+              </StarBorder>
             </motion.div>
 
             {/* Login Link */}

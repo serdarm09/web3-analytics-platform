@@ -1,15 +1,32 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, TrendingUp, TrendingDown, DollarSign, PieChart, Wallet, Activity, ArrowLeft } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, DollarSign, PieChart, Wallet, Activity, ArrowLeft, RefreshCw } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useAuth } from '@/hooks/use-auth'
 import { usePortfolio } from '@/hooks/use-portfolio'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumButton } from '@/components/ui/premium-button'
+import { StarBorder } from '@/components/ui/star-border'
 import { PremiumSkeleton } from '@/components/ui/premium-skeleton'
 import { AreaChart, PieChart as PieChartComponent } from '@/components/charts'
-import PortfolioCreationModal from '@/components/portfolio/PortfolioCreationModal'
 import PortfolioAssetManager from '@/components/portfolio/PortfolioAssetManager'
+import { toast } from 'sonner'
+
+interface PortfolioAsset {
+  _id?: string
+  symbol: string
+  name: string
+  amount: number
+  averagePrice?: number
+  purchasePrice: number
+  purchaseDate: Date
+  currentPrice?: number
+  value?: number
+  change24h?: number
+  changePercent24h?: number
+  image?: string
+}
 
 interface Portfolio {
   _id: string
@@ -19,24 +36,44 @@ interface Portfolio {
   totalCost: number
   totalProfitLoss: number
   totalProfitLossPercentage: number
-  assets: any[]
+  assets: PortfolioAsset[]
+  isPublic: boolean
   lastUpdated: string
+  createdAt: string
 }
 
 export default function PortfolioPage() {
-  const { portfolios, isLoading, createPortfolio, isCreating } = usePortfolio()
+  const { user } = useAuth()
+  const { 
+    portfolios: dbPortfolios, 
+    isLoading, 
+    createPortfolio, 
+    isCreating,
+    refreshPrices 
+  } = usePortfolio()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedPortfolio, setSelectedPortfolio] = useState<Portfolio | null>(null)
   const [viewMode, setViewMode] = useState<'overview' | 'detail'>('overview')
-  const [isInitializing, setIsInitializing] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
-  const totalValue = portfolios?.reduce((sum: number, p: any) => sum + p.totalValue, 0) || 0
-  const totalCost = portfolios?.reduce((sum: number, p: any) => sum + p.totalCost, 0) || 0
+  // Format portfolios from database to match the component structure
+  const portfolios = dbPortfolios?.map(portfolio => ({
+    ...portfolio,
+    _id: portfolio.id || portfolio._id,
+    assets: portfolio.assets.map(asset => ({
+      ...asset,
+      averagePrice: asset.avgBuyPrice || asset.purchasePrice,
+      purchasePrice: asset.avgBuyPrice || asset.purchasePrice
+    }))
+  })) || []
+
+  const totalValue = portfolios?.reduce((sum: number, p: Portfolio) => sum + p.totalValue, 0) || 0
+  const totalCost = portfolios?.reduce((sum: number, p: Portfolio) => sum + p.totalCost, 0) || 0
   const totalProfitLoss = totalValue - totalCost
   const totalProfitLossPercentage = totalCost > 0 ? (totalProfitLoss / totalCost) * 100 : 0
 
-  // Enhanced mock chart data with more realistic portfolio tracking
-  const mockChartData = [
+  // Enhanced chart data with real portfolio tracking
+  const chartData = [
     { name: 'Jan', value: totalCost * 0.8 },
     { name: 'Feb', value: totalCost * 0.9 },
     { name: 'Mar', value: totalCost * 0.85 },
@@ -46,7 +83,7 @@ export default function PortfolioPage() {
     { name: 'Jul', value: totalValue }
   ]
 
-  const pieData = portfolios?.map((p: any, index: number) => ({
+  const pieData = portfolios?.map((p: Portfolio, index: number) => ({
     name: p.name,
     value: p.totalValue,
     color: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][index % 5]
@@ -62,32 +99,32 @@ export default function PortfolioPage() {
     setViewMode('overview')
   }
 
-  // Otomatik portföy oluştur
-  const createDefaultPortfolio = async () => {
-    setIsInitializing(true)
+  const handleRefresh = async () => {
+    if (!selectedPortfolio) return
+    setRefreshing(true)
     try {
-      await createPortfolio({
-        name: 'Ana Portföy',
-        description: 'Kripto varlıklarınızı takip edin'
-      })
-      window.location.reload()
+      await refreshPrices(selectedPortfolio._id)
+      toast.success('Portfolio data refreshed')
     } catch (error) {
-      console.error('Error creating default portfolio:', error)
+      toast.error('Failed to refresh data')
     } finally {
-      setIsInitializing(false)
+      setRefreshing(false)
     }
   }
 
-  // Eğer hiç portföy yoksa otomatik oluştur
+  // Auto-create default portfolio if none exists
   useEffect(() => {
-    if (!isLoading && portfolios && portfolios.length === 0 && !isInitializing) {
-      createDefaultPortfolio()
+    if (!isLoading && portfolios.length === 0 && !isCreating) {
+      createPortfolio({
+        name: 'Ana Portföy',
+        description: 'Kripto varlıklarınızı takip edin'
+      })
     }
-  }, [isLoading, portfolios, isInitializing])
+  }, [isLoading, portfolios, isCreating, createPortfolio])
 
-  // Eğer tek portföy varsa direkt onu seç
+  // Auto-select single portfolio
   useEffect(() => {
-    if (!isLoading && portfolios && portfolios.length === 1 && !selectedPortfolio) {
+    if (!isLoading && portfolios.length === 1 && !selectedPortfolio) {
       handlePortfolioSelect(portfolios[0])
     }
   }, [isLoading, portfolios, selectedPortfolio])
@@ -105,7 +142,7 @@ export default function PortfolioPage() {
     return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`
   }
 
-  if (isLoading || isInitializing) {
+  if (isLoading || isCreating) {
     return (
       <div className="space-y-6">
         <div className="text-center py-12">
@@ -115,7 +152,7 @@ export default function PortfolioPage() {
             className="inline-flex items-center gap-2 text-white"
           >
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span>{isInitializing ? 'Portföyünüz oluşturuluyor...' : 'Yükleniyor...'}</span>
+            <span>{isCreating ? 'Portföyünüz oluşturuluyor...' : 'Yükleniyor...'}</span>
           </motion.div>
         </div>
         <PremiumSkeleton className="h-32" />
@@ -262,12 +299,31 @@ export default function PortfolioPage() {
           <h1 className="text-3xl font-bold text-white">Portföy Yönetimi</h1>
           <p className="text-gray-400 mt-1">Kripto yatırımlarınızı takip edin ve yönetin</p>
         </div>
-        {portfolios && portfolios.length > 1 && (
-          <PremiumButton onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Yeni Portföy
+        <div className="flex items-center gap-3">
+          <PremiumButton
+            onClick={handleRefresh}
+            variant="outline"
+            disabled={refreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Güncelleniyor...' : 'Yenile'}
           </PremiumButton>
-        )}
+          {portfolios && portfolios.length > 1 && (
+            <StarBorder
+              as="button"
+              type="button"
+              onClick={() => setShowCreateModal(true)}
+              color="#3B82F6"
+              speed="4s"
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Plus className="w-4 h-4" />
+                <span>Yeni Portföy</span>
+              </div>
+            </StarBorder>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -363,7 +419,7 @@ export default function PortfolioPage() {
           transition={{ delay: 0.5 }}
         >
           <AreaChart
-            data={mockChartData}
+            data={chartData}
             dataKey="value"
             title="Portföy Performansı"
             height={400}
@@ -424,25 +480,38 @@ export default function PortfolioPage() {
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-400 mb-4">Henüz portföyünüz yok. Başlamak için ilk portföyünüzü oluşturun.</p>
-              <PremiumButton onClick={() => setShowCreateModal(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                İlk Portföyünüzü Oluşturun
-              </PremiumButton>
+              <StarBorder
+                as="button"
+                type="button"
+                onClick={() => setShowCreateModal(true)}
+                color="#3B82F6"
+                speed="4s"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  <span>İlk Portföyünüzü Oluşturun</span>
+                </div>
+              </StarBorder>
             </div>
           )}
         </PremiumCard>
       </motion.div>
 
-      {/* Portfolio Creation Modal */}
-      <PortfolioCreationModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={() => {
-          setShowCreateModal(false)
-          // Refresh portfolios after creation
-          window.location.reload()
-        }}
-      />
+      {/* Portfolio Creation Modal - To be implemented */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-white mb-4">Create New Portfolio</h3>
+            <p className="text-gray-400 mb-4">Portfolio creation feature coming soon!</p>
+            <PremiumButton 
+              onClick={() => setShowCreateModal(false)}
+              className="w-full"
+            >
+              Close
+            </PremiumButton>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

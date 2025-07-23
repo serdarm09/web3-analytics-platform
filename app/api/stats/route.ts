@@ -3,16 +3,16 @@ import dbConnect from '@/lib/database/mongoose'
 import User from '@/models/User'
 import Project from '@/models/Project'
 import Portfolio from '@/models/Portfolio'
-import WhaleWallet from '@/models/WhaleWallet'
+import TrackedWallet from '@/models/TrackedWallet'
 
 export async function GET() {
   try {
     await dbConnect()
 
-    const [userCount, projectCount, whaleCount] = await Promise.all([
+    const [userCount, projectCount, walletCount] = await Promise.all([
       User.countDocuments(),
       Project.countDocuments({ isActive: true }),
-      WhaleWallet.countDocuments({ isActive: true })
+      TrackedWallet.countDocuments({ isActive: true })
     ])
 
     // Calculate total volume from projects
@@ -40,7 +40,7 @@ export async function GET() {
       activeUsers: formatNumber(userCount),
       projectsTracked: formatNumber(projectCount),
       totalVolume: formatVolume(totalVolume),
-      whaleWallets: formatNumber(whaleCount)
+      walletTracker: formatNumber(walletCount)
     }
 
     return NextResponse.json(stats)
@@ -51,7 +51,7 @@ export async function GET() {
       activeUsers: '0',
       projectsTracked: '0',
       totalVolume: '$0',
-      whaleWallets: '0'
+      walletTracker: '0'
     })
   }
 }

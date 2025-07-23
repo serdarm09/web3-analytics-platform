@@ -124,27 +124,7 @@ export function Navbar() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <PremiumButton 
-                  variant="outline" 
-                  size="sm"
-                  className="group relative overflow-hidden"
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20"
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: 0 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                  <span className="relative flex items-center gap-2">
-                    <Home className="w-4 h-4" />
-                    Landing Page Here
-                    <motion.div
-                      animate={{ x: [0, 3, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                    </motion.div>
-                  </span>
-                </PremiumButton>
+                
               </motion.div>
             </Link>
             <Link href="/login">

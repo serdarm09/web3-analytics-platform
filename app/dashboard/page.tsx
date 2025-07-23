@@ -27,6 +27,7 @@ import { StatsCard } from '@/components/dashboard/stats-card'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { PremiumButton } from '@/components/ui/premium-button'
+import { StarBorder } from '@/components/ui/star-border'
 import { useWallet } from '@/hooks/useWallet'
 import { useAuth } from '@/hooks/use-auth'
 import { STORAGE_KEYS } from '@/lib/constants'
@@ -394,22 +395,58 @@ export default function DashboardPage() {
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
                   <div className="space-y-3">
-                    <PremiumButton className="w-full justify-start" variant="outline">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add New Portfolio
-                    </PremiumButton>
-                    <PremiumButton className="w-full justify-start" variant="outline">
-                      <Wallet className="w-4 h-4 mr-2" />
-                      Connect Wallet
-                    </PremiumButton>
-                    <PremiumButton className="w-full justify-start" variant="outline">
-                      <Bell className="w-4 h-4 mr-2" />
-                      Set Price Alert
-                    </PremiumButton>
-                    <PremiumButton className="w-full justify-start" variant="outline">
-                      <Eye className="w-4 h-4 mr-2" />
-                      Add to Watchlist
-                    </PremiumButton>
+                    <StarBorder
+                      as="button"
+                      type="button"
+                      className="w-full text-left"
+                      color="#3B82F6"
+                      speed="6s"
+                      onClick={() => window.location.href = '/dashboard/portfolio'}
+                    >
+                      <div className="flex items-center">
+                        <Plus className="w-4 h-4 mr-2" />
+                        <span>Add New Portfolio</span>
+                      </div>
+                    </StarBorder>
+                    <StarBorder
+                      as="button"
+                      type="button"
+                      className="w-full text-left"
+                      color="#8B5CF6"
+                      speed="6s"
+                      onClick={() => toast.info('Connect wallet from settings')}
+                    >
+                      <div className="flex items-center">
+                        <Wallet className="w-4 h-4 mr-2" />
+                        <span>Connect Wallet</span>
+                      </div>
+                    </StarBorder>
+                    <StarBorder
+                      as="button"
+                      type="button"
+                      className="w-full text-left"
+                      color="#F59E0B"
+                      speed="6s"
+                      onClick={() => toast.info('Price alerts coming soon!')}
+                    >
+                      <div className="flex items-center">
+                        <Bell className="w-4 h-4 mr-2" />
+                        <span>Set Price Alert</span>
+                      </div>
+                    </StarBorder>
+                    <StarBorder
+                      as="button"
+                      type="button"
+                      className="w-full text-left"
+                      color="#10B981"
+                      speed="6s"
+                      onClick={() => window.location.href = '/dashboard/watchlist'}
+                    >
+                      <div className="flex items-center">
+                        <Eye className="w-4 h-4 mr-2" />
+                        <span>Add to Watchlist</span>
+                      </div>
+                    </StarBorder>
                   </div>
                 </div>
               </PremiumCard>

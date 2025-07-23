@@ -5,6 +5,7 @@ import { Activity, TrendingUp, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { PremiumButton } from "@/components/ui/premium-button";
+import { MorphingText } from "@/components/ui/morphing-text";
 
 function CryptoShape({
     className,
@@ -156,32 +157,31 @@ function Web3Hero({
                         </span>
                     </motion.div>
 
-                    {/* Main Title */}
+                    {/* Main Title with Morphing Text */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 1, delay: 0.7 }}
+                        transition={{ duration: 3, delay: 1.5 }}
+                        className="mb-6 md:mb-8"
                     >
-                        <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 tracking-tight">
-                            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-300">
-                                {title1}
-                            </span>
-                            <br />
-                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-200 via-white to-gray-400">
-                                {title2}
-                            </span>
-                        </h1>
+                        <MorphingText 
+                            texts={[
+                                "Real-Time Crypto Analytics",
+                                "Track Project trends",
+                                "Discover DeFi trends",
+                                "Smart Money Moves",
+                            ]}
+                            className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl"
+                        />
                     </motion.div>
 
                     {/* Description */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 1, delay: 0.9 }}
+                        transition={{ duration: 1, delay: 2 }}
                     >
-                        <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-8 leading-relaxed font-light tracking-wide max-w-2xl mx-auto px-4">
-                            {description}
-                        </p>
+                        <br /><br /><br /><br /><br /><br />
                     </motion.div>
 
                     {/* CTA Buttons */}
@@ -219,25 +219,15 @@ function Web3Hero({
                         </motion.div>
                     </motion.div>
 
-                    {/* Stats Bar */}
+                    {/* Description */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 1, delay: 1.1 }}
-                        className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12 mt-8"
+                        transition={{ duration: 1, delay: 5 }}
                     >
-                        <div className="text-center">
-                            <div className="text-2xl md:text-3xl font-bold text-white mb-1">20K+</div>
-                            <div className="text-sm text-gray-500">Tokens Tracked</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-2xl md:text-3xl font-bold text-white mb-1">$2.5B</div>
-                            <div className="text-sm text-gray-500">Volume Analyzed</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-2xl md:text-3xl font-bold text-white mb-1">50K+</div>
-                            <div className="text-sm text-gray-500">Active Users</div>
-                        </div>
+                    <p className="text-base sm:text-lg md:text-xl text-gray-400 mb-8 leading-relaxed font-light tracking-wide max-w-2xl mx-auto px-4">
+                            {description}
+                    </p>
                     </motion.div>
                 </div>
             </div>
