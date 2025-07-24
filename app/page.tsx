@@ -168,7 +168,7 @@ export default function Home() {
             if (isAuthenticated) {
               router.push('/dashboard')
             } else {
-              setAuthModal({ isOpen: true, mode: 'register' })
+              router.push('/register')
             }
           }}
         />
