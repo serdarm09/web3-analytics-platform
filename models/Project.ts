@@ -44,7 +44,12 @@ export interface IProject extends Document {
   contractAddress?: string
   isTestnet?: boolean
   views: number
+  viewCount?: number
+  lastViewed?: Date
+  viewedBy?: string[]
   watchlistCount: number
+  addCount?: number
+  lastAdded?: Date
   addedBy: string
   addedAt: Date
   launchDate?: string
@@ -223,9 +228,27 @@ const projectSchema = new Schema<IProject>(
       type: Number,
       default: 0,
     },
+    viewCount: {
+      type: Number,
+      default: 0,
+    },
+    lastViewed: {
+      type: Date,
+    },
+    viewedBy: {
+      type: [String],
+      default: [],
+    },
     watchlistCount: {
       type: Number,
       default: 0,
+    },
+    addCount: {
+      type: Number,
+      default: 0,
+    },
+    lastAdded: {
+      type: Date,
     },
     addedBy: {
       type: String,

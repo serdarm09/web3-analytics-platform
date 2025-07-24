@@ -369,9 +369,9 @@ export default function WalletTrackerPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h2 className="text-2xl font-bold">{formatAddress(currentWallet.address, currentWallet.ens)}</h2>
-                        <button onClick={() => copyAddress(currentWallet.address)} className="text-gray-400 hover:text-white">
+                        <PremiumButton onClick={() => copyAddress(currentWallet.address)} variant="ghost" size="sm" className="p-1.5">
                           <Copy className="h-4 w-4" />
-                        </button>
+                        </PremiumButton>
                         <a href={`https://etherscan.io/address/${currentWallet.address}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                           <ExternalLink className="h-4 w-4" />
                         </a>

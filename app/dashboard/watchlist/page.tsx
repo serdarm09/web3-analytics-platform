@@ -8,6 +8,7 @@ import { StarBorder } from "@/components/ui/star-border"
 import { PremiumInput } from "@/components/ui/premium-input"
 import { PremiumBadge } from "@/components/ui/premium-badge"
 import { PremiumSkeleton } from "@/components/ui/premium-skeleton"
+import { PremiumButton } from "@/components/ui/premium-button"
 import { useWatchlist } from "@/hooks/use-watchlist"
 import { AddToWatchlistModal } from "@/components/watchlist/AddToWatchlistModal"
 
@@ -161,15 +162,17 @@ export default function WatchlistPage() {
                           <p className="text-sm text-muted-foreground">{item.symbol}</p>
                         </div>
                       </div>
-                      <button
-                        className="p-1.5 rounded-lg hover:bg-gray-secondary transition-colors"
+                      <PremiumButton
+                        variant="ghost"
+                        size="sm"
+                        className="p-1.5"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleRemove(item._id)
                         }}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
-                      </button>
+                      </PremiumButton>
                     </div>
 
                     {/* Price Info */}

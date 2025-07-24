@@ -352,19 +352,19 @@ export default function DashboardPage() {
             <div className="p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <PremiumButton className="w-full justify-start" variant="outline">
+                <PremiumButton className="w-full" variant="glow">
                   <Plus className="w-4 h-4 mr-2" />
                   Add New Portfolio
                 </PremiumButton>
-                <PremiumButton className="w-full justify-start" variant="outline">
+                <PremiumButton className="w-full" variant="glow">
                   <Wallet className="w-4 h-4 mr-2" />
                   Connect Wallet
                 </PremiumButton>
-                <PremiumButton className="w-full justify-start" variant="outline">
+                <PremiumButton className="w-full" variant="glow">
                   <Bell className="w-4 h-4 mr-2" />
                   Set Price Alert
                 </PremiumButton>
-                <PremiumButton className="w-full justify-start" variant="outline">
+                <PremiumButton className="w-full" variant="glow">
                   <Eye className="w-4 h-4 mr-2" />
                   Add to Watchlist
                 </PremiumButton>

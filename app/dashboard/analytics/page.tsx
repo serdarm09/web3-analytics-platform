@@ -18,6 +18,7 @@ import { PremiumCard } from "@/components/ui/premium-card"
 import { StarBorder } from "@/components/ui/star-border"
 import { PremiumBadge } from "@/components/ui/premium-badge"
 import { PremiumSkeleton } from "@/components/ui/premium-skeleton"
+import { PremiumButton } from "@/components/ui/premium-button"
 import { LineChart, AreaChart, BarChart, PieChart as PieChartComponent } from "@/components/charts"
 import { useMarketData } from "@/hooks/use-market-data"
 import { toast } from 'sonner'
@@ -135,20 +136,25 @@ export default function AnalyticsPage() {
           <p className="text-gray-400 mt-1">Comprehensive cryptocurrency market analysis and insights</p>
         </div>
         <div className="flex items-center gap-3">
-          <StarBorder
+          <PremiumButton
             onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
+            variant="glow"
+            size="md"
+            className="gap-2"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Refreshing...' : 'Refresh'}
-          </StarBorder>
-          <StarBorder
-            className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
+          </PremiumButton>
+          <PremiumButton
+            variant="gradient"
+            size="md"
+            className="gap-2"
+            onClick={() => toast.info('Export feature coming soon!')}
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4" />
             Export
-          </StarBorder>
+          </PremiumButton>
         </div>
       </div>
 

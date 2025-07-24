@@ -79,14 +79,12 @@ function Web3Hero({
     title2 = "Analytics Platform",
     description = "Track 20,000+ tokens, analyze whale movements, and discover opportunities in the decentralized ecosystem with professional-grade tools.",
     onLaunchApp,
-    onViewDemo,
 }: {
     badge?: string;
     title1?: string;
     title2?: string;
     description?: string;
     onLaunchApp?: () => void;
-    onViewDemo?: () => void;
 }) {
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
@@ -151,9 +149,25 @@ function Web3Hero({
                         transition={{ duration: 1, delay: 0.5 }}
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-900/[0.5] border border-gray-700/[0.5] mb-8 md:mb-12 backdrop-blur-sm"
                     >
+                        {/* Online indicator with pulsing animation */}
+                        <div className="relative flex items-center">
+                            <motion.div
+                                className="absolute w-3 h-3 bg-green-400 rounded-full"
+                                animate={{
+                                    scale: [1, 1.2, 1],
+                                    opacity: [0.7, 1, 0.7]
+                                }}
+                                transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                            />
+                            <div className="w-3 h-3 bg-green-500 rounded-full shadow-lg shadow-green-500/50" />
+                        </div>
                         <Activity className="h-3 w-3 text-gray-400" />
                         <span className="text-sm text-gray-300 tracking-wide">
-                            {badge}
+                            {badge} • Live
                         </span>
                     </motion.div>
 
@@ -196,23 +210,13 @@ function Web3Hero({
                             whileTap={{ scale: 0.95 }}
                         >
                             <StarBorder 
-                                className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600 text-white shadow hover:bg-primary/90 h-11 px-8"
+                                className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r  text-white shadow "
                                 onClick={onLaunchApp}
                             >
                                 Launch App
                             </StarBorder>
                         </motion.div>
-                        <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <StarBorder 
-                                className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-gray-700 bg-transparent shadow-sm hover:border-gray-500 hover:bg-gray-900/50 hover:text-accent-foreground h-11 px-8"
-                                onClick={onViewDemo}
-                            >
-                                View Demo
-                            </StarBorder>
-                        </motion.div>
+
                     </motion.div>
 
                     {/* Description */}

@@ -8,6 +8,7 @@ import { PremiumCard } from '@/components/ui/premium-card'
 import { StarBorder } from '@/components/ui/star-border'
 import { PremiumInput } from '@/components/ui/premium-input'
 import { PremiumBadge } from '@/components/ui/premium-badge'
+import { PremiumButton } from '@/components/ui/premium-button'
 import ProjectCreationModal from '@/components/ProjectCreationModal'
 import { useProjects } from '@/hooks/useProjects'
 
@@ -266,9 +267,9 @@ export default function ProjectsPage() {
                         >
                           <HeartOff className="w-5 h-5" />
                         </button>
-                        <button className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
+                        <PremiumButton variant="ghost" size="sm" className="p-2">
                           <Star className="w-5 h-5" />
-                        </button>
+                        </PremiumButton>
                         {project.website && (
                           <a
                             href={project.website}

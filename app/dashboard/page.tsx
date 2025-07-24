@@ -32,7 +32,7 @@ import { useWallet } from '@/hooks/useWallet'
 import { useAuth } from '@/hooks/use-auth'
 import { STORAGE_KEYS } from '@/lib/constants'
 import { toast } from 'sonner'
-import { getTopCryptos, getTrendingCryptos, getGlobalMarketData } from '@/lib/services/crypto-api'
+import { getTopCryptos, getGlobalMarketData } from '@/lib/services/crypto-api'
 
 export default function DashboardPage() {
   const { address, isConnected } = useWallet()
@@ -52,7 +52,6 @@ export default function DashboardPage() {
     topLosers: [],
     globalStats: null
   })
-  const [trendingCoins, setTrendingCoins] = useState<any[]>([])
   const [portfolioData, setPortfolioData] = useState({
     totalValue: 0,
     change24h: 0,
@@ -80,7 +79,6 @@ export default function DashboardPage() {
     }
     fetchMarketData()
     fetchPortfolioData()
-    fetchTrendingData()
     fetchUserProjects()
     fetchRecentActivities()
   }, [authUser])
@@ -95,18 +93,6 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error fetching recent activities:', error)
       // Keep default activities if API fails
-    }
-  }
-
-  const fetchTrendingData = async () => {
-    try {
-      const response = await fetch('/api/market-data/trending')
-      if (response.ok) {
-        const data = await response.json()
-        setTrendingCoins(data.coins || [])
-      }
-    } catch (error) {
-      console.error('Error fetching trending data:', error)
     }
   }
 
@@ -229,7 +215,6 @@ export default function DashboardPage() {
     toast.promise(
       Promise.all([
         fetchMarketData(), 
-        fetchTrendingData(), 
         fetchPortfolioData(),
         fetchUserProjects(),
         fetchRecentActivities()
@@ -738,64 +723,6 @@ export default function DashboardPage() {
                       ))
                     ) : (
                       <p className="text-gray-400 text-center py-4">Market data loading...</p>
-                    )}
-                  </div>
-                </div>
-              </PremiumCard>
-            </motion.div>
-
-            {/* Trending Coins */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-            >
-              <PremiumCard className="glassmorphism border border-white border-opacity-10">
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-semibold text-white">🔥 Trending Coins</h3>
-                    <TrendingUp className="w-5 h-5 text-yellow-500" />
-                  </div>
-                  <div className="space-y-3">
-                    {loading ? (
-                      <div className="space-y-3">
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="animate-pulse">
-                            <div className="h-14 bg-gray-800 rounded-lg"></div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : trendingCoins.length > 0 ? (
-                      trendingCoins.map((coin, index) => (
-                        <motion.div
-                          key={coin.coinId || coin.id || `trending-coin-${index}`}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.1 * index }}
-                          className="flex items-center justify-between p-3 rounded-lg bg-yellow-500 bg-opacity-10 border border-yellow-500 border-opacity-20 hover:bg-yellow-500 hover:bg-opacity-20 transition-all duration-200"
-                        >
-                          <div className="flex items-center space-x-3">
-                            <img 
-                              src={coin.thumb} 
-                              alt={coin.name}
-                              className="w-8 h-8 rounded-full"
-                              onError={(e) => {
-                                e.currentTarget.src = `https://ui-avatars.com/api/?name=${coin.symbol}&background=eab308&color=fff`
-                              }}
-                            />
-                            <div>
-                              <p className="text-white font-medium">{coin.symbol}</p>
-                              <p className="text-gray-400 text-xs">{coin.name}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-white font-medium text-xs">#{coin.marketCapRank}</p>
-                            <p className="text-yellow-400 text-xs">Score: {coin.trendingScore}</p>
-                          </div>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <p className="text-gray-400 text-center py-4">No trending data available</p>
                     )}
                   </div>
                 </div>

@@ -45,6 +45,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Update project stats for trending
+    await Project.findByIdAndUpdate(
+      projectId,
+      {
+        $inc: { addCount: 1 },
+        $set: { lastAdded: new Date() },
+        $addToSet: { addedBy: authResult.userId }
+      }
+    )
+
+    // Activity tracking is handled by the Project model update above
+
     return NextResponse.json({ 
       message: 'Project added to tracking list',
       isTracked: true 

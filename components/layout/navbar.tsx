@@ -136,7 +136,7 @@ export function Navbar() {
             </Link>
             <Link href="/register">
               <StarBorder 
-                className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600 text-white shadow hover:bg-primary/90 h-8 px-3"
+                className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600 text-white shadow hover:bg-primary/90 h-9"
               >
                 Get Started
               </StarBorder>

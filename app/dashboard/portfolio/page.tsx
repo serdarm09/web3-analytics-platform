@@ -8,6 +8,7 @@ import { usePortfolio } from '@/hooks/use-portfolio'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { StarBorder } from '@/components/ui/star-border'
 import { PremiumSkeleton } from '@/components/ui/premium-skeleton'
+import { PremiumButton } from '@/components/ui/premium-button'
 import { AreaChart, PieChart as PieChartComponent } from '@/components/charts'
 import PortfolioAssetManager from '@/components/portfolio/PortfolioAssetManager'
 import { toast } from 'sonner'
@@ -171,13 +172,15 @@ export default function PortfolioPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <button
+            <PremiumButton
               onClick={handleBackToOverview}
-              className="flex items-center gap-2 text-accent-slate hover:text-white transition-colors mb-2 text-sm"
+              variant="ghost"
+              size="sm"
+              className="gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Portföy Listesine Dön
-            </button>
+            </PremiumButton>
             <h1 className="text-3xl font-bold text-white">{selectedPortfolio.name}</h1>
             {selectedPortfolio.description && (
               <p className="text-gray-400 mt-1">{selectedPortfolio.description}</p>
