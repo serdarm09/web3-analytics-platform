@@ -204,8 +204,7 @@ const trackedWalletSchema = new Schema<ITrackedWallet>(
     transactions: [walletTransactionSchema],
     lastSynced: {
       type: Date,
-      default: Date.now,
-      index: true
+      default: Date.now
     },
     isActive: {
       type: Boolean,
