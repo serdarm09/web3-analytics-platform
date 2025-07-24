@@ -32,9 +32,8 @@ export interface IProject extends Document {
     marketCapRank?: number
   }
   metrics: {
-    socialScore: number
-    trendingScore: number
-    hypeScore: number
+    starRating: number
+    trendingScore?: number
     holders: number
     transactions24h?: number
     activeAddresses24h?: number
@@ -52,6 +51,8 @@ export interface IProject extends Document {
   lastAdded?: Date
   addedBy: string
   addedAt: Date
+  likeCount?: number
+  likedBy?: string[]
   launchDate?: string
   tokenomics?: {
     totalSupply?: number
@@ -81,6 +82,7 @@ export interface IProject extends Document {
     description?: string
   }>
   isActive: boolean
+  isPublic: boolean
   lastUpdated?: Date
   createdAt: Date
   updatedAt: Date
@@ -179,23 +181,16 @@ const projectSchema = new Schema<IProject>(
       },
     },
     metrics: {
-      socialScore: {
+      starRating: {
         type: Number,
         default: 0,
         min: 0,
-        max: 100,
+        max: 10,
       },
       trendingScore: {
         type: Number,
         default: 0,
         min: 0,
-        max: 100,
-      },
-      hypeScore: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 100,
       },
       holders: {
         type: Number,
@@ -258,6 +253,14 @@ const projectSchema = new Schema<IProject>(
       type: Date,
       default: Date.now,
     },
+    likeCount: {
+      type: Number,
+      default: 0,
+    },
+    likedBy: {
+      type: [String],
+      default: [],
+    },
     launchDate: String,
     tokenomics: {
       type: Schema.Types.Mixed,
@@ -294,6 +297,10 @@ const projectSchema = new Schema<IProject>(
       type: Boolean,
       default: true,
     },
+    isPublic: {
+      type: Boolean,
+      default: false,
+    },
     lastUpdated: {
       type: Date,
       default: Date.now,
@@ -304,15 +311,36 @@ const projectSchema = new Schema<IProject>(
   }
 )
 
+// Virtual field for calculating trending score
+projectSchema.virtual('calculatedTrendingScore').get(function() {
+  const viewScore = (this.viewCount || 0) * 1
+  const addScore = (this.addCount || 0) * 2
+  const likeScore = (this.likeCount || 0) * 3
+  return viewScore + addScore + likeScore
+})
+
+// Pre-save hook to update trending score
+projectSchema.pre('save', function(next) {
+  // Calculate trending score based on views, adds, and likes
+  const viewScore = (this.viewCount || 0) * 1
+  const addScore = (this.addCount || 0) * 2
+  const likeScore = (this.likeCount || 0) * 3
+  this.metrics.trendingScore = viewScore + addScore + likeScore
+  next()
+})
+
 // Indexes for better query performance
 projectSchema.index({ symbol: 1 })
 projectSchema.index({ category: 1 })
 projectSchema.index({ 'marketData.marketCap': -1 })
-projectSchema.index({ 'metrics.trendingScore': -1 })
+projectSchema.index({ 'metrics.starRating': -1 })
 projectSchema.index({ views: -1 })
 projectSchema.index({ watchlistCount: -1 })
 projectSchema.index({ addedAt: -1 })
 projectSchema.index({ isTestnet: 1 })
+projectSchema.index({ isPublic: 1 })
+projectSchema.index({ likeCount: -1 })
+projectSchema.index({ addCount: -1 })
 
 const Project: Model<IProject> = mongoose.models.Project || mongoose.model<IProject>('Project', projectSchema)
 

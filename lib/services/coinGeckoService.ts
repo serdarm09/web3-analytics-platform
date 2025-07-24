@@ -105,14 +105,32 @@ class CoinGeckoService {
     await rateLimit()
     
     try {
-      const url = new URL(`${COINGECKO_API_BASE}${endpoint}`)
+      let url: URL
       
-      if (params) {
-        Object.entries(params).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            url.searchParams.append(key, String(value))
-          }
-        })
+      // Check if we're in the browser
+      if (typeof window !== 'undefined') {
+        // Use our proxy endpoint for browser requests
+        url = new URL('/api/crypto/coingecko', window.location.origin)
+        url.searchParams.append('endpoint', endpoint)
+        
+        if (params) {
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              url.searchParams.append(key, String(value))
+            }
+          })
+        }
+      } else {
+        // Direct API call for server-side requests
+        url = new URL(`${COINGECKO_API_BASE}${endpoint}`)
+        
+        if (params) {
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              url.searchParams.append(key, String(value))
+            }
+          })
+        }
       }
 
       const response = await fetch(url.toString(), {

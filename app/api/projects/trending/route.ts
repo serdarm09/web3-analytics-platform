@@ -31,8 +31,9 @@ export async function GET(request: NextRequest) {
         dateFilter.setDate(dateFilter.getDate() - 7)
     }
 
-    // Find trending projects based on views and additions
+    // Find trending projects based on views and additions (only public projects)
     const projects = await Project.find({
+      isPublic: true,
       $or: [
         { lastViewed: { $gte: dateFilter } },
         { lastAdded: { $gte: dateFilter } }
@@ -49,12 +50,17 @@ export async function GET(request: NextRequest) {
       'socialLinks.twitter': 1,
       viewCount: 1,
       addCount: 1,
+      likeCount: 1,
       'marketData.price': 1,
       'marketData.marketCap': 1,
       'marketData.change24h': 1,
       'marketData.volume24h': 1,
-      lastUpdated: 1
+      lastUpdated: 1,
+      addedBy: 1,
+      addedAt: 1,
+      isPublic: 1
     })
+    .populate('addedBy', 'email name username')
     .sort({ 
       viewCount: -1,
       addCount: -1 
@@ -80,12 +86,19 @@ export async function GET(request: NextRequest) {
         twitter: project.socialLinks?.twitter,
         totalViews,
         totalAdds,
+        likeCount: project.likeCount || 0,
         marketCap: project.marketData?.marketCap,
         price: project.marketData?.price,
         priceChange24h: project.marketData?.change24h,
         volume24h: project.marketData?.volume24h,
         lastUpdated: project.lastUpdated,
-        recentActivity
+        recentActivity,
+        creator: project.addedBy ? {
+          id: project.addedBy._id || project.addedBy,
+          name: project.addedBy.name || project.addedBy.username || 'Anonymous',
+          email: project.addedBy.email
+        } : null,
+        addedAt: project.addedAt
       }
     }).sort((a, b) => b.recentActivity - a.recentActivity)
 

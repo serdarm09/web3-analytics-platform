@@ -407,9 +407,11 @@ export default function PortfolioPage() {
         <h2 className="text-xl font-semibold text-white mb-4">Your Portfolios</h2>
         {portfolios && portfolios.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {portfolios.map((portfolio: any, index: number) => (
+            {portfolios.map((portfolio: any, index: number) => {
+              const portfolioKey = `portfolio-${portfolio._id || portfolio.id || index}`;
+              return (
               <motion.div
-                key={portfolio._id || portfolio.id}
+                key={portfolioKey}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 * index }}
@@ -478,7 +480,8 @@ export default function PortfolioPage() {
                   </div>
                 </PremiumCard>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <PremiumCard className="glassmorphism p-12 text-center">

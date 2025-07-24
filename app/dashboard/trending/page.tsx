@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { 
   TrendingUp, 
@@ -13,7 +13,9 @@ import {
   ArrowUp,
   ExternalLink,
   Plus,
-  Activity
+  Activity,
+  User,
+  Heart
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumBadge } from "@/components/ui/premium-badge"
@@ -29,6 +31,9 @@ export default function UserBasedTrendingPage() {
   const [period, setPeriod] = useState<'24h' | '7d' | '30d'>('7d')
   const { projects, loading, refresh, trackProjectView } = useTrendingProjects(period)
   const [refreshing, setRefreshing] = useState(false)
+  const [addingProjects, setAddingProjects] = useState<Set<string>>(new Set())
+  const [likingProjects, setLikingProjects] = useState<Set<string>>(new Set())
+  const [projectLikes, setProjectLikes] = useState<Record<string, { likeCount: number; isLiked: boolean }>>({})
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -50,11 +55,107 @@ export default function UserBasedTrendingPage() {
     router.push(`/dashboard/projects/${project._id}`)
   }
 
+  const handleAddToMyProjects = async (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation()
+    
+    if (addingProjects.has(projectId)) return
+    
+    setAddingProjects(prev => new Set(prev).add(projectId))
+    
+    try {
+      const response = await fetch('/api/projects/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ projectId }),
+      })
+
+      if (response.ok) {
+        toast.success('Project added to your list!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to add project')
+      }
+    } catch (error) {
+      toast.error('Failed to add project')
+    } finally {
+      setAddingProjects(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(projectId)
+        return newSet
+      })
+    }
+  }
+
+  const handleLikeProject = async (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation()
+    
+    if (likingProjects.has(projectId)) return
+    
+    setLikingProjects(prev => new Set(prev).add(projectId))
+    
+    try {
+      const response = await fetch(`/api/projects/${projectId}/like`, {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setProjectLikes(prev => ({
+          ...prev,
+          [projectId]: {
+            likeCount: data.likeCount,
+            isLiked: data.isLiked
+          }
+        }))
+        toast.success(data.isLiked ? 'Project liked!' : 'Project unliked!')
+      } else {
+        toast.error('Failed to update like status')
+      }
+    } catch (error) {
+      toast.error('Failed to update like status')
+    } finally {
+      setLikingProjects(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(projectId)
+        return newSet
+      })
+    }
+  }
+
   const periodOptions = [
     { value: '24h', label: '24 Hours', icon: Clock },
     { value: '7d', label: '7 Days', icon: Activity },
     { value: '30d', label: '30 Days', icon: TrendingUp }
   ]
+
+  // Fetch like statuses for all projects
+  useEffect(() => {
+    const fetchLikeStatuses = async () => {
+      for (const project of projects) {
+        try {
+          const response = await fetch(`/api/projects/${project._id}/like`)
+          if (response.ok) {
+            const data = await response.json()
+            setProjectLikes(prev => ({
+              ...prev,
+              [project._id]: {
+                likeCount: data.likeCount,
+                isLiked: data.isLiked
+              }
+            }))
+          }
+        } catch (error) {
+          console.error('Error fetching like status for project:', project._id, error)
+        }
+      }
+    }
+
+    if (projects.length > 0) {
+      fetchLikeStatuses()
+    }
+  }, [projects])
 
   if (loading) {
     return (
@@ -192,9 +293,27 @@ export default function UserBasedTrendingPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-white text-lg">{project.name}</h3>
-                    <p className="text-gray-400 text-sm">{project.symbol}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-gray-400 text-sm">{project.symbol}</p>
+                      {project.category && (
+                        <PremiumBadge variant="outline" size="sm">
+                          {project.category}
+                        </PremiumBadge>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {/* Creator Info */}
+                {project.creator && (
+                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-800">
+                    <User className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-400">Created by</span>
+                    <span className="text-sm text-white font-medium">
+                      {project.creator.name}
+                    </span>
+                  </div>
+                )}
 
                 {/* Stats */}
                 <div className="space-y-3 mb-4">
@@ -223,6 +342,15 @@ export default function UserBasedTrendingPage() {
                     </div>
                     <span className="text-white font-medium">
                       {project.stats.engagement}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <Heart className="w-4 h-4" />
+                      <span className="text-sm">Likes</span>
+                    </div>
+                    <span className="text-white font-medium">
+                      {projectLikes[project._id]?.likeCount || project.likeCount || 0}
                     </span>
                   </div>
                 </div>
@@ -268,15 +396,32 @@ export default function UserBasedTrendingPage() {
                     </a>
                   )}
                   <PremiumButton
-                    variant="ghost"
+                    variant={projectLikes[project._id]?.isLiked ? "glow" : "ghost"}
+                    size="sm"
+                    onClick={(e) => handleLikeProject(e, project._id)}
+                    disabled={likingProjects.has(project._id)}
+                    className="gap-1"
+                  >
+                    {likingProjects.has(project._id) ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Heart className={`w-4 h-4 ${projectLikes[project._id]?.isLiked ? 'fill-current' : ''}`} />
+                    )}
+                    <span className="text-xs">{projectLikes[project._id]?.likeCount || project.likeCount || 0}</span>
+                  </PremiumButton>
+                  <PremiumButton
+                    variant="gradient"
                     size="sm"
                     className="ml-auto"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      toast.info('Add to watchlist feature coming soon!')
-                    }}
+                    onClick={(e) => handleAddToMyProjects(e, project._id)}
+                    disabled={addingProjects.has(project._id)}
                   >
-                    <Star className="w-4 h-4" />
+                    {addingProjects.has(project._id) ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Plus className="w-4 h-4" />
+                    )}
+                    Add to My Projects
                   </PremiumButton>
                 </div>
               </div>

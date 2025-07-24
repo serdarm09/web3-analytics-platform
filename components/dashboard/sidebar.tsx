@@ -44,7 +44,7 @@ const sidebarItems = [
     href: '/dashboard/trending',
   },
   {
-    title: 'Watchlist',
+    title: 'Watch Projects',
     icon: Eye,
     href: '/dashboard/watchlist',
   },

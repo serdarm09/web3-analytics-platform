@@ -5,7 +5,7 @@ import Project from '@/models/Project'
 
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ projectId: string }> }
 ) {
   try {
     const authResult = await verifyAuth(request)
@@ -14,7 +14,7 @@ export async function POST(
     }
 
     await dbConnect()
-    const { id: projectId } = await context.params
+    const { projectId } = await context.params
 
     // Update view count and last viewed timestamp
     const project = await Project.findByIdAndUpdate(

@@ -3,7 +3,6 @@ import dbConnect from '@/lib/database/mongoose'
 import Portfolio from '@/models/Portfolio'
 import Project from '@/models/Project'
 import { verifyAuth } from '@/lib/auth/middleware'
-import axios from 'axios'
 
 // Symbol to CoinGecko ID mapping
 const symbolToCoinGeckoId: Record<string, string> = {
@@ -33,30 +32,35 @@ const symbolToCoinGeckoId: Record<string, string> = {
   'busd': 'binance-usd'
 }
 
-// Get current crypto prices from CoinGecko
+// Get current crypto prices using the market-data API
 async function getCryptoPrices(symbols: string[]) {
   try {
-    // Map symbols to CoinGecko IDs
-    const coinIds = symbols.map(symbol => {
-      const id = symbolToCoinGeckoId[symbol.toLowerCase()]
-      return id || symbol.toLowerCase()
-    })
+    if (symbols.length === 0) return {}
     
-    const uniqueIds = [...new Set(coinIds)]
-    const idsString = uniqueIds.join(',')
+    // Use the existing market-data endpoint which has its own caching
+    const symbolsString = symbols.join(',')
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${baseUrl}/api/crypto/market-data?symbols=${symbolsString}`)
     
-    const response = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${idsString}&vs_currencies=usd&include_24hr_change=true`
-    )
+    if (!response.ok) {
+      console.error('Failed to fetch market data:', response.status)
+      return {}
+    }
     
-    // Map the response back to symbols
+    const data = await response.json()
+    
+    // Transform the response to match our expected format
     const priceData: Record<string, any> = {}
-    symbols.forEach(symbol => {
-      const coinId = symbolToCoinGeckoId[symbol.toLowerCase()] || symbol.toLowerCase()
-      if (response.data[coinId]) {
-        priceData[symbol.toLowerCase()] = response.data[coinId]
-      }
-    })
+    
+    if (data.success && data.data) {
+      Object.keys(data.data).forEach(symbol => {
+        const marketData = data.data[symbol]
+        priceData[symbol.toLowerCase()] = {
+          usd: marketData.current_price || 0,
+          usd_24h_change: marketData.price_change_percentage_24h || 0
+        }
+      })
+    }
     
     return priceData
   } catch (error) {

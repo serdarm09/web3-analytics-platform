@@ -19,28 +19,34 @@ export async function GET(request: NextRequest) {
     const sort = searchParams.get('sort')
     const limit = parseInt(searchParams.get('limit') || '100')
     const page = parseInt(searchParams.get('page') || '1')
+    const publicOnly = searchParams.get('public') === 'true'
 
     await dbConnect()
 
-    // Get user's tracked projects
-    const User = (await import('@/models/User')).default
-    const user = await User.findById(authResult.userId).select('trackedProjects')
+    let query: any = {}
     
-    if (!user || !user.trackedProjects || user.trackedProjects.length === 0) {
-      // Return empty result if user has no tracked projects
-      return NextResponse.json({
-        projects: [],
-        pagination: {
-          page: 1,
-          limit,
-          total: 0,
-          totalPages: 0
-        }
-      })
-    }
+    if (publicOnly) {
+      // Fetch public projects
+      query.isPublic = true
+    } else {
+      // Get user's tracked projects
+      const User = (await import('@/models/User')).default
+      const user = await User.findById(authResult.userId).select('trackedProjects')
+      
+      if (!user || !user.trackedProjects || user.trackedProjects.length === 0) {
+        // Return empty result if user has no tracked projects
+        return NextResponse.json({
+          projects: [],
+          pagination: {
+            page: 1,
+            limit,
+            total: 0,
+            totalPages: 0
+          }
+        })
+      }
 
-    const query: any = {
-      _id: { $in: user.trackedProjects }
+      query._id = { $in: user.trackedProjects }
     }
     
     if (category && category !== 'All') {
@@ -63,6 +69,7 @@ export async function GET(request: NextRequest) {
     }
 
     const projects = await Project.find(query)
+      .populate('addedBy', 'email name username')
       .sort(sortQuery)
       .skip(skip)
       .limit(limit)
@@ -134,6 +141,7 @@ export async function POST(request: NextRequest) {
       blockchain,
       contractAddress,
       isTestnet,
+      isPublic,
       website, 
       whitepaper,
       socialLinks,
@@ -173,6 +181,7 @@ export async function POST(request: NextRequest) {
       blockchain: blockchain || 'Unknown',
       contractAddress: contractAddress || '',
       isTestnet: isTestnet || false,
+      isPublic: isPublic ?? false,
       website,
       whitepaper,
       socialLinks,
@@ -202,9 +211,7 @@ export async function POST(request: NextRequest) {
         marketCapRank: 0
       },
       metrics: {
-        socialScore: 0,
-        trendingScore: 0,
-        hypeScore: 0,
+        starRating: 0,
         holders: 0,
         transactions24h: 0,
         activeAddresses24h: 0,

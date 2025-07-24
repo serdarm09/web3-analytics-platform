@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Heart, HeartOff } from 'lucide-react'
+import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Heart, HeartOff, Edit2 } from 'lucide-react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { PremiumCard } from '@/components/ui/premium-card'
@@ -10,7 +10,9 @@ import { PremiumInput } from '@/components/ui/premium-input'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { PremiumButton } from '@/components/ui/premium-button'
 import ProjectCreationModal from '@/components/ProjectCreationModal'
+import ProjectEditModal from '@/components/ProjectEditModal'
 import { useProjects } from '@/hooks/useProjects'
+import { useAuth } from '@/hooks/useAuth'
 
 const categories = ['All', 'DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Other']
 
@@ -18,8 +20,11 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
   const [showTrendingProjects, setShowTrendingProjects] = useState(false)
   
+  const { user } = useAuth()
   const { projects, loading, error, refetch } = useProjects({
     search: searchQuery,
     category: selectedCategory === 'All' ? '' : selectedCategory
@@ -27,6 +32,17 @@ export default function ProjectsPage() {
 
   const handleProjectCreated = () => {
     refetch()
+  }
+
+  const handleProjectUpdated = () => {
+    refetch()
+    setIsEditModalOpen(false)
+    setEditingProjectId(null)
+  }
+
+  const handleEditProject = (projectId: string) => {
+    setEditingProjectId(projectId)
+    setIsEditModalOpen(true)
   }
 
   const handleTrackProject = async (projectId: string) => {
@@ -260,6 +276,15 @@ export default function ProjectsPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {user?.id === project.addedBy && (
+                          <button 
+                            className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+                            onClick={() => handleEditProject(project._id)}
+                            title="Edit project"
+                          >
+                            <Edit2 className="w-5 h-5" />
+                          </button>
+                        )}
                         <button 
                           className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
                           onClick={() => handleUntrackProject(project._id)}
@@ -295,6 +320,18 @@ export default function ProjectsPage() {
         onClose={() => setIsModalOpen(false)}
         onProjectCreated={handleProjectCreated}
       />
+
+      {editingProjectId && (
+        <ProjectEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false)
+            setEditingProjectId(null)
+          }}
+          projectId={editingProjectId}
+          onProjectUpdated={handleProjectUpdated}
+        />
+      )}
     </div>
   )
 }

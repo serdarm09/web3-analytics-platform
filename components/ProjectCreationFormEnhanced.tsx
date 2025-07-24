@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FormInput } from '@/components/ui/form-input'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumCard } from '@/components/ui/premium-card'
-import { Plus, Trash2, Upload, Calendar, FileText, Shield, Globe, Users, Coins, LineChart, X, Search, RefreshCw } from 'lucide-react'
+import { Plus, Trash2, Upload, Calendar, FileText, Shield, Globe, Users, Coins, LineChart, X, Search, RefreshCw, Star } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface ProjectFormData {
@@ -14,6 +14,7 @@ interface ProjectFormData {
   description: string
   category: string
   website: string
+  isPublic: boolean
   social: {
     twitter: string
     telegram: string
@@ -36,9 +37,7 @@ interface ProjectFormData {
     fullyDilutedValuation: number
   }
   metrics: {
-    socialScore: number
-    trendingScore: number
-    hypeScore: number
+    starRating: number
     holders: number
   }
   tokenomics: {
@@ -74,16 +73,19 @@ interface ProjectCreationFormProps {
   onSubmit: (data: ProjectFormData) => void
   onCancel: () => void
   isLoading?: boolean
+  initialData?: ProjectFormData
+  isEditMode?: boolean
 }
 
-export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoading = false }: ProjectCreationFormProps) {
-  const [formData, setFormData] = useState<ProjectFormData>({
+export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoading = false, initialData, isEditMode = false }: ProjectCreationFormProps) {
+  const [formData, setFormData] = useState<ProjectFormData>(initialData || {
     name: '',
     symbol: '',
     logo: '',
     description: '',
     category: '',
     website: '',
+    isPublic: false,
     social: {
       twitter: '',
       telegram: '',
@@ -106,9 +108,7 @@ export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoad
       fullyDilutedValuation: 0,
     },
     metrics: {
-      socialScore: 0,
-      trendingScore: 0,
-      hypeScore: 0,
+      starRating: 0,
       holders: 0,
     },
     tokenomics: {
@@ -137,6 +137,13 @@ export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoad
   const [activeSection, setActiveSection] = useState('basic')
   const [isFetchingData, setIsFetchingData] = useState(false)
   const [fetchError, setFetchError] = useState('')
+
+  // Update form data when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData)
+    }
+  }, [initialData])
 
   const categories = ['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'DAO', 'Oracle', 'Privacy', 'Exchange', 'Other']
   const blockchains = ['Ethereum', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Avalanche', 'Solana', 'Cardano', 'Polkadot', 'Cosmos', 'Near', 'Other']
@@ -481,6 +488,39 @@ export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoad
         />
 
         <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Project Visibility</label>
+          <div className="flex items-center space-x-4 mt-2">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="visibility"
+                value="public"
+                checked={formData.isPublic}
+                onChange={() => handleInputChange('isPublic', true)}
+                className="mr-2 text-accent-teal focus:ring-accent-teal"
+              />
+              <span className="text-sm text-gray-300">Public</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="visibility"
+                value="private"
+                checked={!formData.isPublic}
+                onChange={() => handleInputChange('isPublic', false)}
+                className="mr-2 text-accent-teal focus:ring-accent-teal"
+              />
+              <span className="text-sm text-gray-300">Private</span>
+            </label>
+          </div>
+          <p className="text-xs text-gray-400 mt-1">
+            Public projects will appear in trending and search results
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-300">
             Contract Address (CA)
           </label>
@@ -707,36 +747,30 @@ export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoad
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <FormInput
-          label="Social Score (0-100)"
-          type="number"
-          min="0"
-          max="100"
-          placeholder="0"
-          value={formData.metrics.socialScore || ''}
-          onChange={(e) => handleInputChange('metrics.socialScore', Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
-        />
-
-        <FormInput
-          label="Trending Score (0-100)"
-          type="number"
-          min="0"
-          max="100"
-          placeholder="0"
-          value={formData.metrics.trendingScore || ''}
-          onChange={(e) => handleInputChange('metrics.trendingScore', Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
-        />
-
-        <FormInput
-          label="Hype Score (0-100)"
-          type="number"
-          min="0"
-          max="100"
-          placeholder="0"
-          value={formData.metrics.hypeScore || ''}
-          onChange={(e) => handleInputChange('metrics.hypeScore', Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-300">Project Rating</label>
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+              <button
+                key={rating}
+                type="button"
+                onClick={() => handleInputChange('metrics.starRating', rating)}
+                className={`p-1 transition-colors ${
+                  formData.metrics.starRating >= rating
+                    ? 'text-yellow-400 hover:text-yellow-300'
+                    : 'text-gray-600 hover:text-gray-500'
+                }`}
+              >
+                <Star 
+                  className="w-6 h-6" 
+                  fill={formData.metrics.starRating >= rating ? 'currentColor' : 'none'}
+                />
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400">Rate this project from 1 to 10 stars</p>
+        </div>
 
         <FormInput
           label="Token Holders"

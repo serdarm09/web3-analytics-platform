@@ -31,14 +31,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if user already tracks this project
+    const user = await User.findById(authResult.userId)
+    if (user?.trackedProjects?.includes(projectId)) {
+      return NextResponse.json(
+        { error: 'You already track this project' },
+        { status: 400 }
+      )
+    }
+
+    // If the project is not public and user is not the creator, deny access
+    if (!project.isPublic && project.addedBy !== authResult.userId) {
+      return NextResponse.json(
+        { error: 'This project is private' },
+        { status: 403 }
+      )
+    }
+
     // Add project to user's tracked projects
-    const user = await User.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
       authResult.userId,
       { $addToSet: { trackedProjects: projectId } },
       { new: true }
     )
 
-    if (!user) {
+    if (!updatedUser) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }

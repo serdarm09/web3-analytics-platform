@@ -11,6 +11,7 @@ interface ProjectFormData {
   description: string
   category: string
   website: string
+  isPublic: boolean
   social: {
     twitter: string
     telegram: string
@@ -33,9 +34,7 @@ interface ProjectFormData {
     fullyDilutedValuation: number
   }
   metrics: {
-    socialScore: number
-    trendingScore: number
-    hypeScore: number
+    starRating: number
     holders: number
   }
   tokenomics: {

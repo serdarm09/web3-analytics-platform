@@ -6,7 +6,7 @@ const COINGECKO_API = 'https://api.coingecko.com/api/v3'
 // Cache for market data
 let marketDataCache: any = {}
 let cacheTimestamp = 0
-const CACHE_DURATION = 60000 // 1 minute for price data
+const CACHE_DURATION = 300000 // 5 minutes for price data to reduce API calls
 
 export async function GET(request: NextRequest) {
   try {

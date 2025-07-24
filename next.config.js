@@ -1,7 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost', 'assets.coingecko.com', 'cryptologos.cc', 'ui-avatars.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      }
+    ],
   },
   eslint: {
     ignoreDuringBuilds: true,
