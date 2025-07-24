@@ -481,55 +481,26 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h3 className="text-xl font-semibold text-white">Portföy Varlıkları</h3>
+          <h3 className="text-xl font-semibold text-white">Portfolio Assets</h3>
           <div className="flex items-center gap-4 mt-1">
-            <p className="text-gray-400 text-sm">Kripto varlıklarınızı takip edin ve yönetin</p>
+            <p className="text-gray-400 text-sm">Manage and track your crypto holdings</p>
             {lastUpdate && (
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${pricesLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
                 <p className="text-xs text-gray-500">
-                  Son güncelleme: {lastUpdate.toLocaleTimeString('tr-TR')}
+                  Last update: {lastUpdate.toLocaleTimeString()}
                 </p>
                 <button
                   onClick={refreshPrices}
                   className="text-xs text-blue-400 hover:text-blue-300 underline"
                   disabled={pricesLoading}
                 >
-                  Yenile
+                  Refresh
                 </button>
               </div>
             )}
           </div>
           
-          {/* Portfolio Summary */}
-          {assets.length > 0 && (
-            <div className="mt-4 grid grid-cols-4 gap-4">
-              <div className="bg-gray-800/50 rounded-lg p-3">
-                <p className="text-gray-400 text-xs">Toplam Değer</p>
-                <p className="text-white font-semibold">
-                  {formatCurrency(portfolioTotals.totalCurrentValue)}
-                </p>
-              </div>
-              <div className="bg-gray-800/50 rounded-lg p-3">
-                <p className="text-gray-400 text-xs">Toplam Maliyet</p>
-                <p className="text-white font-semibold">
-                  {formatCurrency(portfolioTotals.totalPurchaseValue)}
-                </p>
-              </div>
-              <div className="bg-gray-800/50 rounded-lg p-3">
-                <p className="text-gray-400 text-xs">Kar/Zarar</p>
-                <p className={`font-semibold ${portfolioTotals.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatCurrency(Math.abs(portfolioTotals.totalProfitLoss))}
-                </p>
-              </div>
-              <div className="bg-gray-800/50 rounded-lg p-3">
-                <p className="text-gray-400 text-xs">Performans</p>
-                <p className={`font-semibold ${portfolioTotals.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatPercentage(portfolioTotals.totalProfitLossPercentage)}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
         <StarBorder
           as="button"
@@ -541,7 +512,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
         >
           <div className="flex items-center justify-center gap-2">
             <Plus className="w-4 h-4" />
-            <span>Varlık Ekle</span>
+            <span>Add Asset</span>
           </div>
         </StarBorder>
       </div>
@@ -897,7 +868,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                           {asset.symbol}
                         </h4>
                         <p className="text-gray-400 text-sm">
-                          {asset.amount} adet
+                          {asset.amount} units
                         </p>
                       </div>
                     </div>
@@ -908,7 +879,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                           {formatCurrency(currentValue)}
                         </p>
                         <p className="text-gray-400 text-sm">
-                          Güncel Değer
+                          Current Value
                           {realTimePrice && (
                             <span className="ml-1 text-green-400 text-xs">●</span>
                           )}
@@ -920,7 +891,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                           {formatCurrency(asset.amount * asset.purchasePrice)}
                         </p>
                         <p className="text-gray-400 text-sm">
-                          Maliyet
+                          Cost
                         </p>
                       </div>
 
@@ -964,14 +935,14 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                   <div className="mt-4 pt-4 border-t border-gray-800">
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-400">Alış Fiyatı</p>
+                        <p className="text-gray-400">Purchase Price</p>
                         <p className="text-white font-medium">
                           {formatCurrency(asset.purchasePrice)}
                         </p>
                       </div>
                       <div>
                         <p className="text-gray-400">
-                          Güncel Fiyat
+                          Current Price
                           {realTimePrice && (
                             <span className="ml-1 text-green-400 text-xs">●</span>
                           )}
@@ -988,7 +959,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                         </div>
                       </div>
                       <div>
-                        <p className="text-gray-400">Alış Tarihi</p>
+                        <p className="text-gray-400">Purchase Date</p>
                         <p className="text-white font-medium">
                           {new Date(asset.purchaseDate).toLocaleDateString()}
                         </p>

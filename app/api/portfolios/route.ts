@@ -5,14 +5,60 @@ import Project from '@/models/Project'
 import { verifyAuth } from '@/lib/auth/middleware'
 import axios from 'axios'
 
+// Symbol to CoinGecko ID mapping
+const symbolToCoinGeckoId: Record<string, string> = {
+  'btc': 'bitcoin',
+  'eth': 'ethereum',
+  'bnb': 'binancecoin',
+  'sol': 'solana',
+  'xrp': 'ripple',
+  'ada': 'cardano',
+  'avax': 'avalanche-2',
+  'doge': 'dogecoin',
+  'dot': 'polkadot',
+  'matic': 'matic-network',
+  'shib': 'shiba-inu',
+  'trx': 'tron',
+  'link': 'chainlink',
+  'uni': 'uniswap',
+  'atom': 'cosmos',
+  'ltc': 'litecoin',
+  'etc': 'ethereum-classic',
+  'xlm': 'stellar',
+  'near': 'near',
+  'algo': 'algorand',
+  'usdt': 'tether',
+  'usdc': 'usd-coin',
+  'dai': 'dai',
+  'busd': 'binance-usd'
+}
+
 // Get current crypto prices from CoinGecko
 async function getCryptoPrices(symbols: string[]) {
   try {
-    const symbolsString = symbols.join(',')
+    // Map symbols to CoinGecko IDs
+    const coinIds = symbols.map(symbol => {
+      const id = symbolToCoinGeckoId[symbol.toLowerCase()]
+      return id || symbol.toLowerCase()
+    })
+    
+    const uniqueIds = [...new Set(coinIds)]
+    const idsString = uniqueIds.join(',')
+    
     const response = await axios.get(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${symbolsString}&vs_currencies=usd&include_24hr_change=true`
+      `https://api.coingecko.com/api/v3/simple/price?ids=${idsString}&vs_currencies=usd&include_24hr_change=true`
     )
-    return response.data
+    
+    // Map the response back to symbols
+    const priceData: Record<string, any> = {}
+    symbols.forEach(symbol => {
+      const coinId = symbolToCoinGeckoId[symbol.toLowerCase()] || symbol.toLowerCase()
+      if (response.data[coinId]) {
+        priceData[symbol.toLowerCase()] = response.data[coinId]
+      }
+    })
+    
+    return priceData
   } catch (error) {
     console.error('Error fetching crypto prices:', error)
     return {}
@@ -32,6 +78,8 @@ async function updatePortfolioMetrics(portfolio: any) {
   // Get unique symbols from portfolio assets
   const symbols = portfolio.assets.map((asset: any) => asset.symbol.toLowerCase())
   const prices = await getCryptoPrices(symbols)
+  
+  console.log('Fetched prices:', prices)
 
   let totalValue = 0
   let totalCost = 0
@@ -39,10 +87,13 @@ async function updatePortfolioMetrics(portfolio: any) {
   // Update each asset with current prices
   portfolio.assets.forEach((asset: any) => {
     const symbolLower = asset.symbol.toLowerCase()
-    const currentPrice = prices[symbolLower]?.usd || asset.purchasePrice // Fallback to purchase price
+    const priceData = prices[symbolLower]
+    const currentPrice = priceData?.usd || asset.purchasePrice // Fallback to purchase price
+    const change24h = priceData?.usd_24h_change || 0
     
     asset.currentPrice = currentPrice
     asset.currentValue = asset.amount * currentPrice
+    asset.change24h = change24h
     
     const cost = asset.amount * asset.purchasePrice
     const profitLoss = asset.currentValue - cost
@@ -52,6 +103,8 @@ async function updatePortfolioMetrics(portfolio: any) {
     
     totalCost += cost
     totalValue += asset.currentValue
+    
+    console.log(`Asset ${asset.symbol}: Purchase Price: $${asset.purchasePrice}, Current Price: $${currentPrice}, P&L: $${profitLoss}`)
   })
 
   portfolio.totalValue = totalValue

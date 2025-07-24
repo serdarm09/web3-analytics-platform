@@ -136,7 +136,7 @@ export default function AlertsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <PremiumBadge variant={alert.active ? "success" : "muted"}>
+                    <PremiumBadge variant={alert.active ? "success" : "default"}>
                       {alert.active ? 'Active' : 'Inactive'}
                     </PremiumBadge>
                     <PremiumButton

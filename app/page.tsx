@@ -171,13 +171,6 @@ export default function Home() {
               setAuthModal({ isOpen: true, mode: 'register' })
             }
           }}
-          onViewDemo={() => {
-            if (isAuthenticated) {
-              router.push('/dashboard')
-            } else {
-              setAuthModal({ isOpen: true, mode: 'login' })
-            }
-          }}
         />
 
 

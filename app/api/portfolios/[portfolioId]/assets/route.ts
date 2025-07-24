@@ -16,9 +16,17 @@ export async function POST(
       return NextResponse.json({ error: 'Kimlik doğrulama başarısız. Lütfen tekrar giriş yapın.' }, { status: 401 })
     }
 
-    const { portfolioId } = await params
+    const resolvedParams = await params
+    const portfolioId = resolvedParams.portfolioId
     console.log('POST /api/portfolios/[portfolioId]/assets - portfolioId:', portfolioId)
     console.log('userId:', authResult.userId)
+    
+    if (!portfolioId || portfolioId === 'undefined') {
+      return NextResponse.json(
+        { error: 'Portfolio ID is required' },
+        { status: 400 }
+      )
+    }
     
     const body = await request.json()
     const { symbol, amount, purchasePrice, purchaseDate, projectId } = body

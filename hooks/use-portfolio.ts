@@ -160,16 +160,22 @@ export function usePortfolio() {
   })
 
   const refreshPricesMutation = useMutation({
-    mutationFn: async (portfolioId: string) => {
-      const response = await fetchWithAuth(`/api/portfolios/${portfolioId}/refresh-prices`, {
-        method: 'POST'
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to refresh prices')
+    mutationFn: async (portfolioId?: string) => {
+      if (portfolioId) {
+        const response = await fetchWithAuth(`/api/portfolios/${portfolioId}/refresh-prices`, {
+          method: 'POST'
+        })
+        
+        if (!response.ok) {
+          throw new Error('Failed to refresh prices')
+        }
+        
+        return response.json()
+      } else {
+        // Refresh all portfolios by invalidating the query
+        queryClient.invalidateQueries({ queryKey: ['portfolios'] })
+        return { success: true }
       }
-      
-      return response.json()
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolios'] })

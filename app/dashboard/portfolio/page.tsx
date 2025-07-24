@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Plus, TrendingUp, TrendingDown, DollarSign, PieChart, Wallet, Activity, ArrowLeft, RefreshCw } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, TrendingUp, TrendingDown, DollarSign, PieChart, Wallet, Activity, ArrowLeft, RefreshCw, Eye, EyeOff, BarChart3, Clock } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/use-auth'
 import { usePortfolio } from '@/hooks/use-portfolio'
 import { PremiumCard } from '@/components/ui/premium-card'
@@ -11,6 +11,7 @@ import { PremiumSkeleton } from '@/components/ui/premium-skeleton'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { AreaChart, PieChart as PieChartComponent } from '@/components/charts'
 import PortfolioAssetManager from '@/components/portfolio/PortfolioAssetManager'
+import CreatePortfolioModal from '@/components/portfolio/CreatePortfolioModal'
 import { toast } from 'sonner'
 
 interface PortfolioAsset {
@@ -19,8 +20,9 @@ interface PortfolioAsset {
   name: string
   amount: number
   averagePrice?: number
-  purchasePrice: number
-  purchaseDate: Date
+  purchasePrice?: number
+  avgBuyPrice?: number
+  purchaseDate?: Date
   currentPrice?: number
   value?: number
   change24h?: number
@@ -29,7 +31,7 @@ interface PortfolioAsset {
 }
 
 interface Portfolio {
-  _id: string
+  _id?: string
   id: string
   name: string
   description?: string
@@ -48,48 +50,85 @@ export default function PortfolioPage() {
   const { 
     portfolios: dbPortfolios, 
     isLoading, 
-    createPortfolio, 
-    isCreating,
+    createPortfolio,
+    deletePortfolio,
     refreshPrices 
   } = usePortfolio()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedPortfolio, setSelectedPortfolio] = useState<Portfolio | null>(null)
   const [viewMode, setViewMode] = useState<'overview' | 'detail'>('overview')
   const [refreshing, setRefreshing] = useState(false)
+  const [showTotalValue, setShowTotalValue] = useState(true)
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+
+  // Auto-refresh prices every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        await refreshPrices(undefined)
+        setLastRefresh(new Date())
+      } catch (error) {
+        console.error('Auto-refresh failed:', error)
+      }
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [refreshPrices])
 
   // Format portfolios from database to match the component structure
-  const portfolios = dbPortfolios?.map(portfolio => ({
-    ...portfolio,
-    _id: portfolio.id,
-    assets: portfolio.assets.map(asset => ({
-      ...asset,
-      averagePrice: asset.avgBuyPrice,
-      purchasePrice: asset.avgBuyPrice,
-      purchaseDate: new Date()
-    }))
-  })) || []
+  const portfolios = useMemo(() => 
+    dbPortfolios?.map(portfolio => ({
+      ...portfolio,
+      _id: portfolio.id,
+      id: portfolio.id,
+      assets: portfolio.assets.map((asset: any) => ({
+        symbol: asset.symbol,
+        name: asset.name,
+        amount: asset.amount,
+        averagePrice: asset.avgBuyPrice || 0,
+        purchasePrice: asset.avgBuyPrice || 0,
+        projectId: undefined,
+        purchaseDate: new Date(),
+        currentPrice: asset.currentPrice,
+        value: asset.currentPrice ? asset.amount * asset.currentPrice : undefined,
+        change24h: asset.change24h,
+        changePercent24h: asset.changePercent24h,
+        image: asset.image
+      }))
+    })) || []
+  , [dbPortfolios])
 
   const totalValue = portfolios?.reduce((sum: number, p: Portfolio) => sum + p.totalValue, 0) || 0
   const totalCost = portfolios?.reduce((sum: number, p: Portfolio) => sum + p.totalCost, 0) || 0
   const totalProfitLoss = totalValue - totalCost
   const totalProfitLossPercentage = totalCost > 0 ? (totalProfitLoss / totalCost) * 100 : 0
 
-  // Enhanced chart data with real portfolio tracking
-  const chartData = [
-    { name: 'Jan', value: totalCost * 0.8 },
-    { name: 'Feb', value: totalCost * 0.9 },
-    { name: 'Mar', value: totalCost * 0.85 },
-    { name: 'Apr', value: totalCost * 1.1 },
-    { name: 'May', value: totalCost * 1.05 },
-    { name: 'Jun', value: totalCost * 1.2 },
-    { name: 'Jul', value: totalValue }
-  ]
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount)
+  }
 
-  const pieData = portfolios?.map((p: Portfolio, index: number) => ({
-    name: p.name,
-    value: p.totalValue,
-    color: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][index % 5]
-  })) || []
+  const formatPercentage = (value: number) => {
+    const sign = value >= 0 ? '+' : ''
+    return `${sign}${value.toFixed(2)}%`
+  }
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      await refreshPrices(undefined)
+      setLastRefresh(new Date())
+      toast.success('Prices refreshed successfully')
+    } catch (error) {
+      toast.error('Failed to refresh prices')
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   const handlePortfolioSelect = (portfolio: Portfolio) => {
     setSelectedPortfolio(portfolio)
@@ -101,110 +140,81 @@ export default function PortfolioPage() {
     setViewMode('overview')
   }
 
-  const handleRefresh = async () => {
-    if (!selectedPortfolio) return
-    setRefreshing(true)
-    try {
-      await refreshPrices(selectedPortfolio._id)
-      toast.success('Portfolio data refreshed')
-    } catch (error) {
-      toast.error('Failed to refresh data')
-    } finally {
-      setRefreshing(false)
-    }
-  }
-
-  // Auto-create default portfolio if none exists
+  // Update selected portfolio when portfolios refresh
   useEffect(() => {
-    if (!isLoading && portfolios.length === 0 && !isCreating) {
-      createPortfolio({
-        name: 'Ana Portföy',
-        description: 'Kripto varlıklarınızı takip edin'
-      })
+    if (selectedPortfolio && portfolios) {
+      const updated = portfolios.find(p => p._id === selectedPortfolio._id || p.id === selectedPortfolio.id)
+      if (updated) {
+        setSelectedPortfolio(updated)
+      }
     }
-  }, [isLoading, portfolios, isCreating, createPortfolio])
+  }, [portfolios, selectedPortfolio])
 
-  // Auto-select single portfolio
-  useEffect(() => {
-    if (!isLoading && portfolios.length === 1 && !selectedPortfolio) {
-      handlePortfolioSelect(portfolios[0])
-    }
-  }, [isLoading, portfolios, selectedPortfolio])
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount)
-  }
-
-  const formatPercentage = (percentage: number) => {
-    return `${percentage >= 0 ? '+' : ''}${percentage.toFixed(2)}%`
-  }
-
-  if (isLoading || isCreating) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="text-center py-12">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="inline-flex items-center gap-2 text-white"
-          >
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span>{isCreating ? 'Portföyünüz oluşturuluyor...' : 'Yükleniyor...'}</span>
-          </motion.div>
-        </div>
-        <PremiumSkeleton className="h-32" />
+        <PremiumSkeleton className="h-8 w-64" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <PremiumSkeleton key={i} className="h-24" />
+            <PremiumSkeleton key={i} className="h-32" />
           ))}
         </div>
       </div>
     )
   }
 
+  // Detail View - Individual Portfolio
   if (viewMode === 'detail' && selectedPortfolio) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <PremiumButton
               onClick={handleBackToOverview}
               variant="ghost"
               size="sm"
-              className="gap-2"
+              className="gap-2 mb-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Portföy Listesine Dön
+              Back to Portfolios
             </PremiumButton>
             <h1 className="text-3xl font-bold text-white">{selectedPortfolio.name}</h1>
             {selectedPortfolio.description && (
               <p className="text-gray-400 mt-1">{selectedPortfolio.description}</p>
             )}
           </div>
+          <div className="flex items-center gap-3">
+            <PremiumButton
+              onClick={handleRefresh}
+              disabled={refreshing}
+              variant="glow"
+              size="md"
+              className="gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              Refresh Prices
+            </PremiumButton>
+          </div>
         </div>
 
-        {/* Portfolio Stats */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Portfolio Performance Cards */}
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <PremiumCard className="p-6">
+            <PremiumCard className="glassmorphism p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Total Value</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-400 mb-1">Portfolio Value</p>
+                  <p className="text-2xl font-bold text-white">
                     {formatCurrency(selectedPortfolio.totalValue)}
                   </p>
                 </div>
-                <div className="p-3 bg-accent-slate/20 rounded-lg">
-                  <DollarSign className="w-6 h-6 text-accent-slate" />
+                <div className="p-3 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl">
+                  <Wallet className="w-6 h-6 text-blue-400" />
                 </div>
               </div>
             </PremiumCard>
@@ -215,16 +225,16 @@ export default function PortfolioPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <PremiumCard className="p-6">
+            <PremiumCard className="glassmorphism p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Total Cost</p>
-                  <p className="text-2xl font-bold text-white mt-1">
+                <div className="flex-1">
+                  <p className="text-sm text-gray-400 mb-1">Total Invested</p>
+                  <p className="text-2xl font-bold text-white">
                     {formatCurrency(selectedPortfolio.totalCost)}
                   </p>
                 </div>
-                <div className="p-3 bg-blue-500/20 rounded-lg">
-                  <Wallet className="w-6 h-6 text-blue-400" />
+                <div className="p-3 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl">
+                  <DollarSign className="w-6 h-6 text-purple-400" />
                 </div>
               </div>
             </PremiumCard>
@@ -235,18 +245,21 @@ export default function PortfolioPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <PremiumCard className="p-6">
+            <PremiumCard className="glassmorphism p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">Profit/Loss</p>
-                  <p className={`text-2xl font-bold mt-1 ${
+                <div className="flex-1">
+                  <p className="text-sm text-gray-400 mb-1">Total P&L</p>
+                  <p className={`text-2xl font-bold ${
                     selectedPortfolio.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'
                   }`}>
+                    {selectedPortfolio.totalProfitLoss >= 0 ? '+' : '-'}
                     {formatCurrency(Math.abs(selectedPortfolio.totalProfitLoss))}
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg ${
-                  selectedPortfolio.totalProfitLoss >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
+                <div className={`p-3 rounded-xl ${
+                  selectedPortfolio.totalProfitLoss >= 0 
+                    ? 'bg-gradient-to-br from-green-500/20 to-green-600/20' 
+                    : 'bg-gradient-to-br from-red-500/20 to-red-600/20'
                 }`}>
                   {selectedPortfolio.totalProfitLoss >= 0 ? (
                     <TrendingUp className="w-6 h-6 text-green-400" />
@@ -263,20 +276,18 @@ export default function PortfolioPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <PremiumCard className="p-6">
+            <PremiumCard className="glassmorphism p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-400">P/L Percentage</p>
-                  <p className={`text-2xl font-bold mt-1 ${
+                <div className="flex-1">
+                  <p className="text-sm text-gray-400 mb-1">Return %</p>
+                  <p className={`text-2xl font-bold ${
                     selectedPortfolio.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'
                   }`}>
                     {formatPercentage(selectedPortfolio.totalProfitLossPercentage)}
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg ${
-                  selectedPortfolio.totalProfitLossPercentage >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'
-                }`}>
-                  <Activity className="w-6 h-6 text-accent-slate" />
+                <div className="p-3 bg-gradient-to-br from-amber-500/20 to-amber-600/20 rounded-xl">
+                  <Activity className="w-6 h-6 text-amber-400" />
                 </div>
               </div>
             </PremiumCard>
@@ -285,10 +296,9 @@ export default function PortfolioPage() {
 
         {/* Asset Manager */}
         <PortfolioAssetManager
-          portfolioId={selectedPortfolio._id}
-          assets={selectedPortfolio.assets}
+          portfolioId={selectedPortfolio._id || selectedPortfolio.id}
+          assets={selectedPortfolio.assets as any}
           onAssetsUpdate={() => {
-            // Refresh portfolio data
             window.location.reload()
           }}
         />
@@ -296,225 +306,211 @@ export default function PortfolioPage() {
     )
   }
 
+  // Overview - All Portfolios
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Portfolio Management</h1>
-          <p className="text-gray-400 mt-1">Kripto yatırımlarınızı takip edin ve yönetin</p>
+          <h1 className="text-3xl font-bold text-white">Portfolio Dashboard</h1>
+          <p className="text-gray-400 mt-1">Track and manage your crypto investments</p>
         </div>
         <div className="flex items-center gap-3">
-          <StarBorder
+          <PremiumButton
+            onClick={() => setShowTotalValue(!showTotalValue)}
+            variant="ghost"
+            size="sm"
+            className="gap-2"
+          >
+            {showTotalValue ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showTotalValue ? 'Hide' : 'Show'} Values
+          </PremiumButton>
+          <PremiumButton
             onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
+            variant="glow"
+            size="md"
+            className="gap-2"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </StarBorder>
-          {portfolios && portfolios.length > 1 && (
-            <StarBorder
-              as="button"
-              type="button"
-              onClick={() => setShowCreateModal(true)}
-              color="#3B82F6"
-              speed="4s"
-            >
-              <div className="flex items-center justify-center gap-2">
-                <Plus className="w-4 h-4" />
-                <span>New Portfolio</span>
-              </div>
-            </StarBorder>
-          )}
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </PremiumButton>
+          <PremiumButton
+            onClick={() => setShowCreateModal(true)}
+            variant="gradient"
+            size="md"
+            className="gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            New Portfolio
+          </PremiumButton>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <PremiumCard className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Total Value</p>
-                <p className="text-2xl font-bold text-white mt-1">
-                  {formatCurrency(totalValue)}
-                </p>
-              </div>
-              <div className="p-3 bg-accent-slate/20 rounded-lg">
-                <DollarSign className="w-6 h-6 text-accent-slate" />
-              </div>
-            </div>
-          </PremiumCard>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <PremiumCard className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Total Cost</p>
-                <p className="text-2xl font-bold text-white mt-1">
-                  {formatCurrency(totalCost)}
-                </p>
-              </div>
-              <div className="p-3 bg-blue-500/20 rounded-lg">
-                <DollarSign className="w-6 h-6 text-blue-400" />
-              </div>
-            </div>
-          </PremiumCard>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <PremiumCard className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Profit/Loss</p>
-                <p className={`text-2xl font-bold mt-1 ${totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatCurrency(Math.abs(totalProfitLoss))}
-                </p>
-              </div>
-              <div className={`p-3 rounded-lg ${totalProfitLoss >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                {totalProfitLoss >= 0 ? (
-                  <TrendingUp className="w-6 h-6 text-green-400" />
-                ) : (
-                  <TrendingDown className="w-6 h-6 text-red-400" />
-                )}
-              </div>
-            </div>
-          </PremiumCard>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <PremiumCard className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Return Rate</p>
-                <p className={`text-2xl font-bold mt-1 ${totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatPercentage(totalProfitLossPercentage)}
-                </p>
-              </div>
-              <div className="p-3 bg-accent-teal/20 rounded-lg">
-                <PieChart className="w-6 h-6 text-accent-teal" />
-              </div>
-            </div>
-          </PremiumCard>
-        </motion.div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <AreaChart
-            data={chartData}
-            dataKey="value"
-            title="Portfolio Performance"
-            height={400}
-            color="#64748b"
-          />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-        >
-          <PieChartComponent
-            data={pieData}
-            title="Portfolio Distribution"
-            height={400}
-          />
-        </motion.div>
-      </div>
-
+      {/* Total Stats Overview */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
       >
-        <PremiumCard className="p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Your Portfolios</h2>
-          {portfolios && portfolios.length > 0 ? (
-            <div className="space-y-4">
-              {portfolios.map((portfolio: any) => (
-                <div 
-                  key={portfolio._id || portfolio.id} 
-                  className="border border-gray-800 rounded-lg p-4 hover:border-accent-slate/50 transition-colors cursor-pointer"
-                  onClick={() => handlePortfolioSelect(portfolio)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-white">{portfolio.name}</h3>
-                      {portfolio.description && (
-                        <p className="text-sm text-gray-400 mt-1">{portfolio.description}</p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2">
-                        <span className="text-sm text-gray-400">
-                          {portfolio.assets.length} assets
-                        </span>
-                        <span className="text-sm text-gray-400">
-                          Value: {formatCurrency(portfolio.totalValue)}
-                        </span>
-                        <span className={`text-sm ${portfolio.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {formatPercentage(portfolio.totalProfitLossPercentage)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        <PremiumCard className="glassmorphism p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-accent-slate" />
+              Overall Performance
+            </h2>
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Clock className="w-3 h-3" />
+              <span>Updated {new Date(lastRefresh).toLocaleTimeString()}</span>
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-400 mb-4">You don't have any portfolios yet. Create your first portfolio to get started.</p>
-              <StarBorder
-                as="button"
-                type="button"
-                onClick={() => setShowCreateModal(true)}
-                color="#3B82F6"
-                speed="4s"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  <span>Create Your First Portfolio</span>
-                </div>
-              </StarBorder>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+              <p className="text-sm text-gray-400 mb-1">Total Portfolio Value</p>
+              <p className="text-2xl font-bold text-white">
+                {showTotalValue ? formatCurrency(totalValue) : '••••••'}
+              </p>
             </div>
-          )}
+            <div>
+              <p className="text-sm text-gray-400 mb-1">Total Invested</p>
+              <p className="text-xl font-semibold text-gray-300">
+                {showTotalValue ? formatCurrency(totalCost) : '••••••'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-400 mb-1">Total Profit/Loss</p>
+              <p className={`text-xl font-semibold ${totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {showTotalValue ? (
+                  <>
+                    {totalProfitLoss >= 0 ? '+' : '-'}
+                    {formatCurrency(Math.abs(totalProfitLoss))}
+                  </>
+                ) : '••••••'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-400 mb-1">Total Return</p>
+              <p className={`text-xl font-semibold ${totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {showTotalValue ? formatPercentage(totalProfitLossPercentage) : '••••'}
+              </p>
+            </div>
+          </div>
         </PremiumCard>
       </motion.div>
 
-      {/* Portfolio Creation Modal - To be implemented */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-white mb-4">Create New Portfolio</h3>
-            <p className="text-gray-400 mb-4">Portfolio creation feature coming soon!</p>
-            <StarBorder 
-              onClick={() => setShowCreateModal(false)}
-              className="w-full inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
-            >
-              Close
-            </StarBorder>
+      {/* Portfolio List */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h2 className="text-xl font-semibold text-white mb-4">Your Portfolios</h2>
+        {portfolios && portfolios.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {portfolios.map((portfolio: any, index: number) => (
+              <motion.div
+                key={portfolio._id || portfolio.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index }}
+              >
+                <PremiumCard 
+                  className="glassmorphism p-6 hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+                  onClick={() => handlePortfolioSelect(portfolio)}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{portfolio.name}</h3>
+                      {portfolio.description && (
+                        <p className="text-sm text-gray-400 mt-1">{portfolio.description}</p>
+                      )}
+                    </div>
+                    <div className={`p-2 rounded-lg ${
+                      portfolio.totalProfitLoss >= 0 
+                        ? 'bg-green-500/20' 
+                        : 'bg-red-500/20'
+                    }`}>
+                      {portfolio.totalProfitLoss >= 0 ? (
+                        <TrendingUp className="w-4 h-4 text-green-400" />
+                      ) : (
+                        <TrendingDown className="w-4 h-4 text-red-400" />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Value</span>
+                      <span className="font-semibold text-white">
+                        {showTotalValue ? formatCurrency(portfolio.totalValue) : '••••••'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">P&L</span>
+                      <span className={`font-semibold ${
+                        portfolio.totalProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {showTotalValue ? (
+                          <>
+                            {portfolio.totalProfitLoss >= 0 ? '+' : ''}
+                            {formatCurrency(portfolio.totalProfitLoss)}
+                          </>
+                        ) : '••••'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-400">Assets</span>
+                      <span className="text-white">{portfolio.assets.length}</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-800">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">
+                        Last updated: {new Date(portfolio.lastUpdated).toLocaleDateString()}
+                      </span>
+                      <span className={`text-sm font-semibold ${
+                        portfolio.totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {formatPercentage(portfolio.totalProfitLossPercentage)}
+                      </span>
+                    </div>
+                  </div>
+                </PremiumCard>
+              </motion.div>
+            ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <PremiumCard className="glassmorphism p-12 text-center">
+            <Wallet className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">No portfolios yet</h3>
+            <p className="text-gray-400 mb-6">Create your first portfolio to start tracking your crypto investments</p>
+            <PremiumButton
+              onClick={() => setShowCreateModal(true)}
+              variant="gradient"
+              size="lg"
+              className="gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Create Your First Portfolio
+            </PremiumButton>
+          </PremiumCard>
+        )}
+      </motion.div>
+
+      {/* Create Portfolio Modal */}
+      <CreatePortfolioModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreatePortfolio={async (data) => {
+          return new Promise((resolve, reject) => {
+            createPortfolio(data, {
+              onSuccess: () => resolve(),
+              onError: (error) => reject(error)
+            })
+          })
+        }}
+      />
     </div>
   )
 }
