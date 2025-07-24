@@ -54,6 +54,8 @@ export default function TrendingPage() {
   const [category, setCategory] = useState("all")
   const [sortBy, setSortBy] = useState("market_cap_rank")
   const [refreshing, setRefreshing] = useState(false)
+  const [projects, setProjects] = useState<TrendingProject[]>([])
+  const [showTestnet, setShowTestnet] = useState(false)
 
   const categories = ["all", "defi", "nft", "gaming", "meme", "ai", "dao", "oracle", "privacy"]
 
@@ -81,7 +83,7 @@ export default function TrendingPage() {
   }, [])
 
   const fetchTrendingProjects = async () => {
-    setLoading(true)
+    // setLoading(true) // loading state is managed by useMarketData hook
     try {
       const response = await fetch('/api/projects?sort=trending&limit=50')
       if (response.ok) {
@@ -92,7 +94,7 @@ export default function TrendingPage() {
       console.error('Error fetching trending projects:', error)
       toast.error('Failed to load trending projects')
     } finally {
-      setLoading(false)
+      // setLoading(false) // loading state is managed by useMarketData hook
     }
   }
 

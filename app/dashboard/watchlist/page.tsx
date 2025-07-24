@@ -193,7 +193,7 @@ export default function WatchlistPage() {
 
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Volume:</span>
-                        <span>{formatVolume(item.volume24h)}</span>
+                        <span>{formatVolume(item.volume24h || 0)}</span>
                       </div>
                     </div>
 
