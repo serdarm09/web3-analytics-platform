@@ -3,7 +3,7 @@ import * as bcrypt from 'bcryptjs'
 import dotenv from 'dotenv'
 import User from '../models/User'
 import Project from '../models/Project'
-import WhaleWallet from '../models/WhaleWallet'
+import TrackedWallet from '../models/TrackedWallet'
 
 dotenv.config()
 
@@ -19,7 +19,7 @@ const seedDatabase = async () => {
     console.log('🧹 Clearing existing data...')
     await User.deleteMany({})
     await Project.deleteMany({})
-    await WhaleWallet.deleteMany({})
+    await TrackedWallet.deleteMany({})
 
     // Create test users
     console.log('👤 Creating test users...')
@@ -246,71 +246,91 @@ const seedDatabase = async () => {
     ])
     console.log(`✅ Created ${projects.length} projects`)
 
-    // Create sample whale wallets
-    console.log('🐋 Creating sample whale wallets...')
-    const whaleWallets = await WhaleWallet.create([
+    // Create sample tracked wallets (whale wallets)
+    console.log('🐋 Creating sample tracked wallets...')
+    const trackedWallets = await TrackedWallet.create([
       {
+        userId: (users[1] as any)._id,
         address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+        network: 'ethereum',
         label: 'Ethereum Foundation',
-        balance: 3500000,
-        balanceUSD: 9800000000,
-        tokens: [
-          { symbol: 'ETH', balance: 3500000, valueUSD: 9800000000 },
-          { symbol: 'USDC', balance: 50000000, valueUSD: 50000000 }
-        ],
-        isTracked: true,
-        trackingUsers: [(users[1] as any)._id.toString()],
-        totalTransactions: 15420,
-        transactions: [
+        isOwned: false,
+        nativeBalance: '3500000000000000000000000',
+        nativeBalanceUSD: 9800000000,
+        totalValueUSD: 9850000000,
+        assets: [
           {
-            hash: '0x123abc456def789',
-            type: 'out',
-            amount: 1000,
-            token: 'ETH',
-            from: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-            to: '0x742d35Cc6634C0532925a3b844Bc9e7595f5d12',
-            timestamp: new Date(Date.now() - 3600000),
-            value: 2800000,
-            gas: 21000,
-            gasPrice: 30
+            tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+            tokenName: 'USD Coin',
+            tokenSymbol: 'USDC',
+            balance: '50000000000000',
+            balanceUSD: 50000000,
+            decimals: 6
           }
-        ]
+        ],
+        tags: ['whale', 'foundation'],
+        lastSynced: new Date()
       },
       {
+        userId: (users[1] as any)._id,
         address: '0x8f8e8b3c4de76a31971fe6a87297d8f703be8570',
+        network: 'ethereum',
         label: 'DeFi Whale #1',
-        balance: 125.5,
-        balanceUSD: 351400,
-        tokens: [
-          { symbol: 'ETH', balance: 125.5, valueUSD: 351400 },
-          { symbol: 'UNI', balance: 50000, valueUSD: 310000 },
-          { symbol: 'LINK', balance: 10000, valueUSD: 155000 }
+        isOwned: false,
+        nativeBalance: '125500000000000000000',
+        nativeBalanceUSD: 351400,
+        totalValueUSD: 816400,
+        assets: [
+          {
+            tokenAddress: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+            tokenName: 'Uniswap',
+            tokenSymbol: 'UNI',
+            balance: '50000000000000000000000',
+            balanceUSD: 310000,
+            decimals: 18
+          },
+          {
+            tokenAddress: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+            tokenName: 'ChainLink Token',
+            tokenSymbol: 'LINK',
+            balance: '10000000000000000000000',
+            balanceUSD: 155000,
+            decimals: 18
+          }
         ],
-        isTracked: true,
-        trackingUsers: [(users[1] as any)._id.toString(), (users[2] as any)._id.toString()],
-        totalTransactions: 3842
+        tags: ['whale', 'defi'],
+        lastSynced: new Date()
       },
       {
+        userId: (users[2] as any)._id,
         address: '0x28c6c06298d514db089934071355e5743bf21d60',
+        network: 'ethereum',
         label: 'Binance Hot Wallet',
-        balance: 250000,
-        balanceUSD: 700000000,
-        tokens: [
-          { symbol: 'ETH', balance: 250000, valueUSD: 700000000 },
-          { symbol: 'BTC', balance: 5000, valueUSD: 225000000 }
+        isOwned: false,
+        nativeBalance: '250000000000000000000000',
+        nativeBalanceUSD: 700000000,
+        totalValueUSD: 925000000,
+        assets: [
+          {
+            tokenAddress: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+            tokenName: 'Wrapped BTC',
+            tokenSymbol: 'WBTC',
+            balance: '500000000000',
+            balanceUSD: 225000000,
+            decimals: 8
+          }
         ],
-        isTracked: true,
-        trackingUsers: [],
-        totalTransactions: 285420
+        tags: ['whale', 'exchange'],
+        lastSynced: new Date()
       }
     ])
-    console.log(`✅ Created ${whaleWallets.length} whale wallets`)
+    console.log(`✅ Created ${trackedWallets.length} tracked wallets`)
 
     console.log('✅ Database seeding completed successfully!')
     console.log('\n📊 Summary:')
     console.log(`   - Users: ${users.length}`)
     console.log(`   - Projects: ${projects.length}`)
-    console.log(`   - Whale Wallets: ${whaleWallets.length}`)
+    console.log(`   - Tracked Wallets: ${trackedWallets.length}`)
     
     console.log('\n🔑 Test Credentials:')
     console.log('   Admin: admin@web3platform.com / admin123')

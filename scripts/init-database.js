@@ -68,13 +68,14 @@ const initDatabase = async () => {
     await createIndexSafe(portfoliosCollection, { totalValue: -1 });
     console.log('✅ Processed indexes for portfolios collection');
 
-    // WhaleWallet indexes
-    const whaleWalletsCollection = db.collection('whalewallets');
-    await createIndexSafe(whaleWalletsCollection, { address: 1 });
-    await createIndexSafe(whaleWalletsCollection, { balanceUSD: -1 });
-    await createIndexSafe(whaleWalletsCollection, { lastActivity: -1 });
-    await createIndexSafe(whaleWalletsCollection, { 'transactions.timestamp': -1 });
-    console.log('✅ Processed indexes for whalewallets collection');
+    // TrackedWallet indexes
+    const trackedWalletsCollection = db.collection('tracked_wallets');
+    await createIndexSafe(trackedWalletsCollection, { userId: 1, network: 1 });
+    await createIndexSafe(trackedWalletsCollection, { address: 1, network: 1 }, { unique: true });
+    await createIndexSafe(trackedWalletsCollection, { userId: 1, isOwned: 1 });
+    await createIndexSafe(trackedWalletsCollection, { userId: 1, totalValueUSD: -1 });
+    await createIndexSafe(trackedWalletsCollection, { lastSynced: 1 });
+    console.log('✅ Processed indexes for tracked_wallets collection');
 
     // Database statistics
     console.log('\n📊 Database Statistics:');

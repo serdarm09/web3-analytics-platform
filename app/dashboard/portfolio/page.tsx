@@ -29,6 +29,7 @@ interface PortfolioAsset {
 
 interface Portfolio {
   _id: string
+  id: string
   name: string
   description?: string
   totalValue: number
@@ -36,7 +37,7 @@ interface Portfolio {
   totalProfitLoss: number
   totalProfitLossPercentage: number
   assets: PortfolioAsset[]
-  isPublic: boolean
+  isPublic?: boolean
   lastUpdated: string
   createdAt: string
 }
@@ -58,11 +59,12 @@ export default function PortfolioPage() {
   // Format portfolios from database to match the component structure
   const portfolios = dbPortfolios?.map(portfolio => ({
     ...portfolio,
-    _id: portfolio.id || portfolio._id,
+    _id: portfolio.id,
     assets: portfolio.assets.map(asset => ({
       ...asset,
-      averagePrice: asset.avgBuyPrice || asset.purchasePrice,
-      purchasePrice: asset.avgBuyPrice || asset.purchasePrice
+      averagePrice: asset.avgBuyPrice,
+      purchasePrice: asset.avgBuyPrice,
+      purchaseDate: new Date()
     }))
   })) || []
 
@@ -501,12 +503,12 @@ export default function PortfolioPage() {
           <div className="bg-slate-800 p-6 rounded-lg max-w-md w-full mx-4">
             <h3 className="text-xl font-bold text-white mb-4">Create New Portfolio</h3>
             <p className="text-gray-400 mb-4">Portfolio creation feature coming soon!</p>
-            <PremiumButton 
+            <StarBorder 
               onClick={() => setShowCreateModal(false)}
-              className="w-full"
+              className="w-full inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
             >
               Close
-            </PremiumButton>
+            </StarBorder>
           </div>
         </div>
       )}

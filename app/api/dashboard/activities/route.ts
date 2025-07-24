@@ -4,7 +4,7 @@ import { verifyAuth } from '@/lib/auth/middleware'
 import Portfolio from '@/models/Portfolio'
 import Project from '@/models/Project'
 import User from '@/models/User'
-import WhaleWallet from '@/models/WhaleWallet'
+import TrackedWallet from '@/models/TrackedWallet'
 
 export async function GET(request: NextRequest) {
   try {
@@ -68,19 +68,21 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      // Get recent whale wallet activities
-      const whaleActivities = await WhaleWallet.find()
-        .sort({ lastActivity: -1 })
+      // Get recent whale wallet activities (high value tracked wallets)
+      const whaleActivities = await TrackedWallet.find({
+        totalValueUSD: { $gte: 1000000 } // Consider wallets with $1M+ as whale wallets
+      })
+        .sort({ lastSynced: -1 })
         .limit(3)
 
       whaleActivities.forEach(whale => {
-        if (whale.lastActivity && new Date().getTime() - whale.lastActivity.getTime() < 24 * 60 * 60 * 1000) {
+        if (whale.lastSynced && new Date().getTime() - whale.lastSynced.getTime() < 24 * 60 * 60 * 1000) {
           activities.push({
             type: 'whale',
             message: `Whale wallet activity detected`,
-            time: formatTimeAgo(whale.lastActivity),
-            timestamp: whale.lastActivity,
-            value: `$${whale.balance?.toLocaleString() || '0'}`,
+            time: formatTimeAgo(whale.lastSynced),
+            timestamp: whale.lastSynced,
+            value: `$${whale.totalValueUSD?.toLocaleString() || '0'}`,
             details: {
               address: whale.address,
               label: whale.label

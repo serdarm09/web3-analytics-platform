@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/database/mongoose'
-import WhaleWallet from '@/models/WhaleWallet'
+import TrackedWallet from '@/models/TrackedWallet'
 import { verifyAuth } from '@/lib/auth/middleware'
 
 export async function GET(request: NextRequest) {
@@ -17,8 +17,12 @@ export async function GET(request: NextRequest) {
     await dbConnect()
 
     const query = network ? { network } : {}
-    const whaleWallets = await WhaleWallet.find(query)
-      .sort({ portfolioValue: -1 })
+    // Get all tracked wallets with high portfolio value (whale wallets)
+    const whaleWallets = await TrackedWallet.find({
+      ...query,
+      totalValueUSD: { $gte: 1000000 } // Consider wallets with $1M+ as whale wallets
+    })
+      .sort({ totalValueUSD: -1 })
       .limit(limit)
       .lean()
 
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
     await dbConnect()
 
     // Check if wallet already exists
-    const existingWallet = await WhaleWallet.findOne({ address, network })
+    const existingWallet = await TrackedWallet.findOne({ address, network })
     if (existingWallet) {
       return NextResponse.json(
         { error: 'Wallet is already being tracked' },
@@ -78,20 +82,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const newWallet = new WhaleWallet({
+    const newWallet = new TrackedWallet({
+      userId: authResult.userId,
       address,
       label: label || `${network} Wallet`,
       network,
-      balance: balance || 0,
-      balanceUSD: balanceUSD || 0,
+      nativeBalance: balance?.toString() || '0',
+      nativeBalanceUSD: balanceUSD || 0,
+      totalValueUSD: portfolioValue || balanceUSD || 0,
       assets: assets || [],
       transactions: transactions || [],
-      portfolioValue: portfolioValue || 0,
-      portfolioChange24h: portfolioChange24h || 0,
-      isTracked: true,
-      trackingUsers: [authResult.userId],
-      lastActivity: new Date(),
-      totalTransactions: transactions?.length || 0
+      isOwned: false,
+      tags: ['whale'],
+      lastSynced: new Date()
     })
 
     await newWallet.save()
