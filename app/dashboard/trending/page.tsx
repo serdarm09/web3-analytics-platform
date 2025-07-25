@@ -177,7 +177,7 @@ export default function UserBasedTrendingPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Trending Projects</h1>
           <p className="text-gray-400 mt-1">
-            Most visited and added projects by the community
+            Top 50 projects ranked by trend score (views + adds × 2 + likes × 3)
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -351,6 +351,15 @@ export default function UserBasedTrendingPage() {
                     </div>
                     <span className="text-white font-medium">
                       {projectLikes[project._id]?.likeCount || project.likeCount || 0}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <TrendingUp className="w-4 h-4" />
+                      <span className="text-sm">Trend Score</span>
+                    </div>
+                    <span className="text-white font-medium">
+                      {project.trendingScore || 0}
                     </span>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Heart, HeartOff, Edit2 } from 'lucide-react'
+import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Heart, HeartOff, Edit2, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { PremiumCard } from '@/components/ui/premium-card'
@@ -74,6 +74,28 @@ export default function ProjectsPage() {
       }
     } catch (error) {
       console.error('Error untracking project:', error)
+    }
+  }
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        refetch()
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to delete project')
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error)
+      alert('Failed to delete project')
     }
   }
 
@@ -271,19 +293,35 @@ export default function ProjectsPage() {
                       </div>
 
                       <div className="text-right">
-                        <p className="text-sm text-gray-400">Social Score</p>
-                        <p className="text-lg font-medium text-white">{project.metrics?.socialScore || 0}/100</p>
+                        <p className="text-sm text-gray-400">Rating</p>
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(10)].map((_, i) => (
+                            <Star 
+                              key={i} 
+                              className={`w-3 h-3 ${i < (project.metrics?.starRating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} 
+                            />
+                          ))}
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-2">
                         {user?.id === project.addedBy && (
-                          <button 
-                            className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
-                            onClick={() => handleEditProject(project._id)}
-                            title="Edit project"
-                          >
-                            <Edit2 className="w-5 h-5" />
-                          </button>
+                          <>
+                            <button 
+                              className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+                              onClick={() => handleEditProject(project._id)}
+                              title="Edit project"
+                            >
+                              <Edit2 className="w-5 h-5" />
+                            </button>
+                            <button 
+                              className="p-2 text-red-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+                              onClick={() => handleDeleteProject(project._id)}
+                              title="Delete project"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </>
                         )}
                         <button 
                           className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"

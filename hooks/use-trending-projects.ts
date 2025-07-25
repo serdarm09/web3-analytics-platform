@@ -21,6 +21,13 @@ export interface TrendingProject {
     adds: number
     engagement: string
   }
+  creator?: {
+    id: string
+    name: string
+    email?: string
+  }
+  addedAt?: Date
+  likeCount?: number
 }
 
 export function useTrendingProjects(period: '24h' | '7d' | '30d' = '7d') {

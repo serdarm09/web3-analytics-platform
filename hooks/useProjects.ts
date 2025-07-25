@@ -25,14 +25,18 @@ export interface Project {
     totalSupply: number
   }
   metrics: {
-    socialScore: number
-    trendingScore: number
-    hypeScore: number
+    starRating: number
+    trendingScore?: number
     holders: number
   }
   blockchain: string
   contractAddress?: string
   isActive: boolean
+  isPublic?: boolean
+  addedBy?: string
+  viewCount?: number
+  addCount?: number
+  likeCount?: number
   createdAt: string
   updatedAt: string
 }

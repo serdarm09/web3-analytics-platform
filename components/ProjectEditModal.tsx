@@ -36,6 +36,9 @@ interface ProjectFormData {
   metrics: {
     starRating: number
     holders: number
+    socialScore?: number
+    trendingScore?: number
+    hypeScore?: number
   }
   tokenomics: {
     publicSale: number
@@ -135,10 +138,11 @@ export default function ProjectEditModal({ isOpen, onClose, projectId, onProject
           fullyDilutedValuation: project.marketData?.fullyDilutedValuation || 0,
         },
         metrics: {
+          starRating: project.metrics?.starRating || 0,
+          holders: project.metrics?.holders || 0,
           socialScore: project.metrics?.socialScore || 0,
           trendingScore: project.metrics?.trendingScore || 0,
           hypeScore: project.metrics?.hypeScore || 0,
-          holders: project.metrics?.holders || 0,
         },
         tokenomics: project.tokenomics || {
           publicSale: 0,

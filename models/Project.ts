@@ -34,6 +34,8 @@ export interface IProject extends Document {
   metrics: {
     starRating: number
     trendingScore?: number
+    socialScore?: number
+    hypeScore?: number
     holders: number
     transactions24h?: number
     activeAddresses24h?: number
@@ -188,6 +190,16 @@ const projectSchema = new Schema<IProject>(
         max: 10,
       },
       trendingScore: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      socialScore: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      hypeScore: {
         type: Number,
         default: 0,
         min: 0,

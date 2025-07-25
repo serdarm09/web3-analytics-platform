@@ -222,7 +222,7 @@ export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoad
     }
   }
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     const fieldParts = field.split('.')
     
     if (fieldParts.length === 1) {

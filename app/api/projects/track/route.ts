@@ -67,8 +67,7 @@ export async function POST(request: NextRequest) {
       projectId,
       {
         $inc: { addCount: 1 },
-        $set: { lastAdded: new Date() },
-        $addToSet: { addedBy: authResult.userId }
+        $set: { lastAdded: new Date() }
       }
     )
 

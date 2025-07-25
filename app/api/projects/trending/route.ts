@@ -31,13 +31,9 @@ export async function GET(request: NextRequest) {
         dateFilter.setDate(dateFilter.getDate() - 7)
     }
 
-    // Find trending projects based on views and additions (only public projects)
+    // Find all public projects and calculate their trending scores
     const projects = await Project.find({
-      isPublic: true,
-      $or: [
-        { lastViewed: { $gte: dateFilter } },
-        { lastAdded: { $gte: dateFilter } }
-      ]
+      isPublic: true
     })
     .select({
       name: 1,
@@ -55,24 +51,25 @@ export async function GET(request: NextRequest) {
       'marketData.marketCap': 1,
       'marketData.change24h': 1,
       'marketData.volume24h': 1,
+      'metrics.trendingScore': 1,
       lastUpdated: 1,
       addedBy: 1,
       addedAt: 1,
       isPublic: 1
     })
     .populate('addedBy', 'email name username')
-    .sort({ 
-      viewCount: -1,
-      addCount: -1 
-    })
-    .limit(20)
     .lean()
 
     // Calculate trending scores and format response
     const trendingProjects = projects.map(project => {
       const totalViews = project.viewCount || 0
       const totalAdds = project.addCount || 0
-      const recentActivity = totalViews + (totalAdds * 2) // Weight additions more
+      const totalLikes = project.likeCount || 0
+      
+      // Calculate trending score: views * 1 + adds * 2 + likes * 3
+      const calculatedTrendingScore = (totalViews * 1) + (totalAdds * 2) + (totalLikes * 3)
+      // Use the stored trending score if available, otherwise use calculated
+      const trendingScore = project.metrics?.trendingScore || calculatedTrendingScore
       
       return {
         _id: project._id,
@@ -86,37 +83,34 @@ export async function GET(request: NextRequest) {
         twitter: project.socialLinks?.twitter,
         totalViews,
         totalAdds,
-        likeCount: project.likeCount || 0,
+        likeCount: totalLikes,
         marketCap: project.marketData?.marketCap,
         price: project.marketData?.price,
         priceChange24h: project.marketData?.change24h,
         volume24h: project.marketData?.volume24h,
         lastUpdated: project.lastUpdated,
-        recentActivity,
-        creator: project.addedBy ? {
-          id: project.addedBy._id || project.addedBy,
-          name: project.addedBy.name || project.addedBy.username || 'Anonymous',
-          email: project.addedBy.email
+        trendingScore,
+        creator: typeof project.addedBy === 'object' && project.addedBy ? {
+          id: (project.addedBy as any)._id || project.addedBy,
+          name: (project.addedBy as any).name || (project.addedBy as any).username || 'Anonymous',
+          email: (project.addedBy as any).email
         } : null,
         addedAt: project.addedAt
       }
-    }).sort((a, b) => b.recentActivity - a.recentActivity)
+    })
+    .sort((a, b) => b.trendingScore - a.trendingScore)
+    .slice(0, 50) // Get top 50 projects
 
-    // Get additional market data if needed
-    const projectsWithMarketData = await Promise.all(
-      trendingProjects.map(async (project) => {
-        // You can fetch additional market data here if needed
-        return {
-          ...project,
-          trendingScore: project.recentActivity || 0,
-          stats: {
-            views: project.totalViews,
-            adds: project.totalAdds,
-            engagement: ((project.totalViews + project.totalAdds * 2) / 3).toFixed(1)
-          }
-        }
-      })
-    )
+    // Format the response with stats
+    const projectsWithMarketData = trendingProjects.map(project => ({
+      ...project,
+      stats: {
+        views: project.totalViews,
+        adds: project.totalAdds,
+        likes: project.likeCount,
+        engagement: ((project.totalViews + project.totalAdds * 2 + project.likeCount * 3) / 6).toFixed(1)
+      }
+    }))
 
     return NextResponse.json({
       success: true,

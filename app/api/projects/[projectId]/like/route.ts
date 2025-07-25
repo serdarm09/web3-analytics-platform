@@ -33,7 +33,7 @@ export async function POST(
     }
 
     // Check if user already liked this project
-    const hasLiked = project.likedBy?.includes(authResult.userId)
+    const hasLiked = project.likedBy?.includes(authResult.userId!)
 
     if (hasLiked) {
       // Unlike: Remove user from likedBy array
@@ -97,7 +97,7 @@ export async function GET(
       )
     }
 
-    const isLiked = project.likedBy?.includes(authResult.userId) || false
+    const isLiked = project.likedBy?.includes(authResult.userId!) || false
 
     return NextResponse.json({
       likeCount: project.likeCount || 0,

@@ -5,7 +5,7 @@ import { verifyAuth } from '@/lib/auth/middleware'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
     const authResult = await verifyAuth(request)
@@ -15,7 +15,8 @@ export async function GET(
 
     await dbConnect()
 
-    const project = await Project.findById(params.projectId).lean()
+    const { projectId } = await params
+    const project = await Project.findById(projectId).lean()
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
@@ -33,7 +34,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
     const authResult = await verifyAuth(request)
@@ -43,8 +44,9 @@ export async function PUT(
 
     await dbConnect()
 
+    const { projectId } = await params
     // Check if project exists and user is the creator
-    const existingProject = await Project.findById(params.projectId)
+    const existingProject = await Project.findById(projectId)
     if (!existingProject) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
@@ -59,7 +61,7 @@ export async function PUT(
 
     const body = await request.json()
     console.log('Received update request:', {
-      projectId: params.projectId,
+      projectId: projectId,
       hasIsPublic: 'isPublic' in body,
       isPublic: body.isPublic
     })
@@ -112,7 +114,7 @@ export async function PUT(
     if (metrics !== undefined) updateData.metrics = { ...existingProject.metrics, ...metrics }
 
     const updatedProject = await Project.findByIdAndUpdate(
-      params.projectId,
+      projectId,
       updateData,
       { new: true, runValidators: true }
     )
@@ -129,7 +131,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { projectId: string } }
+  { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
     const authResult = await verifyAuth(request)
@@ -139,8 +141,9 @@ export async function DELETE(
 
     await dbConnect()
 
+    const { projectId } = await params
     // Check if project exists and user is the creator
-    const existingProject = await Project.findById(params.projectId)
+    const existingProject = await Project.findById(projectId)
     if (!existingProject) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
@@ -153,13 +156,13 @@ export async function DELETE(
       )
     }
 
-    await Project.findByIdAndDelete(params.projectId)
+    await Project.findByIdAndDelete(projectId)
 
     // Remove project from all users' tracked projects
     const User = (await import('@/models/User')).default
     await User.updateMany(
-      { trackedProjects: params.projectId },
-      { $pull: { trackedProjects: params.projectId } }
+      { trackedProjects: projectId },
+      { $pull: { trackedProjects: projectId } }
     )
 
     return NextResponse.json({ message: 'Project deleted successfully' })
