@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import mongoose from 'mongoose'
 
 export async function GET(request: NextRequest) {
-  const results = {
+  const results: any = {
     mongodbUri: process.env.MONGODB_URI ? 'SET' : 'NOT SET',
     connectionAttempt: 'pending',
-    error: null as any,
+    error: null,
     connectionState: mongoose.connection.readyState,
     timestamp: new Date().toISOString()
   }
@@ -30,8 +30,12 @@ export async function GET(request: NextRequest) {
     results.connectionState = mongoose.connection.readyState
     
     // Test a simple query
-    const collections = await mongoose.connection.db.listCollections().toArray()
-    results.collections = collections.map(c => c.name)
+    if (mongoose.connection.db) {
+      const collections = await mongoose.connection.db.listCollections().toArray()
+      results.collections = collections.map(c => c.name)
+    } else {
+      results.collections = []
+    }
 
     return NextResponse.json(results, { status: 200 })
   } catch (error: any) {
