@@ -5,6 +5,10 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value
   const pathname = request.nextUrl.pathname
 
+  // Public routes that don't require authentication
+  const publicRoutes = ['/dashboard/watchlist']
+  const isPublicRoute = publicRoutes.some(route => pathname === route)
+
   // List of protected routes
   const protectedRoutes = ['/dashboard', '/portfolio', '/projects', '/analytics', '/watchlist', '/settings', '/profile']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
@@ -14,7 +18,8 @@ export function middleware(request: NextRequest) {
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
 
   // Check if the user is trying to access a protected route without token
-  if (isProtectedRoute && !token) {
+  // But allow access to public routes even without token
+  if (isProtectedRoute && !token && !isPublicRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { DashboardHeader } from '@/components/dashboard/dashboard-header'
 import { motion } from 'framer-motion'
@@ -17,19 +17,24 @@ export default function DashboardLayout({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Check if current page is public
+  const isPublicPage = pathname === '/dashboard/watchlist';
 
   useEffect(() => {
-    console.log('🔐 Dashboard Layout Auth Check:', { user: !!user, isLoading, isAuthenticated })
+    console.log('🔐 Dashboard Layout Auth Check:', { user: !!user, isLoading, isAuthenticated, pathname })
     
-    if (!isLoading && !isAuthenticated) {
+    // Skip authentication check for public pages
+    if (!isPublicPage && !isLoading && !isAuthenticated) {
       console.log('❌ User not authenticated, redirecting to login')
       router.push('/login')
       return
     }
-  }, [user, isLoading, isAuthenticated, router])
+  }, [user, isLoading, isAuthenticated, router, isPublicPage, pathname])
 
   // Show loading state
-  if (isLoading) {
+  if (isLoading && !isPublicPage) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-slate"></div>
@@ -37,8 +42,8 @@ export default function DashboardLayout({
     );
   }
 
-  // Show redirect state  
-  if (!isAuthenticated || !user) {
+  // Show redirect state for protected pages
+  if (!isPublicPage && (!isAuthenticated || !user)) {
     return (
       <div className="h-screen bg-black flex items-center justify-center">
         <div className="text-white">Redirecting to login...</div>

@@ -39,6 +39,7 @@ export default function WatchlistPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'omit', // Don't send cookies for public requests
       })
       
       const data = await response.json()
