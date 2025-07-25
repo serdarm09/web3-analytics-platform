@@ -11,7 +11,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Call the trending sync endpoint
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/trending`, {
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    
+    const response = await fetch(`${baseUrl}/api/trending`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

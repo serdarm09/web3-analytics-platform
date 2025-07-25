@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 require('dotenv').config({ path: '.env.local' });
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/web3-analytics';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 // Import the Project model schema
 const projectSchema = new mongoose.Schema({

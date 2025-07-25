@@ -39,8 +39,8 @@ async function getCryptoPrices(symbols: string[]) {
     
     // Use the existing market-data endpoint which has its own caching
     const symbolsString = symbols.join(',')
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/crypto/market-data?symbols=${symbolsString}`)
+    // In server-side code, use relative URLs for internal API calls
+    const response = await fetch(`${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/crypto/market-data?symbols=${symbolsString}`)
     
     if (!response.ok) {
       console.error('Failed to fetch market data:', response.status)

@@ -4,11 +4,16 @@ import { cookies } from 'next/headers'
 export async function GET(request: NextRequest) {
   try {
     // Get cookies to simulate browser request
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('token')
     
+    // Get base URL dynamically
+    const baseUrl = request.headers.get('host') 
+      ? `${request.headers.get('x-forwarded-proto') || 'http'}://${request.headers.get('host')}`
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    
     // Test 1: Without credentials
-    const response1 = await fetch('http://localhost:3000/api/projects?public=true', {
+    const response1 = await fetch(`${baseUrl}/api/projects?public=true`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -24,7 +29,7 @@ export async function GET(request: NextRequest) {
       headers['Cookie'] = `token=${token.value}`
     }
     
-    const response2 = await fetch('http://localhost:3000/api/projects?public=true', {
+    const response2 = await fetch(`${baseUrl}/api/projects?public=true`, {
       method: 'GET',
       headers
     })

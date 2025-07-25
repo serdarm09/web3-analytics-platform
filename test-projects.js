@@ -95,7 +95,8 @@ const testProjects = [
 ]
 
 async function createTestProjects() {
-  const authResponse = await fetch('http://localhost:3000/api/auth/login', {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  const authResponse = await fetch(`${baseUrl}/api/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -113,7 +114,7 @@ async function createTestProjects() {
 
   for (const project of testProjects) {
     try {
-      const response = await fetch('http://localhost:3000/api/projects', {
+      const response = await fetch(`${baseUrl}/api/projects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
