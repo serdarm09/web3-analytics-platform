@@ -34,16 +34,25 @@ export default function WatchlistPage() {
   const fetchPublicProjects = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/projects?public=true')
+      const response = await fetch('/api/projects?public=true', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      const data = await response.json()
+      
       if (response.ok) {
-        const data = await response.json()
+        console.log('Fetched public projects:', data.projects?.length || 0)
         setProjects(data.projects || [])
-        // Fetch like statuses
-        fetchLikeStatuses(data.projects || [])
+        // Fetch like statuses if user is logged in
+        if (data.projects && data.projects.length > 0) {
+          fetchLikeStatuses(data.projects)
+        }
       } else {
-        const errorData = await response.json()
-        console.error('Failed to fetch public projects:', errorData)
-        toast.error(errorData.error || 'Failed to fetch projects')
+        console.error('Failed to fetch public projects:', data)
+        toast.error(data.error || 'Failed to fetch projects')
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
