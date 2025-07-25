@@ -10,15 +10,15 @@ interface RateLimitStore {
 // Simple in-memory store (in production, use Redis)
 const rateLimitStore: RateLimitStore = {}
 
-// Clean up old entries every 5 minutes
-setInterval(() => {
+// Clean up old entries on each request
+function cleanupOldEntries() {
   const now = Date.now()
   for (const key in rateLimitStore) {
     if (rateLimitStore[key].resetTime < now) {
       delete rateLimitStore[key]
     }
   }
-}, 5 * 60 * 1000)
+}
 
 export interface RateLimitConfig {
   windowMs?: number // Time window in milliseconds
@@ -47,6 +47,11 @@ export function rateLimit(config: RateLimitConfig = {}) {
     request: NextRequest,
     handler: (req: NextRequest) => Promise<NextResponse>
   ): Promise<NextResponse> {
+    // Clean up old entries periodically
+    if (Math.random() < 0.01) { // 1% chance on each request
+      cleanupOldEntries()
+    }
+    
     const key = finalConfig.keyGenerator(request)
     const now = Date.now()
     const windowStart = now - finalConfig.windowMs
