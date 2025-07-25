@@ -19,16 +19,6 @@
       "maxDuration": 60
     }
   },
-  "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/cron/sync-trending",
-      "schedule": "0 */6 * * *"
-    }
-  ],
   "env": {
     "MONGODB_URI": "@mongodb-uri",
     "JWT_SECRET": "@jwt-secret",
