@@ -26,14 +26,18 @@ export async function GET(request: NextRequest) {
         name: p.name,
         symbol: p.symbol,
         isPublic: p.isPublic,
-        createdBy: p.addedBy?.email || p.addedBy?.username || p.addedBy?.name || 'Unknown',
+        createdBy: typeof p.addedBy === 'object' && p.addedBy ? 
+          ((p.addedBy as any).email || (p.addedBy as any).username || (p.addedBy as any).name || 'Unknown') : 
+          'Unknown',
         createdAt: p.createdAt
       })),
       privateProjects: privateProjects.map(p => ({
         name: p.name,
         symbol: p.symbol,
         isPublic: p.isPublic,
-        createdBy: p.addedBy?.email || p.addedBy?.username || p.addedBy?.name || 'Unknown',
+        createdBy: typeof p.addedBy === 'object' && p.addedBy ? 
+          ((p.addedBy as any).email || (p.addedBy as any).username || (p.addedBy as any).name || 'Unknown') : 
+          'Unknown',
         createdAt: p.createdAt
       }))
     }
