@@ -39,8 +39,7 @@ async function dbConnect(): Promise<typeof mongoose | null> {
       serverSelectionTimeoutMS: 5000, // Reduced timeout
       socketTimeoutMS: 45000,
       connectTimeoutMS: 10000,
-      retryWrites: true,
-      w: 'majority'
+      retryWrites: true
     }
 
     console.log('🔄 Connecting to MongoDB Atlas...')
