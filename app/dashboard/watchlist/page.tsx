@@ -39,20 +39,17 @@ export default function WatchlistPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'omit', // Don't send cookies for public requests
       })
       
       const data = await response.json()
       
       if (response.ok) {
-        console.log('Fetched public projects:', data.projects?.length || 0)
         setProjects(data.projects || [])
-        // Fetch like statuses if user is logged in
+        // Fetch like statuses
         if (data.projects && data.projects.length > 0) {
           fetchLikeStatuses(data.projects)
         }
       } else {
-        console.error('Failed to fetch public projects:', data)
         toast.error(data.error || 'Failed to fetch projects')
       }
     } catch (error) {
