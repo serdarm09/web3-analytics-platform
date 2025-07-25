@@ -41,7 +41,9 @@ export default function WatchlistPage() {
         // Fetch like statuses
         fetchLikeStatuses(data.projects || [])
       } else {
-        toast.error('Failed to fetch projects')
+        const errorData = await response.json()
+        console.error('Failed to fetch public projects:', errorData)
+        toast.error(errorData.error || 'Failed to fetch projects')
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
@@ -201,10 +203,10 @@ export default function WatchlistPage() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
-                Public Projects
+                Watch Projects
               </h1>
               <p className="text-muted-foreground mt-2">
-                Discover and track community-shared crypto projects
+                Discover and track public crypto projects shared by the community
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -427,7 +429,7 @@ export default function WatchlistPage() {
             <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No public projects found</h3>
             <p className="text-muted-foreground mb-4">
-              {searchQuery ? "No results found" : "No public projects have been shared yet"}
+              {searchQuery ? "No results found" : "No public projects have been shared yet. Create a project and mark it as public to share with the community!"}
             </p>
           </motion.div>
         )}

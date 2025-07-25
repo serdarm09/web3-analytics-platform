@@ -7,12 +7,6 @@ import { rateLimitPresets } from '@/lib/middleware/rateLimiter'
 export async function GET(request: NextRequest) {
   return rateLimitPresets.read(request, async (req) => {
   try {
-    // Authenticate user to get tracked projects
-    const authResult = await verifyAuth(req)
-    if (!authResult.authenticated) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { searchParams } = new URL(req.url)
     const category = searchParams.get('category')
     const search = searchParams.get('search')
@@ -20,6 +14,15 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100')
     const page = parseInt(searchParams.get('page') || '1')
     const publicOnly = searchParams.get('public') === 'true'
+
+    // Only require authentication for non-public projects
+    let authResult = null
+    if (!publicOnly) {
+      authResult = await verifyAuth(req)
+      if (!authResult.authenticated) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
 
     await dbConnect()
 
@@ -31,7 +34,7 @@ export async function GET(request: NextRequest) {
     } else {
       // Get user's tracked projects
       const User = (await import('@/models/User')).default
-      const user = await User.findById(authResult.userId).select('trackedProjects')
+      const user = await User.findById(authResult!.userId).select('trackedProjects')
       
       if (!user || !user.trackedProjects || user.trackedProjects.length === 0) {
         // Return empty result if user has no tracked projects
