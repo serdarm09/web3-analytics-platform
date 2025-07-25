@@ -35,10 +35,12 @@ async function dbConnect(): Promise<typeof mongoose | null> {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000,
+      maxPoolSize: 5, // Reduced for Vercel
+      serverSelectionTimeoutMS: 5000, // Reduced timeout
       socketTimeoutMS: 45000,
-      family: 4, // Use IPv4, skip trying IPv6
+      connectTimeoutMS: 10000,
+      retryWrites: true,
+      w: 'majority'
     }
 
     console.log('🔄 Connecting to MongoDB Atlas...')
