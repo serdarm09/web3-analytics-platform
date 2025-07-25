@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  User
+  User,
+  Globe
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
@@ -37,6 +38,11 @@ const sidebarItems = [
     title: 'Projects',
     icon: FolderOpen,
     href: '/dashboard/projects',
+  },
+  {
+    title: 'Explore',
+    icon: Globe,
+    href: '/dashboard/explore',
   },
   {
     title: 'Trending',
