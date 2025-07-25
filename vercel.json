@@ -1,35 +1,5 @@
 {
-  "functions": {
-    "app/api/cron/sync-trending/route.ts": {
-      "maxDuration": 60
-    },
-    "app/api/trending/route.ts": {
-      "maxDuration": 60
-    },
-    "app/api/crypto/market-data/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/portfolios/route.ts": {
-      "maxDuration": 30
-    },
-    "app/api/sync/crypto-data/route.ts": {
-      "maxDuration": 60
-    },
-    "app/api/cron/route.ts": {
-      "maxDuration": 60
-    }
-  },
-  "env": {
-    "MONGODB_URI": "@mongodb-uri",
-    "JWT_SECRET": "@jwt-secret",
-    "CRON_SECRET": "@cron-secret",
-    "NEXT_PUBLIC_BASE_URL": "@next-public-base-url"
-  },
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "regions": ["iad1"],
-  "git": {
-    "deploymentEnabled": true
-  }
+  "outputDirectory": ".next",
+  "framework": "nextjs"
 }
