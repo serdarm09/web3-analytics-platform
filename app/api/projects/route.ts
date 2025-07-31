@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/database/mongoose'
 import Project from '@/models/Project'
+import User from '@/models/User'
 import { verifyAuth } from '@/lib/auth/middleware'
 import { rateLimitPresets } from '@/lib/middleware/rateLimiter'
 
@@ -33,7 +34,6 @@ export async function GET(request: NextRequest) {
       query.isPublic = true
     } else {
       // Get user's tracked projects
-      const User = (await import('@/models/User')).default
       const user = await User.findById(authResult!.userId).select('trackedProjects')
       
       if (!user || !user.trackedProjects || user.trackedProjects.length === 0) {
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
 
     const total = await Project.countDocuments(query)
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       projects: processedProjects,
       pagination: {
         page,
@@ -112,6 +112,13 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit)
       }
     })
+
+    // Add cache control headers to prevent caching
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+
+    return response
   } catch (error) {
     console.error('Error fetching projects:', error)
     return NextResponse.json(
@@ -164,6 +171,9 @@ export async function POST(request: NextRequest) {
 
     await dbConnect()
 
+    // Get user information for createdBy
+    const user = await User.findById(auth.userId).select('email username name')
+
     const existingProject = await Project.findOne({ 
       $or: [{ symbol }, { name }] 
     })
@@ -197,6 +207,11 @@ export async function POST(request: NextRequest) {
       watchlistCount: 0,
       addedBy: auth.userId!, // Now using authenticated user's ID
       addedAt: new Date(),
+      createdBy: {
+        userId: auth.userId,
+        username: user?.username || user?.name,
+        email: user?.email
+      },
       marketData: {
         price: 0,
         marketCap: 0,
@@ -224,7 +239,6 @@ export async function POST(request: NextRequest) {
     })
 
     // Add project to user's tracked projects
-    const User = (await import('@/models/User')).default
     await User.findByIdAndUpdate(
       auth.userId,
       { $addToSet: { trackedProjects: project._id } }

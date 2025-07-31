@@ -19,6 +19,192 @@ const rateLimit = () => {
   return Promise.resolve()
 }
 
+// Cache for symbol to ID mappings to avoid repeated API calls
+const symbolIdCache = new Map<string, string>()
+const cacheExpiry = new Map<string, number>()
+const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+
+// Extended static mapping for common coins to reduce API calls
+const STATIC_SYMBOL_TO_ID: Record<string, string> = {
+  'btc': 'bitcoin',
+  'eth': 'ethereum',
+  'bnb': 'binancecoin',
+  'sol': 'solana',
+  'xrp': 'ripple',
+  'ada': 'cardano',
+  'avax': 'avalanche-2',
+  'doge': 'dogecoin',
+  'dot': 'polkadot',
+  'matic': 'matic-network',
+  'shib': 'shiba-inu',
+  'trx': 'tron',
+  'link': 'chainlink',
+  'uni': 'uniswap',
+  'atom': 'cosmos',
+  'ltc': 'litecoin',
+  'etc': 'ethereum-classic',
+  'xlm': 'stellar',
+  'near': 'near',
+  'algo': 'algorand',
+  'usdt': 'tether',
+  'usdc': 'usd-coin',
+  'dai': 'dai',
+  'busd': 'binance-usd',
+  'mnt': 'mantle',
+  'arb': 'arbitrum',
+  'op': 'optimism',
+  'grt': 'the-graph',
+  'aave': 'aave',
+  'mkr': 'maker',
+  'comp': 'compound-governance-token',
+  'sushi': 'sushi',
+  '1inch': '1inch',
+  'crv': 'curve-dao-token',
+  'ldo': 'lido-dao',
+  'rpl': 'rocket-pool',
+  'ens': 'ethereum-name-service',
+  'gmx': 'gmx',
+  'joe': 'joe',
+  'cake': 'pancakeswap-token',
+  'rune': 'thorchain',
+  'luna': 'terra-luna-2',
+  'lunc': 'terra-luna',
+  'ustc': 'terrausd',
+  'ftm': 'fantom',
+  'one': 'harmony',
+  'celo': 'celo',
+  'flow': 'flow',
+  'icp': 'internet-computer',
+  'fil': 'filecoin',
+  'theta': 'theta-token',
+  'vet': 'vechain',
+  'hbar': 'hedera-hashgraph',
+  'egld': 'elrond-erd-2',
+  'xtz': 'tezos',
+  'neo': 'neo',
+  'waves': 'waves',
+  'zil': 'zilliqa',
+  'ont': 'ontology',
+  'icx': 'icon',
+  'zec': 'zcash',
+  'dash': 'dash',
+  'xmr': 'monero',
+  'bch': 'bitcoin-cash',
+  'bsv': 'bitcoin-sv',
+  'qtum': 'qtum',
+  'dcr': 'decred',
+  'bat': 'basic-attention-token',
+  'zrx': '0x',
+  'rep': 'augur',
+  'knc': 'kyber-network-crystal',
+  'omg': 'omg',
+  'snx': 'havven',
+  'yfi': 'yearn-finance',
+  'uma': 'uma',
+  'bal': 'balancer',
+  'ren': 'ren',
+  'lrc': 'loopring',
+  'band': 'band-protocol',
+  'kava': 'kava',
+  'rlc': 'iexec-rlc',
+  'storj': 'storj',
+  'ocean': 'ocean-protocol',
+  'fetch': 'fetch-ai'
+}
+
+interface CoinSearchResult {
+  id: string
+  symbol: string
+  name: string
+  market_cap_rank?: number
+}
+
+/**
+ * Search for a coin by symbol using CoinGecko's search API
+ */
+async function searchCoinBySymbol(symbol: string): Promise<string | null> {
+  try {
+    await rateLimit()
+    
+    const response = await fetch(
+      `${COINGECKO_API_BASE}/search?query=${symbol}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        }
+      }
+    )
+
+    if (!response.ok) {
+      console.warn(`CoinGecko search failed for ${symbol}: ${response.status}`)
+      return null
+    }
+
+    const data = await response.json()
+    
+    // Find exact symbol match from coins array
+    const exactMatch = data.coins?.find((coin: CoinSearchResult) => 
+      coin.symbol.toLowerCase() === symbol.toLowerCase()
+    )
+
+    if (exactMatch) {
+      return exactMatch.id
+    }
+
+    // If no exact match, try to find the best match by market cap rank
+    const symbolMatches = data.coins?.filter((coin: CoinSearchResult) => 
+      coin.symbol.toLowerCase() === symbol.toLowerCase()
+    ).sort((a: CoinSearchResult, b: CoinSearchResult) => {
+      // Prefer coins with market cap rank (active trading)
+      if (a.market_cap_rank && !b.market_cap_rank) return -1
+      if (!a.market_cap_rank && b.market_cap_rank) return 1
+      if (a.market_cap_rank && b.market_cap_rank) {
+        return a.market_cap_rank - b.market_cap_rank
+      }
+      return 0
+    })
+
+    return symbolMatches?.[0]?.id || null
+  } catch (error) {
+    console.error(`Error searching for coin ${symbol}:`, error)
+    return null
+  }
+}
+
+/**
+ * Get CoinGecko ID for a symbol with caching
+ */
+export async function getCoinGeckoId(symbol: string): Promise<string | null> {
+  const symbolLower = symbol.toLowerCase()
+  
+  // Check static mapping first
+  if (STATIC_SYMBOL_TO_ID[symbolLower]) {
+    return STATIC_SYMBOL_TO_ID[symbolLower]
+  }
+
+  // Check cache
+  const cached = symbolIdCache.get(symbolLower)
+  const cacheTime = cacheExpiry.get(symbolLower)
+  
+  if (cached && cacheTime && Date.now() < cacheTime) {
+    return cached
+  }
+
+  // Search using API
+  const coinId = await searchCoinBySymbol(symbol)
+  
+  if (coinId) {
+    // Cache the result
+    symbolIdCache.set(symbolLower, coinId)
+    cacheExpiry.set(symbolLower, Date.now() + CACHE_DURATION)
+    console.log(`✅ Found CoinGecko ID for ${symbol}: ${coinId}`)
+  } else {
+    console.warn(`⚠️ Could not find CoinGecko ID for symbol: ${symbol}`)
+  }
+
+  return coinId
+}
+
 export interface CoinPrice {
   id: string
   symbol: string

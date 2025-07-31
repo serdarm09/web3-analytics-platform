@@ -71,15 +71,27 @@ export async function POST(
         project = await Project.create({
           name: symbol.toUpperCase(),
           symbol: symbol.toUpperCase(),
+          logo: 'https://via.placeholder.com/32x32/cccccc/666666?text=' + symbol.charAt(0).toUpperCase(),
           description: `Custom entry for ${symbol.toUpperCase()}`,
           category: 'DeFi',
-          chain: 'ethereum',
+          website: 'https://serdar.com',
+          blockchain: 'Ethereum',
           status: 'active',
           isVerified: false,
-          marketCap: 0,
-          price: parseFloat(purchasePrice),
-          change24h: 0,
-          volume24h: 0,
+          marketData: {
+            price: parseFloat(purchasePrice),
+            marketCap: 0,
+            volume24h: 0,
+            change24h: 0,
+            change7d: 0,
+            circulatingSupply: 0,
+            totalSupply: 0
+          },
+          metrics: {
+            starRating: 0,
+            holders: 0
+          },
+          views: 0,
           socialStats: {
             twitterFollowers: 0,
             discordMembers: 0,
@@ -161,6 +173,86 @@ export async function GET(
     console.error('Error fetching portfolio assets:', error)
     return NextResponse.json(
       { error: 'Failed to fetch portfolio assets' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ portfolioId: string }> }
+) {
+  try {
+    const authResult = await verifyAuth(request)
+    if (!authResult.authenticated) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { portfolioId } = await params
+    const body = await request.json()
+    const { assetId, amount, purchasePrice, purchaseDate } = body
+
+    console.log('PUT request:', { portfolioId, assetId, amount, purchasePrice, purchaseDate })
+
+    if (!assetId || !amount || !purchasePrice) {
+      return NextResponse.json(
+        { error: 'Asset ID, amount, and purchase price are required' },
+        { status: 400 }
+      )
+    }
+
+    await dbConnect()
+
+    const portfolio = await Portfolio.findOne({
+      _id: portfolioId,
+      userId: authResult.userId
+    })
+
+    if (!portfolio) {
+      return NextResponse.json({ error: 'Portfolio not found' }, { status: 404 })
+    }
+
+    // Find the asset to update
+    const assetIndex = portfolio.assets.findIndex((asset: any) => asset._id.toString() === assetId)
+    if (assetIndex === -1) {
+      return NextResponse.json({ error: 'Asset not found' }, { status: 404 })
+    }
+
+    // Update the asset
+    portfolio.assets[assetIndex].amount = parseFloat(amount)
+    portfolio.assets[assetIndex].purchasePrice = parseFloat(purchasePrice)
+    if (purchaseDate) {
+      portfolio.assets[assetIndex].purchaseDate = new Date(purchaseDate)
+    }
+
+    // Recalculate portfolio metrics
+    let totalValue = 0
+    let totalCost = 0
+
+    portfolio.assets.forEach((asset: any) => {
+      const cost = asset.amount * asset.purchasePrice
+      const value = asset.currentValue || cost
+      
+      totalCost += cost
+      totalValue += value
+    })
+
+    portfolio.totalValue = totalValue
+    portfolio.totalCost = totalCost
+    portfolio.totalProfitLoss = totalValue - totalCost
+    portfolio.totalProfitLossPercentage = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0
+    portfolio.lastUpdated = new Date()
+
+    await portfolio.save()
+
+    return NextResponse.json({ 
+      message: 'Asset updated successfully',
+      asset: portfolio.assets[assetIndex]
+    })
+  } catch (error) {
+    console.error('Error updating portfolio asset:', error)
+    return NextResponse.json(
+      { error: 'Failed to update portfolio asset' },
       { status: 500 }
     )
   }

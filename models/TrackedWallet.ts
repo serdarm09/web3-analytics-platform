@@ -160,7 +160,6 @@ const trackedWalletSchema = new Schema<ITrackedWallet>(
     address: {
       type: String,
       required: [true, 'Wallet address is required'],
-      index: true,
       validate: {
         validator: function(address: string) {
           // Support multiple address formats (Ethereum, Bitcoin, Solana, etc.)

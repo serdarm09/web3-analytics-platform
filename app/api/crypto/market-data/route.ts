@@ -1,95 +1,142 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// CoinGecko API base URL
-const COINGECKO_API = 'https://api.coingecko.com/api/v3'
+// Static mapping for common coins
+const SYMBOL_TO_ID_MAP: Record<string, string> = {
+  'btc': 'bitcoin',
+  'eth': 'ethereum',
+  'bnb': 'binancecoin',
+  'sol': 'solana',
+  'xrp': 'ripple',
+  'ada': 'cardano',
+  'avax': 'avalanche-2',
+  'doge': 'dogecoin',
+  'dot': 'polkadot',
+  'matic': 'matic-network',
+  'shib': 'shiba-inu',
+  'trx': 'tron',
+  'link': 'chainlink',
+  'uni': 'uniswap',
+  'atom': 'cosmos',
+  'ltc': 'litecoin',
+  'etc': 'ethereum-classic',
+  'xlm': 'stellar',
+  'near': 'near',
+  'algo': 'algorand',
+  'usdt': 'tether',
+  'usdc': 'usd-coin',
+  'dai': 'dai',
+  'busd': 'binance-usd',
+  'mnt': 'mantle',
+  'arb': 'arbitrum',
+  'op': 'optimism',
+  'grt': 'the-graph',
+  'aave': 'aave',
+  'mkr': 'maker',
+  'comp': 'compound-governance-token',
+  'sushi': 'sushi',
+  '1inch': '1inch',
+  'crv': 'curve-dao-token',
+  'ldo': 'lido-dao'
+}
 
-// Cache for market data
-let marketDataCache: any = {}
-let cacheTimestamp = 0
-const CACHE_DURATION = 300000 // 5 minutes for price data to reduce API calls
+// Rate limiting
+const RATE_LIMIT_DELAY = 1200
+let lastCallTime = 0
+
+const rateLimit = () => {
+  const now = Date.now()
+  const timeSinceLastCall = now - lastCallTime
+  if (timeSinceLastCall < RATE_LIMIT_DELAY) {
+    return new Promise(resolve => {
+      setTimeout(resolve, RATE_LIMIT_DELAY - timeSinceLastCall)
+    })
+  }
+  lastCallTime = now
+  return Promise.resolve()
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const symbols = searchParams.get('symbols')?.toLowerCase() || ''
+    const symbolsParam = searchParams.get('symbols')
     
-    if (!symbols) {
-      return NextResponse.json({
-        success: false,
-        error: 'Symbols parameter is required'
+    if (!symbolsParam) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'symbols parameter is required' 
       }, { status: 400 })
     }
 
-    const symbolList = symbols.split(',').map(s => s.trim())
-    const now = Date.now()
-    
-    // Check if we need to refresh cache
-    if (now - cacheTimestamp > CACHE_DURATION) {
-      marketDataCache = {}
-      cacheTimestamp = now
+    const symbols = symbolsParam.split(',').map(s => s.trim().toLowerCase())
+    console.log('🔍 API Debug - Requested symbols:', symbolsParam)
+
+    if (symbols.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        data: [] 
+      })
     }
 
-    // Find which symbols need fresh data
-    const uncachedSymbols = symbolList.filter(symbol => !marketDataCache[symbol])
+    await rateLimit()
+
+    // Map symbols to CoinGecko IDs
+    const validIds = symbols
+      .map(symbol => SYMBOL_TO_ID_MAP[symbol])
+      .filter(Boolean)
+
+    if (validIds.length === 0) {
+      console.log('⚠️ No supported symbols found in:', symbols)
+      return NextResponse.json({ 
+        success: true, 
+        data: [] 
+      })
+    }
+
+    const idsString = validIds.join(',')
     
-    if (uncachedSymbols.length > 0) {
-      try {
-        // Get top 250 coins by market cap
-        const response = await fetch(
-          `${COINGECKO_API}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`
-        )
-        
-        if (response.ok) {
-          const coins = await response.json()
-          
-          // Cache the data
-          coins.forEach((coin: any) => {
-            marketDataCache[coin.symbol.toLowerCase()] = {
-              id: coin.id,
-              symbol: coin.symbol.toUpperCase(),
-              name: coin.name,
-              price: coin.current_price || 0,
-              change24h: coin.price_change_percentage_24h || 0,
-              marketCap: coin.market_cap || 0,
-              volume24h: coin.total_volume || 0,
-              image: coin.image,
-              lastUpdated: new Date().toISOString()
-            }
-          })
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${idsString}&vs_currencies=usd&include_24hr_change=true`,
+      {
+        headers: {
+          'Accept': 'application/json',
         }
-      } catch (error) {
-        console.error('Error fetching market data:', error)
       }
+    )
+
+    if (!response.ok) {
+      console.error('CoinGecko API error:', response.status)
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Failed to fetch price data' 
+      }, { status: response.status })
     }
 
-    // Return requested symbols data
-    const results = symbolList.map(symbol => {
-      return marketDataCache[symbol] || {
-        id: symbol,
+    const priceData = await response.json()
+
+    // Map back to symbols
+    const results = symbols.map(symbol => {
+      const coinId = SYMBOL_TO_ID_MAP[symbol]
+      const data = coinId ? priceData[coinId] : null
+      
+      return {
         symbol: symbol.toUpperCase(),
-        name: symbol.toUpperCase(),
-        price: 0,
-        change24h: 0,
-        marketCap: 0,
-        volume24h: 0,
-        notFound: true
+        price: data?.usd || 0,
+        change24h: data?.usd_24h_change || 0
       }
-    })
+    }).filter(item => item.price > 0)
+
+    console.log('🔍 API Debug - Results:', results.map(r => `${r.symbol}: $${r.price}`).join(', '))
 
     return NextResponse.json({
       success: true,
-      data: results,
-      timestamp: new Date().toISOString()
+      data: results
     })
 
   } catch (error) {
-    console.error('Error in market data:', error)
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'Failed to fetch market data' 
-      },
-      { status: 500 }
-    )
+    console.error('Market data API error:', error)
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Internal server error' 
+    }, { status: 500 })
   }
 }

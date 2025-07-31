@@ -99,8 +99,8 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
     purchaseDate: new Date().toISOString().split('T')[0]
   })
 
-  // Get symbols from assets for real-time price updates
-  const assetSymbols = assets.map(asset => asset.symbol.toUpperCase())
+  // Get symbols from assets for real-time price updates - memoized to prevent unnecessary re-renders
+  const assetSymbols = useMemo(() => assets.map(asset => asset.symbol.toUpperCase()), [assets])
   
   // Fetch real-time prices from API
   const [prices, setPrices] = useState<Record<string, any>>({});
@@ -133,12 +133,14 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
     }
   }, [assetSymbols]);
 
-  // Auto-refresh prices
+  // Auto-refresh prices - reduced frequency to prevent excessive API calls
   useEffect(() => {
-    refreshPrices();
-    const interval = setInterval(refreshPrices, 60000); // Refresh every minute
-    return () => clearInterval(interval);
-  }, [refreshPrices]);
+    if (assetSymbols.length > 0) {
+      refreshPrices();
+      const interval = setInterval(refreshPrices, 300000); // Refresh every 5 minutes to reduce API load
+      return () => clearInterval(interval);
+    }
+  }, [assetSymbols]); // Depend on memoized assetSymbols
 
   // Calculate portfolio totals with real-time prices
   const portfolioTotals = useMemo(() => {

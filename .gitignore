@@ -44,3 +44,15 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+# Performance files
+.claude/
+test-*.js
+test-*.ts
+nul
+
+# Build artifacts  
+*.log
+*.cache
+dist/
+temp/

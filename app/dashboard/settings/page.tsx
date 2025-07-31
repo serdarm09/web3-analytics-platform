@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/lib/contexts/AuthContext"
 import { toast } from "sonner"
 import {
   User,

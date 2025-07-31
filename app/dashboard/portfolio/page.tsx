@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, TrendingUp, TrendingDown, DollarSign, PieChart, Wallet, Activity, ArrowLeft, RefreshCw, Eye, EyeOff, BarChart3, Clock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/contexts/AuthContext'
 import { usePortfolio } from '@/hooks/use-portfolio'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { StarBorder } from '@/components/ui/star-border'

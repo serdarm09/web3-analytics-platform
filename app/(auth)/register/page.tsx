@@ -9,7 +9,7 @@ import { PremiumButton } from '@/components/ui/premium-button'
 import { StarBorder } from '@/components/ui/star-border'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumInput } from '@/components/ui/premium-input'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/contexts/AuthContext'
 import { useWallet } from '@/hooks/useWallet'
 
 export default function RegisterPage() {
@@ -59,14 +59,30 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      await register({
-        username: formData.name,
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        registrationMethod: 'email'
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: formData.name,
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          registrationMethod: 'email'
+        }),
       })
-      router.push('/dashboard')
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed')
+      }
+
+      // Use the register function from AuthContext
+      register(data.token, data.user)
+      
+      // Router push will be handled by AuthContext
     } catch (error: any) {
       setError(error.message || 'Registration failed. Please try again.')
     } finally {
@@ -86,12 +102,28 @@ export default function RegisterPage() {
         if (address) {
           try {
             // Register with wallet
-            await register({
-              username: `User-${address.slice(0, 6)}`,
-              walletAddress: address,
-              registrationMethod: 'wallet'
-            } as any)
-            router.push('/dashboard')
+            const response = await fetch('/api/auth/register', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                username: `User-${address.slice(0, 6)}`,
+                walletAddress: address,
+                registrationMethod: 'wallet'
+              }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+              throw new Error(data.error || 'Wallet registration failed')
+            }
+
+            // Use the register function from AuthContext
+            register(data.token, data.user)
+            
+            // Router push will be handled by AuthContext
           } catch (error: any) {
             setError(error.message || 'Failed to register with wallet.')
           }

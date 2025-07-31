@@ -53,6 +53,11 @@ export interface IProject extends Document {
   lastAdded?: Date
   addedBy: string
   addedAt: Date
+  createdBy?: {
+    userId?: string
+    username?: string
+    email?: string
+  }
   likeCount?: number
   likedBy?: string[]
   launchDate?: string
@@ -264,6 +269,11 @@ const projectSchema = new Schema<IProject>(
     addedAt: {
       type: Date,
       default: Date.now,
+    },
+    createdBy: {
+      userId: String,
+      username: String,
+      email: String,
     },
     likeCount: {
       type: Number,

@@ -39,10 +39,11 @@ import {
   getNetworkIcon,
   formatBalance,
   formatUSDValue,
+  SUPPORTED_NETWORKS,
   type TrackedWallet,
   type WalletAsset,
   type WalletTransaction
-} from "@/hooks/use-tracked-wallets"
+} from "@/hooks/use-multichain-wallets"
 import { useUserActivities } from "@/hooks/use-activities"
 
 interface AddWalletModalProps {
@@ -185,17 +186,14 @@ export default function EnhancedWhaleTrackerPage() {
   const [selectedWallet, setSelectedWallet] = useState<TrackedWallet | null>(null)
   const [refreshing, setRefreshing] = useState(false)
 
-  const { wallets, loading, error, fetchWallets, addWallet } = useTrackedWallets(
-    selectedNetwork || undefined,
-    filterOwned
-  )
-  const { stats, loading: statsLoading } = useWalletStats()
+  const { wallets, loading, error, refetch, addWallet } = useTrackedWallets()
+  const stats = useWalletStats(wallets)
   const { createActivity } = useUserActivities()
 
   const filteredWallets = wallets.filter(wallet =>
     wallet.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
     wallet.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getNetworkDisplayName(wallet.network).toLowerCase().includes(searchTerm.toLowerCase())
+    wallet.chains?.[0]?.chain.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleAddWallet = async (
@@ -210,7 +208,7 @@ export default function EnhancedWhaleTrackerPage() {
   const handleRefresh = async () => {
     setRefreshing(true)
     try {
-      await fetchWallets()
+      await refetch()
       await createActivity(
         'whale_track',
         'Refreshed wallet tracking data',
@@ -286,7 +284,7 @@ export default function EnhancedWhaleTrackerPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Total Wallets</p>
-                  <p className="text-2xl font-bold text-white">{stats.total.totalWallets}</p>
+                  <p className="text-2xl font-bold text-white">{stats.totalWallets}</p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
                   👛
@@ -299,7 +297,7 @@ export default function EnhancedWhaleTrackerPage() {
                 <div>
                   <p className="text-sm text-gray-400">Total Value</p>
                   <p className="text-2xl font-bold text-white">
-                    {formatUSDValue(stats.total.totalValue)}
+                    {formatUSDValue(stats.totalValue)}
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
@@ -312,7 +310,7 @@ export default function EnhancedWhaleTrackerPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Owned Wallets</p>
-                  <p className="text-2xl font-bold text-white">{stats.total.totalOwned}</p>
+                  <p className="text-2xl font-bold text-white">{stats.whaleWallets}</p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
                   🔐
@@ -324,7 +322,7 @@ export default function EnhancedWhaleTrackerPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Tracked Wallets</p>
-                  <p className="text-2xl font-bold text-white">{stats.total.totalTracked}</p>
+                  <p className="text-2xl font-bold text-white">{stats.activeWallets}</p>
                 </div>
                 <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
                   👁️
@@ -405,7 +403,7 @@ export default function EnhancedWhaleTrackerPage() {
               <div className="text-center py-8">
                 <p className="text-red-400 mb-4">{error}</p>
                 <StarBorder 
-                  onClick={() => fetchWallets()}
+                  onClick={() => refetch()}
                   className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
                 >
                   Try Again
@@ -434,7 +432,7 @@ export default function EnhancedWhaleTrackerPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center text-lg">
-                          {getNetworkIcon(wallet.network)}
+                          {getNetworkIcon(wallet.chains?.[0]?.chain || 'ethereum')}
                         </div>
                         
                         <div>
@@ -442,11 +440,6 @@ export default function EnhancedWhaleTrackerPage() {
                             <span className="font-mono text-white">
                               {formatWalletAddress(wallet.address)}
                             </span>
-                            {wallet.isOwned && (
-                              <PremiumBadge variant="success" size="sm">
-                                Owned
-                              </PremiumBadge>
-                            )}
                             {wallet.label && (
                               <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300">
                                 {wallet.label}
@@ -549,7 +542,7 @@ export default function EnhancedWhaleTrackerPage() {
                 {/* Wallet Info */}
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-lg bg-gray-700 flex items-center justify-center text-2xl">
-                    {getNetworkIcon(selectedWallet.network)}
+                    {getNetworkIcon(selectedWallet.chains?.[0]?.chain || 'ethereum')}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-2">
@@ -563,8 +556,8 @@ export default function EnhancedWhaleTrackerPage() {
                         <Copy className="h-4 w-4" />
                       </button>
                     </div>
-                    <p className={`${getNetworkColor(selectedWallet.network)} font-medium`}>
-                      {getNetworkDisplayName(selectedWallet.network)}
+                    <p className={`${getNetworkColor(selectedWallet.chains?.[0]?.chain || 'ethereum')} font-medium`}>
+                      {getNetworkDisplayName(selectedWallet.chains?.[0]?.chain || 'ethereum')}
                     </p>
                     {selectedWallet.label && (
                       <p className="text-gray-400">{selectedWallet.label}</p>

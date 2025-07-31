@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/contexts/AuthContext'
 
 const sidebarItems = [
   {
@@ -96,19 +96,12 @@ export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarPr
   }
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        initial={{ x: isMobile ? -300 : -20, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        exit={{ x: isMobile ? -300 : -20, opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className={cn(
-          "h-full bg-gray-primary border-r border-gray-border transition-all duration-300",
-          isCollapsed && !isMobile ? "w-20" : "w-64",
-          isMobile && "fixed left-0 top-0 z-50",
-          isMobile && !isOpen && "-translate-x-full"
-        )}
-      >
+    <div
+      className={cn(
+        "h-full bg-gray-primary border-r border-gray-border flex flex-col",
+        isCollapsed && !isMobile ? "w-16" : "w-64"
+      )}
+    >
       {/* Logo */}
       <div className="p-6 border-b border-gray-border flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center space-x-3">
@@ -123,6 +116,18 @@ export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarPr
             className="p-2 rounded-lg hover:bg-gray-secondary transition-colors lg:hidden"
           >
             <X className="w-5 h-5 text-white" />
+          </button>
+        )}
+        {!isMobile && (
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 rounded-lg hover:bg-gray-secondary transition-colors hidden lg:block"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4 text-white" />
+            ) : (
+              <ChevronLeft className="w-4 h-4 text-white" />
+            )}
           </button>
         )}
       </div>
@@ -196,7 +201,6 @@ export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarPr
           {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
       )}
-    </motion.div>
-    </AnimatePresence>
+    </div>
   )
 }

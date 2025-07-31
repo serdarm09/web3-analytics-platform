@@ -16,13 +16,23 @@ export async function GET(
     await dbConnect()
 
     const { projectId } = await params
-    const project = await Project.findById(projectId).lean()
+    const project = await Project.findById(projectId)
+      .populate('addedBy', 'name username email')
+      .lean()
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    return NextResponse.json(project)
+    // Check if project is public or owned by the user
+    if (!project.isPublic && (project.addedBy as any)?._id?.toString() !== authResult.userId) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      project
+    })
   } catch (error) {
     console.error('Error fetching project:', error)
     return NextResponse.json(

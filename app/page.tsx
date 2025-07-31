@@ -8,8 +8,7 @@ import { StarBorder } from '@/components/ui/star-border'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { Navbar } from '@/components/layout/navbar'
-import { AuthModal } from '@/components/auth/AuthModal'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/contexts/AuthContext'
 // import { SplineScene } from '@/components/ui/spline'
 import { Web3Hero } from '@/components/ui/web3-hero'
 // import { cryptoDataService } from '@/lib/services/cryptoDataService'
@@ -17,10 +16,6 @@ import { Web3Hero } from '@/components/ui/web3-hero'
 export default function Home() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
-  const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({ 
-    isOpen: false, 
-    mode: 'register' 
-  })
   const [stats, setStats] = useState({
     activeUsers: '0',
     projectsTracked: '0',
@@ -299,12 +294,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-      
-      <AuthModal 
-        isOpen={authModal.isOpen}
-        onClose={() => setAuthModal({ ...authModal, isOpen: false })}
-        mode={authModal.mode}
-      />
     </>
   )
 }

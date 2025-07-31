@@ -1,196 +1,114 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Star, Plus, Trash2, Bell, TrendingUp, TrendingDown, Search, Filter, Eye, Loader2, Heart, RefreshCw, User, ExternalLink } from "lucide-react"
-import { PremiumCard } from "@/components/ui/premium-card"
-import { StarBorder } from "@/components/ui/star-border"
-import { PremiumInput } from "@/components/ui/premium-input"
-import { PremiumBadge } from "@/components/ui/premium-badge"
-import { PremiumSkeleton } from "@/components/ui/premium-skeleton"
-import { PremiumButton } from "@/components/ui/premium-button"
-import { toast } from 'sonner'
-import { useRouter } from "next/navigation"
-import Image from "next/image"
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Heart, Eye, Search, Filter, RefreshCw, User, Plus, TrendingUp, ExternalLink, X, Calendar, Globe } from 'lucide-react'
+import { PremiumCard } from '@/components/ui/premium-card'
+import { PremiumButton } from '@/components/ui/premium-button'
+import { PremiumInput } from '@/components/ui/premium-input'
 
-
+interface Project {
+  _id: string
+  name: string
+  symbol: string
+  category: string
+  description?: string
+  logo?: string
+  website?: string
+  addedBy?: {
+    username?: string
+    name?: string
+  }
+  createdAt: string
+  likes: number
+  views: number
+}
 
 export default function WatchlistPage() {
-  const router = useRouter()
-  const [projects, setProjects] = useState<any[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("All")
-  const [addingProjects, setAddingProjects] = useState<Set<string>>(new Set())
-  const [likingProjects, setLikingProjects] = useState<Set<string>>(new Set())
-  const [projectLikes, setProjectLikes] = useState<Record<string, { likeCount: number; isLiked: boolean }>>({})
-
-  const categories = ['All', 'DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Other']
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [likedProjects, setLikedProjects] = useState<Set<string>>(new Set())
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   useEffect(() => {
-    fetchPublicProjects()
+    fetchProjects()
   }, [])
 
-  const fetchPublicProjects = async () => {
+  const fetchProjects = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/projects?public=true', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch('/api/projects?public=true&_t=' + Date.now(), {
+        headers: { 'Cache-Control': 'no-cache' }
       })
       
       const data = await response.json()
       
-      if (response.ok) {
-        setProjects(data.projects || [])
-        // Fetch like statuses
-        if (data.projects && data.projects.length > 0) {
-          fetchLikeStatuses(data.projects)
-        }
-      } else {
-        toast.error(data.error || 'Failed to fetch projects')
+      if (response.ok && data.projects) {
+        setProjects(data.projects)
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
-      toast.error('Failed to fetch projects')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const fetchLikeStatuses = async (projectsList: any[]) => {
-    for (const project of projectsList) {
-      try {
-        const response = await fetch(`/api/projects/${project._id}/like`)
-        if (response.ok) {
-          const data = await response.json()
-          setProjectLikes(prev => ({
-            ...prev,
-            [project._id]: {
-              likeCount: data.likeCount,
-              isLiked: data.isLiked
-            }
-          }))
-        }
-      } catch (error) {
-        console.error('Error fetching like status:', error)
-      }
-    }
-  }
-
-  const handleAddToMyProjects = async (e: React.MouseEvent, projectId: string) => {
-    e.stopPropagation()
-    
-    if (addingProjects.has(projectId)) return
-    
-    setAddingProjects(prev => new Set(prev).add(projectId))
-    
-    try {
-      const response = await fetch('/api/projects/track', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ projectId }),
-      })
-
-      if (response.ok) {
-        toast.success('Project added to your list!')
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Failed to add project')
-      }
-    } catch (error) {
-      toast.error('Failed to add project')
-    } finally {
-      setAddingProjects(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(projectId)
-        return newSet
-      })
     }
   }
 
   const handleLikeProject = async (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation()
     
-    if (likingProjects.has(projectId)) return
+    const isLiked = likedProjects.has(projectId)
     
-    setLikingProjects(prev => new Set(prev).add(projectId))
-    
-    try {
-      const response = await fetch(`/api/projects/${projectId}/like`, {
-        method: 'POST',
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setProjectLikes(prev => ({
-          ...prev,
-          [projectId]: {
-            likeCount: data.likeCount,
-            isLiked: data.isLiked
-          }
-        }))
-        toast.success(data.isLiked ? 'Project liked!' : 'Project unliked!')
-      } else {
-        toast.error('Failed to update like status')
-      }
-    } catch (error) {
-      toast.error('Failed to update like status')
-    } finally {
-      setLikingProjects(prev => {
+    if (isLiked) {
+      setLikedProjects(prev => {
         const newSet = new Set(prev)
         newSet.delete(projectId)
         return newSet
       })
+    } else {
+      setLikedProjects(prev => new Set(prev).add(projectId))
     }
+    
+    setProjects(prev => prev.map(p => 
+      p._id === projectId 
+        ? { ...p, likes: p.likes + (isLiked ? -1 : 1) }
+        : p
+    ))
   }
 
-  const handleProjectClick = (project: any) => {
-    router.push(`/dashboard/projects/${project._id}`)
+  const handleAddToMyProjects = async (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation()
+    console.log('Adding project to watchlist:', projectId)
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
+  const handleViewProjectDetails = (project: Project) => {
+    setSelectedProject(project)
+    setIsDetailModalOpen(true)
   }
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: "spring" as const,
-        stiffness: 100
-      }
-    }
+  const closeDetailModal = () => {
+    setIsDetailModalOpen(false)
+    setSelectedProject(null)
   }
 
+  const categories = ['all', ...Array.from(new Set(projects.map(p => p.category)))]
+  
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === 'All' || project.category === selectedCategory
+    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === 'all' || project.category === selectedCategory
     return matchesSearch && matchesCategory
   })
 
   if (loading) {
     return (
-      <div className="min-h-screen p-4 md:p-6 lg:p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <PremiumSkeleton className="h-12 w-48" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <PremiumSkeleton key={i} className="h-64" />
-            ))}
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-purple-400" />
+            <p className="text-gray-400">Loading community projects...</p>
           </div>
         </div>
       </div>
@@ -198,249 +116,367 @@ export default function WatchlistPage() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8">
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        className="max-w-7xl mx-auto space-y-6"
-      >
-        {/* Header */}
-        <motion.div variants={itemVariants} className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
-                Watch Projects
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Discover and track public crypto projects shared by the community
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <PremiumButton
-                variant="gradient"
-                onClick={() => fetchPublicProjects()}
-                className="gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh
-              </PremiumButton>
-            </div>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            Watch Projects
+          </h1>
+          <p className="text-gray-400 mt-1">
+            Discover and track community shared projects
+          </p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm font-medium">
+            {projects.length} Projects
           </div>
+          <PremiumButton
+            onClick={fetchProjects}
+            variant="outline"
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Refresh</span>
+          </PremiumButton>
+        </div>
+      </div>
 
-          {/* Search and Stats */}
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <PremiumInput
-                placeholder="Search in watch projects..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                icon={Search}
-              />
-            </div>
-            <div className="flex gap-2">
-              <PremiumBadge variant="outline" className="px-4 py-2">
-                <Eye className="h-4 w-4 mr-2" />
-                {projects.length} Projects
-              </PremiumBadge>
-              <PremiumBadge variant="outline" className="px-4 py-2">
-                <Heart className="h-4 w-4 mr-2" />
-                {Object.values(projectLikes).filter(p => p.isLiked).length} Liked
-              </PremiumBadge>
-            </div>
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <PremiumInput
+            placeholder="Search projects..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
+            icon={Search}
+          />
+        </div>
+        <div className="flex items-center space-x-3">
+          <Filter className="h-4 w-4 text-gray-400" />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          >
+            {categories.map(category => (
+              <option key={category} value={category}>
+                {category === 'all' ? 'All Categories' : category}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Projects Grid */}
+      {filteredProjects.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-24 h-24 bg-gray-800/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="h-8 w-8 text-gray-400" />
           </div>
-        </motion.div>
-
-        {/* Category Filter */}
-        <motion.div variants={itemVariants} className="flex gap-2 flex-wrap">
-          {categories.map((category) => (
-            <PremiumBadge
-              key={category}
-              variant={selectedCategory === category ? 'default' : 'outline'}
-              className="cursor-pointer"
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category}
-            </PremiumBadge>
-          ))}
-        </motion.div>
-
-        {/* Projects Grid */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h3 className="text-xl font-semibold text-gray-300 mb-2">
+            No projects found
+          </h3>
+          <p className="text-gray-400 mb-6">
+            {searchTerm || selectedCategory !== 'all' 
+              ? 'Try adjusting your search or filters'
+              : 'No community projects have been shared yet'
+            }
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence>
             {filteredProjects.map((project, index) => (
               <motion.div
                 key={project._id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <PremiumCard 
-                  className="glassmorphism hover:scale-[1.02] transition-all duration-300 cursor-pointer overflow-hidden group"
-                  onClick={() => handleProjectClick(project)}
+                <PremiumCard className="p-6 h-full hover:scale-[1.02] transition-transform cursor-pointer"
+                  onClick={() => handleViewProjectDetails(project)}
                 >
-                  <div className="p-6">
-                    {/* Project Header */}
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-800">
-                        {project.logo ? (
-                          <Image
-                            src={project.logo}
-                            alt={project.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-600">
-                            <Star className="w-6 h-6" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-white text-lg">{project.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <p className="text-gray-400 text-sm">{project.symbol}</p>
-                          {project.category && (
-                            <PremiumBadge variant="outline" size="sm">
-                              {project.category}
-                            </PremiumBadge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Creator Info */}
-                    {project.addedBy && (
-                      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-800">
-                        <User className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-400">Created by</span>
-                        <span className="text-sm text-white font-medium">
-                          {project.addedBy.name || project.addedBy.username || 'Anonymous'}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Description */}
-                    {project.description && (
-                      <p className="text-sm text-gray-400 mb-4 line-clamp-2">
-                        {project.description}
-                      </p>
-                    )}
-
-                    {/* Stats */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-gray-400">
-                          <Eye className="w-4 h-4" />
-                          <span className="text-sm">Views</span>
-                        </div>
-                        <span className="text-white font-medium">
-                          {project.viewCount || 0}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-gray-400">
-                          <Heart className="w-4 h-4" />
-                          <span className="text-sm">Likes</span>
-                        </div>
-                        <span className="text-white font-medium">
-                          {projectLikes[project._id]?.likeCount || project.likeCount || 0}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Market Data (if available) */}
-                    {project.marketData?.price && (
-                      <div className="pt-4 border-t border-gray-800">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-gray-400 text-sm">Price</span>
-                          <span className="text-white font-medium">
-                            ${project.marketData.price.toFixed(6)}
+                  {/* Project Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      {project.logo ? (
+                        <img 
+                          src={project.logo} 
+                          alt={project.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${project.name}&background=6366f1&color=fff`
+                          }}
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-lg">
+                            {project.symbol.charAt(0)}
                           </span>
                         </div>
-                        {project.marketData?.change24h !== undefined && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-400 text-sm">24h Change</span>
-                            <span className={`font-medium flex items-center gap-1 ${
-                              project.marketData.change24h >= 0 ? 'text-green-400' : 'text-red-400'
-                            }`}>
-                              {project.marketData.change24h >= 0 ? (
-                                <TrendingUp className="w-4 h-4" />
-                              ) : (
-                                <TrendingDown className="w-4 h-4" />
-                              )}
-                              {Math.abs(project.marketData.change24h).toFixed(2)}%
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-2 mt-4">
-                      {project.website && (
-                        <a
-                          href={project.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-gray-400 hover:text-white transition-colors"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
                       )}
-                      <PremiumButton
-                        variant={projectLikes[project._id]?.isLiked ? "glow" : "ghost"}
-                        size="sm"
-                        onClick={(e) => handleLikeProject(e, project._id)}
-                        disabled={likingProjects.has(project._id)}
-                        className="gap-1"
-                      >
-                        {likingProjects.has(project._id) ? (
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Heart className={`w-4 h-4 ${projectLikes[project._id]?.isLiked ? 'fill-current' : ''}`} />
-                        )}
-                        <span className="text-xs">{projectLikes[project._id]?.likeCount || project.likeCount || 0}</span>
-                      </PremiumButton>
-                      <PremiumButton
-                        variant="gradient"
-                        size="sm"
-                        className="ml-auto"
-                        onClick={(e) => handleAddToMyProjects(e, project._id)}
-                        disabled={addingProjects.has(project._id)}
-                      >
-                        {addingProjects.has(project._id) ? (
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Plus className="w-4 h-4" />
-                        )}
-                        Add to My Projects
-                      </PremiumButton>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">
+                          {project.name}
+                        </h3>
+                        <p className="text-sm text-gray-400">
+                          ${project.symbol}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-medium">
+                      {project.category}
                     </div>
                   </div>
 
-                  {/* Hover Effect Gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-accent-slate/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  {/* Project Description */}
+                  {project.description && (
+                    <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+                      {project.description}
+                    </p>
+                  )}
+
+                  {/* Added By */}
+                  {project.addedBy && (
+                    <div className="flex items-center space-x-2 mb-4 p-3 bg-gray-800/20 rounded-lg">
+                      <User className="w-4 h-4 text-purple-400" />
+                      <span className="text-sm text-gray-300">
+                        By {project.addedBy.username || project.addedBy.name || 'Anonymous'}
+                      </span>
+                      <div className="flex items-center space-x-1 text-gray-400 ml-auto">
+                        <span className="text-xs">
+                          {new Date(project.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-700/30">
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={(e) => handleLikeProject(e, project._id)}
+                        className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors ${
+                          likedProjects.has(project._id)
+                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                            : 'bg-gray-700/30 text-gray-400 border border-gray-600/30 hover:bg-gray-600/30'
+                        }`}
+                      >
+                        <Heart className={`h-4 w-4 ${likedProjects.has(project._id) ? 'fill-current' : ''}`} />
+                        <span className="text-sm">{project.likes || 0}</span>
+                      </button>
+                      
+                      <div className="flex items-center space-x-1 text-gray-400">
+                        <Eye className="h-4 w-4" />
+                        <span className="text-sm">{project.views || 0}</span>
+                      </div>
+                    </div>
+
+                    <PremiumButton
+                      onClick={(e) => handleAddToMyProjects(e, project._id)}
+                      size="sm"
+                      variant="outline"
+                      className="flex items-center space-x-1"
+                    >
+                      <Plus className="h-3 w-3" />
+                      <span>Add</span>
+                    </PremiumButton>
+                  </div>
                 </PremiumCard>
               </motion.div>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </div>
+      )}
 
-        {/* Empty State */}
-        {filteredProjects.length === 0 && (
-          <motion.div variants={itemVariants} className="text-center py-12">
-            <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No public projects found</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchQuery ? "No results found" : "No public projects have been shared yet. Create a project and mark it as public to share with the community!"}
-            </p>
+      {/* Project Detail Modal */}
+      <AnimatePresence>
+        {isDetailModalOpen && selectedProject && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={closeDetailModal}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-gray-900/90 backdrop-blur-xl border-b border-gray-700/30 p-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Proje Detayları
+                </h2>
+                <button
+                  onClick={closeDetailModal}
+                  className="p-2 rounded-lg bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 space-y-6">
+                {/* Project Header */}
+                <div className="flex items-start space-x-4">
+                  {selectedProject.logo ? (
+                    <img 
+                      src={selectedProject.logo} 
+                      alt={selectedProject.name}
+                      className="w-20 h-20 rounded-xl object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${selectedProject.name}&background=6366f1&color=fff&size=80`
+                      }}
+                    />
+                  ) : (
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                      <span className="text-white font-bold text-2xl">
+                        {selectedProject.symbol.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-white mb-2">
+                      {selectedProject.name}
+                    </h3>
+                    <p className="text-lg text-gray-300 mb-2">
+                      ${selectedProject.symbol}
+                    </p>
+                    <div className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-sm font-medium inline-block">
+                      {selectedProject.category}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Publisher Information */}
+                {selectedProject.addedBy && (
+                  <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-4">
+                    <h4 className="text-lg font-semibold text-white mb-3 flex items-center">
+                      <User className="w-5 h-5 text-purple-400 mr-2" />
+                      Yayınlayan
+                    </h4>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-medium text-lg">
+                          {selectedProject.addedBy.name || selectedProject.addedBy.username || 'Anonim Kullanıcı'}
+                        </p>
+                        {selectedProject.addedBy.username && selectedProject.addedBy.name && (
+                          <p className="text-gray-400 text-sm">
+                            @{selectedProject.addedBy.username}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center text-gray-400">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        <span className="text-sm">
+                          {new Date(selectedProject.createdAt).toLocaleDateString('tr-TR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Project Description */}
+                {selectedProject.description && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-3">Açıklama</h4>
+                    <p className="text-gray-300 leading-relaxed">
+                      {selectedProject.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Project Website */}
+                {selectedProject.website && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-3">Website</h4>
+                    <a
+                      href={selectedProject.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center space-x-2 text-purple-400 hover:text-purple-300 transition-colors"
+                    >
+                      <Globe className="w-4 h-4" />
+                      <span>{selectedProject.website}</span>
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                )}
+
+                {/* Project Stats */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-gray-800/30 rounded-lg p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <Heart className="w-5 h-5 text-red-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-white">{selectedProject.likes || 0}</p>
+                    <p className="text-gray-400 text-sm">Beğeni</p>
+                  </div>
+                  <div className="bg-gray-800/30 rounded-lg p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <Eye className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-white">{selectedProject.views || 0}</p>
+                    <p className="text-gray-400 text-sm">Görüntülenme</p>
+                  </div>
+                  <div className="bg-gray-800/30 rounded-lg p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <TrendingUp className="w-5 h-5 text-green-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-white">
+                      {Math.floor((selectedProject.likes || 0) / Math.max((selectedProject.views || 1), 1) * 100)}%
+                    </p>
+                    <p className="text-gray-400 text-sm">Beğeni Oranı</p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex space-x-3 pt-4">
+                  <PremiumButton
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleLikeProject(e, selectedProject._id)
+                    }}
+                    className={`flex-1 flex items-center justify-center space-x-2 ${
+                      likedProjects.has(selectedProject._id)
+                        ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                        : ''
+                    }`}
+                    variant={likedProjects.has(selectedProject._id) ? "outline" : "gradient"}
+                  >
+                    <Heart className={`h-4 w-4 ${likedProjects.has(selectedProject._id) ? 'fill-current' : ''}`} />
+                    <span>{likedProjects.has(selectedProject._id) ? 'Beğenildi' : 'Beğen'}</span>
+                  </PremiumButton>
+                  
+                  <PremiumButton
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleAddToMyProjects(e, selectedProject._id)
+                    }}
+                    variant="outline"
+                    className="flex-1 flex items-center justify-center space-x-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Watchlist'e Ekle</span>
+                  </PremiumButton>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
-      </motion.div>
+      </AnimatePresence>
     </div>
   )
 }

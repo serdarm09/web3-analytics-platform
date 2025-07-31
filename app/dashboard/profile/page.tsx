@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { UserProfile, UserStats, UserActivity } from '@/components/user'
 import { PremiumCard } from '@/components/ui/premium-card'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/contexts/AuthContext'
 import { redirect } from 'next/navigation'
 
 export default function ProfilePage() {

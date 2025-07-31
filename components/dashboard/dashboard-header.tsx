@@ -4,7 +4,7 @@ import { Bell, User, Menu, Wallet, Mail, Calendar } from 'lucide-react'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/contexts/AuthContext'
 
 interface DashboardHeaderProps {
   onMenuClick?: () => void;

@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from './use-auth'
+import { useAuth } from '@/lib/contexts/AuthContext'
 import { fetchWithAuth } from '@/lib/api/fetch-with-auth'
 
 interface Asset {

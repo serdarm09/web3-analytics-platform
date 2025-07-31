@@ -4,43 +4,15 @@ import Portfolio from '@/models/Portfolio'
 import Project from '@/models/Project'
 import { verifyAuth } from '@/lib/auth/middleware'
 
-// Symbol to CoinGecko ID mapping
-const symbolToCoinGeckoId: Record<string, string> = {
-  'btc': 'bitcoin',
-  'eth': 'ethereum',
-  'bnb': 'binancecoin',
-  'sol': 'solana',
-  'xrp': 'ripple',
-  'ada': 'cardano',
-  'avax': 'avalanche-2',
-  'doge': 'dogecoin',
-  'dot': 'polkadot',
-  'matic': 'matic-network',
-  'shib': 'shiba-inu',
-  'trx': 'tron',
-  'link': 'chainlink',
-  'uni': 'uniswap',
-  'atom': 'cosmos',
-  'ltc': 'litecoin',
-  'etc': 'ethereum-classic',
-  'xlm': 'stellar',
-  'near': 'near',
-  'algo': 'algorand',
-  'usdt': 'tether',
-  'usdc': 'usd-coin',
-  'dai': 'dai',
-  'busd': 'binance-usd'
-}
-
-// Get current crypto prices using the market-data API
+// Get current crypto prices using the market-data API with dynamic ID resolution
 async function getCryptoPrices(symbols: string[]) {
   try {
     if (symbols.length === 0) return {}
     
-    // Use the existing market-data endpoint which has its own caching
+    // Use the existing market-data endpoint which now has dynamic search
     const symbolsString = symbols.join(',')
-    // In server-side code, use relative URLs for internal API calls
-    const response = await fetch(`${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/crypto/market-data?symbols=${symbolsString}`)
+    const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    const response = await fetch(`${baseUrl}/api/crypto/market-data?symbols=${symbolsString}`)
     
     if (!response.ok) {
       console.error('Failed to fetch market data:', response.status)
@@ -49,20 +21,21 @@ async function getCryptoPrices(symbols: string[]) {
     
     const data = await response.json()
     
-    // Transform the response to match our expected format
-    const priceData: Record<string, any> = {}
-    
-    if (data.success && data.data) {
-      Object.keys(data.data).forEach(symbol => {
-        const marketData = data.data[symbol]
-        priceData[symbol.toLowerCase()] = {
-          usd: marketData.current_price || 0,
-          usd_24h_change: marketData.price_change_percentage_24h || 0
-        }
-      })
+    if (!data.success) {
+      console.error('Market data API error:', data.error)
+      return {}
     }
     
-    return priceData
+    // Convert new API format to compatible format
+    const priceMap: Record<string, any> = {}
+    data.data.forEach((coin: any) => {
+      priceMap[coin.symbol.toLowerCase()] = {
+        usd: coin.price,
+        usd_24h_change: coin.change24h
+      }
+    })
+    
+    return priceMap
   } catch (error) {
     console.error('Error fetching crypto prices:', error)
     return {}
@@ -139,7 +112,17 @@ export async function GET(request: NextRequest) {
       portfolios.map(portfolio => updatePortfolioMetrics(portfolio))
     )
 
-    return NextResponse.json(updatedPortfolios)
+    // Transform portfolios to include id field for frontend compatibility
+    const transformedPortfolios = updatedPortfolios.map(portfolio => ({
+      ...portfolio,
+      id: portfolio._id.toString(),
+      assets: portfolio.assets.map((asset: any) => ({
+        ...asset,
+        _id: asset._id?.toString() || undefined
+      }))
+    }))
+
+    return NextResponse.json(transformedPortfolios)
   } catch (error) {
     console.error('Error fetching portfolios:', error)
     return NextResponse.json(

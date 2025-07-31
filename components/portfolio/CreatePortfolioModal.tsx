@@ -11,10 +11,16 @@ import { toast } from 'sonner'
 interface CreatePortfolioModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreatePortfolio: (data: { name: string; description?: string }) => Promise<void>
+  onCreatePortfolio?: (data: { name: string; description?: string }) => Promise<void>
+  onPortfolioCreated?: (portfolio: any) => void
 }
 
-export default function CreatePortfolioModal({ isOpen, onClose, onCreatePortfolio }: CreatePortfolioModalProps) {
+export default function CreatePortfolioModal({ 
+  isOpen, 
+  onClose, 
+  onCreatePortfolio, 
+  onPortfolioCreated 
+}: CreatePortfolioModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     description: ''
@@ -31,15 +37,35 @@ export default function CreatePortfolioModal({ isOpen, onClose, onCreatePortfoli
 
     setIsLoading(true)
     try {
-      await onCreatePortfolio({
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined
-      })
+      if (onCreatePortfolio) {
+        await onCreatePortfolio({
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined
+        })
+      } else if (onPortfolioCreated) {
+        // Create portfolio via API
+        const response = await fetch('/api/portfolios', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            description: formData.description.trim() || undefined
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to create portfolio')
+        }
+
+        const newPortfolio = await response.json()
+        onPortfolioCreated(newPortfolio)
+      }
       
       // Reset form and close modal
       setFormData({ name: '', description: '' })
       onClose()
-      toast.success('Portfolio created successfully!')
     } catch (error) {
       console.error('Error creating portfolio:', error)
       toast.error('Failed to create portfolio')

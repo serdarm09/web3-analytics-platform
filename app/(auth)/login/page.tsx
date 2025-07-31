@@ -9,7 +9,7 @@ import { PremiumButton } from '@/components/ui/premium-button'
 import { StarBorder } from '@/components/ui/star-border'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumInput } from '@/components/ui/premium-input'
-import { useAuth } from '@/hooks/use-auth'
+import { useAuth } from '@/lib/contexts/AuthContext'
 import { useWallet } from '@/hooks/useWallet'
 
 export default function LoginPage() {
@@ -39,13 +39,69 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      await login({
+      console.log('🔐 Starting login request...')
+      
+      const requestBody = {
         email: formData.email,
         password: formData.password,
         loginMethod: 'email'
+      }
+      
+      console.log('📤 Request body:', requestBody)
+      
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
       })
-      router.push('/dashboard')
+
+      console.log('📋 Response status:', response.status)
+      console.log('📋 Response ok:', response.ok)
+      console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()))
+
+      let data
+      try {
+        const responseText = await response.text()
+        console.log('📋 Raw response length:', responseText?.length || 0)
+        console.log('📋 Raw response:', responseText?.substring(0, 200) + (responseText?.length > 200 ? '...' : ''))
+        
+        if (!responseText || responseText.trim() === '') {
+          throw new Error('Empty response from server')
+        }
+        
+        // Check if response looks like HTML (error page)
+        if (responseText.trim().startsWith('<')) {
+          throw new Error('Server returned an error page instead of JSON')
+        }
+        
+        data = JSON.parse(responseText)
+        console.log('📋 Parsed response:', data)
+      } catch (parseError) {
+        console.error('❌ Response parsing error:', parseError)
+        throw new Error('Invalid response from server. Please check your internet connection and try again.')
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || `Server error: ${response.status}`)
+      }
+
+      if (!data.token || !data.user) {
+        throw new Error('Invalid response: missing token or user data')
+      }
+
+      console.log('✅ Login successful, calling AuthContext login...')
+      // Use the login function from AuthContext with remember me option
+      login(data.token, data.user, formData.rememberMe)
+      
+      // Wait longer for cookies to be fully set before redirecting
+      setTimeout(() => {
+        console.log('🔄 Redirecting to dashboard after cookie sync...')
+        window.location.href = '/dashboard' // Use location.href for full reload to ensure cookies are available
+      }, 500)
     } catch (error: any) {
+      console.error('❌ Login error:', error)
       setError(error.message || 'Login failed. Please try again.')
     } finally {
       setIsLoading(false)
@@ -64,11 +120,31 @@ export default function LoginPage() {
         if (address) {
           // Try to login with wallet
           try {
-            await login({
-              walletAddress: address,
-              loginMethod: 'wallet'
-            } as any)
-            router.push('/dashboard')
+            const response = await fetch('/api/auth/login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                walletAddress: address,
+                loginMethod: 'wallet'
+              }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+              throw new Error(data.error || 'Wallet login failed')
+            }
+
+            // Use the login function from AuthContext
+            login(data.token, data.user)
+            
+            // Wait for cookies to be set before redirecting
+            setTimeout(() => {
+              console.log('🔄 Redirecting to dashboard after wallet login...')
+              window.location.href = '/dashboard'
+            }, 500)
           } catch (error: any) {
             setError('Failed to login with wallet. Please try again.')
           }
