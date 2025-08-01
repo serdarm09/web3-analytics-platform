@@ -8,17 +8,29 @@ export async function GET(
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
+    const { projectId } = await params
+    console.log('GET /api/projects/[projectId] - projectId:', projectId)
+    
     const authResult = await verifyAuth(request)
+    console.log('Auth result:', { authenticated: authResult.authenticated, userId: authResult.userId })
+    
     if (!authResult.authenticated) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     await dbConnect()
 
-    const { projectId } = await params
     const project = await Project.findById(projectId)
       .populate('addedBy', 'name username email')
       .lean()
+
+    console.log('Found project:', { 
+      id: project?._id, 
+      name: project?.name, 
+      found: !!project,
+      isPublic: project?.isPublic,
+      addedBy: project?.addedBy
+    })
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })

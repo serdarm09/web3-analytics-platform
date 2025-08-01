@@ -78,7 +78,8 @@ interface ProjectCreationFormProps {
 }
 
 export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoading = false, initialData, isEditMode = false }: ProjectCreationFormProps) {
-  const [formData, setFormData] = useState<ProjectFormData>(initialData || {
+  
+  const defaultFormData: ProjectFormData = {
     name: '',
     symbol: '',
     logo: '',
@@ -129,7 +130,9 @@ export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoad
     launchDate: '',
     whitepaperUrl: '',
     tags: []
-  })
+  }
+
+  const [formData, setFormData] = useState<ProjectFormData>(initialData || defaultFormData)
 
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormData, string>>>({})
   const [currentTag, setCurrentTag] = useState('')
@@ -140,7 +143,9 @@ export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoad
 
   // Update form data when initialData changes (for edit mode)
   useEffect(() => {
+    console.log('ProjectCreationFormEnhanced - initialData changed:', initialData)
     if (initialData) {
+      console.log('Setting form data from initialData:', initialData)
       setFormData(initialData)
     }
   }, [initialData])
@@ -1085,7 +1090,10 @@ export default function ProjectCreationFormEnhanced({ onSubmit, onCancel, isLoad
                   variant="gradient"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Creating Project...' : 'Create Project'}
+                  {isLoading 
+                    ? (isEditMode ? 'Updating Project...' : 'Creating Project...') 
+                    : (isEditMode ? 'Update Project' : 'Create Project')
+                  }
                 </PremiumButton>
               </div>
             </form>

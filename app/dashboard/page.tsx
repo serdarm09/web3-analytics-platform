@@ -20,7 +20,6 @@ import {
   PieChart,
   Target,
   Clock,
-  AlertTriangle,
   Shield,
   Coins
 } from 'lucide-react'

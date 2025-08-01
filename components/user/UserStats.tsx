@@ -7,7 +7,6 @@ import {
   Wallet,
   TrendingUp,
   Eye,
-  Bell,
   Activity,
   PieChart,
   Target,
@@ -21,12 +20,19 @@ import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { StatsCard } from '@/components/dashboard/stats-card'
 
+interface UserStats {
+  totalValue: number
+  dayChange: number
+  dayChangePercent: number
+  totalProjects: number
+  totalTransactions: number
+}
+
 interface UserStatsData {
   totalPortfolioValue: number
   totalPortfolios: number
   totalAssets: number
   totalProjects: number
-  activeAlerts: number
   watchlistItems: number
   totalTransactions: number
   profitLoss: number
@@ -45,7 +51,6 @@ export function UserStats() {
     totalPortfolios: 0,
     totalAssets: 0,
     totalProjects: 0,
-    activeAlerts: 0,
     watchlistItems: 0,
     totalTransactions: 0,
     profitLoss: 0,
@@ -75,15 +80,10 @@ export function UserStats() {
       // Fetch projects
       const projectsRes = await fetch('/api/projects')
       const projectsData = projectsRes.ok ? await projectsRes.json() : { projects: [] }
-      
-      // Fetch alerts
-      const alertsRes = await fetch('/api/alerts')
-      const alertsData = alertsRes.ok ? await alertsRes.json() : { alerts: [] }
 
       // Calculate stats
       const portfolios = portfoliosData.portfolios || []
       const projects = projectsData.projects || []
-      const alerts = alertsData.alerts || []
 
       const totalPortfolioValue = portfolios.reduce((sum: number, p: any) => sum + (p.totalValue || 0), 0)
       const totalAssets = portfolios.reduce((sum: number, p: any) => sum + (p.assets?.length || 0), 0)
@@ -94,7 +94,6 @@ export function UserStats() {
         totalPortfolios: portfolios.length,
         totalAssets,
         totalProjects: projects.length,
-        activeAlerts: alerts.filter((a: any) => a.isActive).length,
         watchlistItems: projects.filter((p: any) => p.isWatching).length,
         totalTransactions: portfolios.reduce((sum: number, p: any) => sum + (p.transactions?.length || 0), 0),
         profitLoss: portfolios.reduce((sum: number, p: any) => sum + (p.totalPnL || 0), 0),
@@ -179,15 +178,6 @@ export function UserStats() {
             value={stats.totalProjects.toString()}
             change={8.3}
             icon={<BarChart3 className="w-6 h-6 text-purple-400" />}
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
-          <StatsCard
-            title="Active Alerts"
-            value={stats.activeAlerts.toString()}
-            change={-5.7}
-            icon={<Bell className="w-6 h-6 text-orange-400" />}
           />
         </motion.div>
       </div>

@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { 
+  import { 
   TrendingUp, 
   TrendingDown,
   Eye, 
@@ -18,7 +18,9 @@ import {
   Heart,
   X,
   Calendar,
-  Globe
+  Globe,
+  Filter,
+  ChevronDown
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumBadge } from "@/components/ui/premium-badge"
@@ -32,6 +34,9 @@ import Image from "next/image"
 export default function UserBasedTrendingPage() {
   const router = useRouter()
   const [period, setPeriod] = useState<'24h' | '7d' | '30d'>('7d')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'trending' | 'views' | 'likes' | 'recent'>('trending')
+  const [showFilters, setShowFilters] = useState(false)
   const { projects, loading, refresh, trackProjectView } = useTrendingProjects(period)
   const [refreshing, setRefreshing] = useState(false)
   const [addingProjects, setAddingProjects] = useState<Set<string>>(new Set())
@@ -141,6 +146,55 @@ export default function UserBasedTrendingPage() {
     { value: '30d', label: '30 Days', icon: TrendingUp }
   ]
 
+  const categoryOptions = [
+    { value: 'all', label: 'All Categories' },
+    { value: 'DeFi', label: 'DeFi' },
+    { value: 'NFT', label: 'NFT' },
+    { value: 'Gaming', label: 'Gaming' },
+    { value: 'Infrastructure', label: 'Infrastructure' },
+    { value: 'Exchange', label: 'Exchange' },
+    { value: 'Layer1', label: 'Layer 1' },
+    { value: 'Layer2', label: 'Layer 2' },
+    { value: 'Metaverse', label: 'Metaverse' },
+    { value: 'DAO', label: 'DAO' },
+    { value: 'AI', label: 'AI' },
+    { value: 'Other', label: 'Other' }
+  ]
+
+  const sortOptions = [
+    { value: 'trending', label: 'Trending Score', icon: TrendingUp },
+    { value: 'views', label: 'Most Viewed', icon: Eye },
+    { value: 'likes', label: 'Most Liked', icon: Heart },
+    { value: 'recent', label: 'Recently Added', icon: Clock }
+  ]
+
+  // Filter and sort projects
+  const filteredAndSortedProjects = React.useMemo(() => {
+    let filtered = projects
+
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(project => project.category === categoryFilter)
+    }
+
+    // Apply sorting
+    filtered = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'views':
+          return (b.stats?.views || 0) - (a.stats?.views || 0)
+        case 'likes':
+          return (b.likeCount || 0) - (a.likeCount || 0)
+        case 'recent':
+          return new Date(b.addedAt || Date.now()).getTime() - new Date(a.addedAt || Date.now()).getTime()
+        case 'trending':
+        default:
+          return (b.trendingScore || 0) - (a.trendingScore || 0)
+      }
+    })
+
+    return filtered
+  }, [projects, categoryFilter, sortBy])
+
   // Fetch like statuses for all projects
   useEffect(() => {
     const fetchLikeStatuses = async () => {
@@ -188,39 +242,156 @@ export default function UserBasedTrendingPage() {
         <div>
           <h1 className="text-3xl font-bold text-white">Trending Projects</h1>
           <p className="text-gray-400 mt-1">
-            Top 50 projects ranked by trend score (views + adds × 2 + likes × 3)
+            {filteredAndSortedProjects.length} projects ranked by trend score
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center bg-gray-900/50 rounded-lg p-1">
-            {periodOptions.map((option) => {
-              const Icon = option.icon
-              return (
-                <PremiumButton
-                  key={option.value}
-                  onClick={() => setPeriod(option.value as any)}
-                  variant={period === option.value ? "gradient" : "ghost"}
-                  size="sm"
-                  className="gap-2 rounded-md"
-                >
-                  <Icon className="w-4 h-4" />
-                  {option.label}
-                </PremiumButton>
-              )
-            })}
-          </div>
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {/* Add Project Button */}
+          <PremiumButton
+            onClick={() => router.push('/dashboard/projects')}
+            variant="gradient"
+            size="md"
+            className="gap-2 w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4" />
+            Add New Project
+          </PremiumButton>
+          
+          {/* Filters Toggle */}
+          <PremiumButton
+            onClick={() => setShowFilters(!showFilters)}
+            variant={showFilters ? "glow" : "outline"}
+            size="md"
+            className="gap-2 w-full sm:w-auto"
+          >
+            <Filter className="w-4 h-4" />
+            Filters
+            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+          </PremiumButton>
+          
+          {/* Refresh Button */}
           <PremiumButton
             onClick={handleRefresh}
             disabled={refreshing}
             variant="glow"
             size="md"
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </PremiumButton>
         </div>
       </div>
+
+      {/* Expandable Filters */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <PremiumCard className="glassmorphism p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Time Period Filter */}
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-3 block">Time Period</label>
+                  <div className="flex flex-col gap-2">
+                    {periodOptions.map((option) => {
+                      const Icon = option.icon
+                      return (
+                        <PremiumButton
+                          key={option.value}
+                          onClick={() => setPeriod(option.value as any)}
+                          variant={period === option.value ? "gradient" : "ghost"}
+                          size="sm"
+                          className="gap-2 justify-start"
+                        >
+                          <Icon className="w-4 h-4" />
+                          {option.label}
+                        </PremiumButton>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Category Filter */}
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-3 block">Category</label>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {categoryOptions.map((option) => (
+                      <PremiumButton
+                        key={option.value}
+                        onClick={() => setCategoryFilter(option.value)}
+                        variant={categoryFilter === option.value ? "gradient" : "ghost"}
+                        size="sm"
+                        className="w-full justify-start"
+                      >
+                        {option.label}
+                      </PremiumButton>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sort By Filter */}
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-3 block">Sort By</label>
+                  <div className="flex flex-col gap-2">
+                    {sortOptions.map((option) => {
+                      const Icon = option.icon
+                      return (
+                        <PremiumButton
+                          key={option.value}
+                          onClick={() => setSortBy(option.value as any)}
+                          variant={sortBy === option.value ? "gradient" : "ghost"}
+                          size="sm"
+                          className="gap-2 justify-start"
+                        >
+                          <Icon className="w-4 h-4" />
+                          {option.label}
+                        </PremiumButton>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Filters Summary */}
+              <div className="mt-6 pt-4 border-t border-gray-700/30">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-gray-400">Active filters:</span>
+                  <PremiumBadge variant="outline" size="sm">
+                    {periodOptions.find(p => p.value === period)?.label}
+                  </PremiumBadge>
+                  {categoryFilter !== 'all' && (
+                    <PremiumBadge variant="outline" size="sm">
+                      {categoryOptions.find(c => c.value === categoryFilter)?.label}
+                    </PremiumBadge>
+                  )}
+                  <PremiumBadge variant="outline" size="sm">
+                    {sortOptions.find(s => s.value === sortBy)?.label}
+                  </PremiumBadge>
+                  {(categoryFilter !== 'all' || sortBy !== 'trending') && (
+                    <PremiumButton
+                      onClick={() => {
+                        setCategoryFilter('all')
+                        setSortBy('trending')
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 text-xs"
+                    >
+                      <X className="w-3 h-3" />
+                      Clear Filters
+                    </PremiumButton>
+                  )}
+                </div>
+              </div>
+            </PremiumCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -232,7 +403,7 @@ export default function UserBasedTrendingPage() {
             <div>
               <p className="text-gray-400 text-sm">Total Views</p>
               <p className="text-2xl font-bold text-white">
-                {projects.reduce((sum, p) => sum + p.stats.views, 0).toLocaleString()}
+                {filteredAndSortedProjects.reduce((sum, p) => sum + (p.stats?.views || 0), 0).toLocaleString()}
               </p>
             </div>
           </div>
@@ -246,7 +417,7 @@ export default function UserBasedTrendingPage() {
             <div>
               <p className="text-gray-400 text-sm">Total Additions</p>
               <p className="text-2xl font-bold text-white">
-                {projects.reduce((sum, p) => sum + p.stats.adds, 0).toLocaleString()}
+                {filteredAndSortedProjects.reduce((sum, p) => sum + (p.stats?.adds || 0), 0).toLocaleString()}
               </p>
             </div>
           </div>
@@ -258,8 +429,8 @@ export default function UserBasedTrendingPage() {
               <Users className="w-6 h-6 text-purple-400" />
             </div>
             <div>
-              <p className="text-gray-400 text-sm">Trending Projects</p>
-              <p className="text-2xl font-bold text-white">{projects.length}</p>
+              <p className="text-gray-400 text-sm">Filtered Projects</p>
+              <p className="text-2xl font-bold text-white">{filteredAndSortedProjects.length}</p>
             </div>
           </div>
         </PremiumCard>
@@ -267,7 +438,7 @@ export default function UserBasedTrendingPage() {
 
       {/* Trending Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project, index) => (
+        {filteredAndSortedProjects.map((project, index) => (
           <motion.div
             key={project._id}
             initial={{ opacity: 0, y: 20 }}
@@ -403,45 +574,49 @@ export default function UserBasedTrendingPage() {
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-2 mt-4">
-                  {project.website && (
-                    <a
-                      href={project.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  )}
-                  <PremiumButton
-                    variant={projectLikes[project._id]?.isLiked ? "glow" : "ghost"}
-                    size="sm"
-                    onClick={(e) => handleLikeProject(e, project._id)}
-                    disabled={likingProjects.has(project._id)}
-                    className="gap-1"
-                  >
-                    {likingProjects.has(project._id) ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Heart className={`w-4 h-4 ${projectLikes[project._id]?.isLiked ? 'fill-current' : ''}`} />
+                <div className="flex items-center justify-between mt-4">
+                  <div className="flex items-center gap-2">
+                    {project.website && (
+                      <a
+                        href={project.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800/50"
+                        title="Visit Website"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
                     )}
-                    <span className="text-xs">{projectLikes[project._id]?.likeCount || project.likeCount || 0}</span>
-                  </PremiumButton>
+                    <PremiumButton
+                      variant={projectLikes[project._id]?.isLiked ? "glow" : "ghost"}
+                      size="sm"
+                      onClick={(e) => handleLikeProject(e, project._id)}
+                      disabled={likingProjects.has(project._id)}
+                      className="gap-1 px-3"
+                    >
+                      {likingProjects.has(project._id) ? (
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Heart className={`w-4 h-4 ${projectLikes[project._id]?.isLiked ? 'fill-current' : ''}`} />
+                      )}
+                      <span className="text-xs">{projectLikes[project._id]?.likeCount || project.likeCount || 0}</span>
+                    </PremiumButton>
+                  </div>
+                  
                   <PremiumButton
                     variant="gradient"
                     size="sm"
-                    className="ml-auto"
                     onClick={(e) => handleAddToMyProjects(e, project._id)}
                     disabled={addingProjects.has(project._id)}
+                    className="gap-1 px-4"
                   >
                     {addingProjects.has(project._id) ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
                     ) : (
                       <Plus className="w-4 h-4" />
                     )}
-                    Add to My Projects
+                    Add
                   </PremiumButton>
                 </div>
               </div>
@@ -454,12 +629,17 @@ export default function UserBasedTrendingPage() {
       </div>
 
       {/* Empty State */}
-      {projects.length === 0 && !loading && (
+      {filteredAndSortedProjects.length === 0 && !loading && (
         <PremiumCard className="glassmorphism p-12 text-center">
           <TrendingUp className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">No trending projects yet</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            {projects.length === 0 ? 'No trending projects yet' : 'No projects match your filters'}
+          </h3>
           <p className="text-gray-400">
-            Start exploring and adding projects to see them trend here
+            {projects.length === 0 
+              ? 'Start exploring and adding projects to see them trend here'
+              : 'Try adjusting your filters to see more results'
+            }
           </p>
         </PremiumCard>
       )}
@@ -530,7 +710,7 @@ export default function UserBasedTrendingPage() {
                 {/* Trending Badge */}
                 <div className="flex items-center space-x-2">
                   <TrendingUp className="w-5 h-5 text-green-400" />
-                  <span className="text-green-400 font-medium">Trending #{projects.findIndex(p => p._id === selectedProject._id) + 1}</span>
+                  <span className="text-green-400 font-medium">Trending #{filteredAndSortedProjects.findIndex(p => p._id === selectedProject._id) + 1}</span>
                   <span className="text-gray-400">•</span>
                   <span className="text-gray-400">Score: {selectedProject.trendingScore || 0}</span>
                 </div>

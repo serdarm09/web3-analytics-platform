@@ -76,7 +76,7 @@ export default function ProjectCreationForm({ onSubmit, onCancel, isLoading = fa
 
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormData, string>>>({})
 
-  const categories = ['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Other']
+  const categories = ['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Oracle', 'Exchange', 'Other']
   const blockchains = ['Ethereum', 'BSC', 'Polygon', 'Arbitrum', 'Optimism', 'Avalanche', 'Solana', 'Other']
 
   const handleInputChange = (field: string, value: string | number) => {

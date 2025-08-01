@@ -15,6 +15,30 @@ const nextConfig = {
         hostname: 'assets.coingecko.com',
       },
       {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'app.passport.xyz',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cryptologos.cc',
+      },
+      {
+        protocol: 'https',
+        hostname: 'coin-images.coingecko.com',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
       }

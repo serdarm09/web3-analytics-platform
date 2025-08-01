@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Heart, HeartOff, Edit2, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { PremiumCard } from '@/components/ui/premium-card'
-import { StarBorder } from '@/components/ui/star-border'
 import { PremiumInput } from '@/components/ui/premium-input'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { PremiumButton } from '@/components/ui/premium-button'
@@ -14,9 +14,10 @@ import ProjectEditModal from '@/components/ProjectEditModal'
 import { useProjects } from '@/hooks/useProjects'
 import { useAuth } from '@/hooks/useAuth'
 
-const categories = ['All', 'DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Other']
+const categories = ['All', 'DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Oracle', 'Exchange', 'Other']
 
 export default function ProjectsPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -108,19 +109,36 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Crypto Projects</h1>
+          <h1 className="text-3xl font-bold text-white">My Projects</h1>
           <p className="text-gray-400 mt-1">Discover and track cryptocurrency projects</p>
         </div>
-        <StarBorder
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
-        >
-          Add Project
-        </StarBorder>
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <PremiumButton
+            onClick={() => setIsModalOpen(true)}
+            variant="gradient"
+            size="md"
+            className="gap-2 w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4" />
+            Add New Project
+          </PremiumButton>
+          
+          <PremiumButton
+            onClick={() => router.push('/dashboard/trending')}
+            variant="outline"
+            size="md"
+            className="gap-2 w-full sm:w-auto"
+          >
+            <TrendingUp className="w-4 h-4" />
+            Browse Trending
+          </PremiumButton>
+        </div>
       </div>
 
+      {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <PremiumInput
@@ -130,14 +148,14 @@ export default function ProjectsPage() {
             icon={Search}
           />
         </div>
-        <div className="flex gap-2">
-          <StarBorder
-            className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filters
-          </StarBorder>
-        </div>
+        <PremiumButton
+          variant="outline"
+          size="md"
+          className="gap-2 w-full md:w-auto"
+        >
+          <Filter className="w-4 h-4" />
+          Filters
+        </PremiumButton>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -184,21 +202,32 @@ export default function ProjectsPage() {
         <div className="grid gap-4">
           {projects.length === 0 ? (
             <PremiumCard className="p-12 text-center">
-              <p className="text-gray-400 text-lg">No tracked projects found</p>
-              <p className="text-gray-500 text-sm mt-2">Start tracking projects to see them here</p>
-              <div className="flex gap-4 justify-center mt-6">
-                <StarBorder
-                  className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4"
+              <div className="w-20 h-20 bg-gray-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Plus className="w-10 h-10 text-gray-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">No tracked projects found</h3>
+              <p className="text-gray-400 mb-6">Start tracking projects to see them here</p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <PremiumButton
                   onClick={() => setIsModalOpen(true)}
+                  variant="gradient"
+                  size="lg"
+                  className="gap-2"
                 >
-                  Add Project
-                </StarBorder>
-                <StarBorder
-                  className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
+                  <Plus className="w-5 h-5" />
+                  Add Your First Project
+                </PremiumButton>
+                
+                <PremiumButton
                   onClick={() => setShowTrendingProjects(!showTrendingProjects)}
+                  variant="outline"
+                  size="lg"
+                  className="gap-2"
                 >
+                  <TrendingUp className="w-5 h-5" />
                   {showTrendingProjects ? 'Hide' : 'Browse'} Trending Projects
-                </StarBorder>
+                </PremiumButton>
               </div>
               
               {showTrendingProjects && (
@@ -226,12 +255,15 @@ export default function ProjectsPage() {
                             <p className="text-gray-400 text-sm">{trendingProject.symbol} • {trendingProject.category}</p>
                           </div>
                         </div>
-                        <StarBorder
-                          className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3"
+                        <PremiumButton
                           onClick={() => setIsModalOpen(true)}
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 px-3"
                         >
+                          <Plus className="w-3 h-3" />
                           Track
-                        </StarBorder>
+                        </PremiumButton>
                       </div>
                     ))}
                   </div>
@@ -305,44 +337,60 @@ export default function ProjectsPage() {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        {user?.id === project.addedBy && (
-                          <>
-                            <button 
-                              className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
-                              onClick={() => handleEditProject(project._id)}
-                              title="Edit project"
-                            >
-                              <Edit2 className="w-5 h-5" />
-                            </button>
-                            <button 
-                              className="p-2 text-red-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
-                              onClick={() => handleDeleteProject(project._id)}
-                              title="Delete project"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </>
-                        )}
-                        <button 
-                          className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
-                          onClick={() => handleUntrackProject(project._id)}
-                          title="Remove from tracking"
-                        >
-                          <HeartOff className="w-5 h-5" />
-                        </button>
-                        <PremiumButton variant="ghost" size="sm" className="p-2">
-                          <Star className="w-5 h-5" />
-                        </PremiumButton>
                         {project.website && (
                           <a
                             href={project.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 text-gray-400 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+                            className="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors"
+                            title="Visit Website"
                           >
-                            <ExternalLink className="w-5 h-5" />
+                            <ExternalLink className="w-4 h-4" />
                           </a>
                         )}
+                        
+                        {user?.id === project.addedBy && (
+                          <>
+                            <PremiumButton
+                              onClick={() => handleEditProject(project._id)}
+                              variant="ghost"
+                              size="sm"
+                              className="p-2 gap-1"
+                              title="Edit project"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </PremiumButton>
+                            <PremiumButton
+                              onClick={() => handleDeleteProject(project._id)}
+                              variant="ghost"
+                              size="sm"
+                              className="p-2 gap-1 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                              title="Delete project"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </PremiumButton>
+                          </>
+                        )}
+                        
+                        <PremiumButton
+                          onClick={() => handleUntrackProject(project._id)}
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 px-3"
+                          title="Remove from tracking"
+                        >
+                          <HeartOff className="w-4 h-4" />
+                          Untrack
+                        </PremiumButton>
+                        
+                        <PremiumButton 
+                          variant="ghost" 
+                          size="sm" 
+                          className="p-2 gap-1"
+                          title="Add to favorites"
+                        >
+                          <Star className="w-4 h-4" />
+                        </PremiumButton>
                       </div>
                     </div>
                   </div>

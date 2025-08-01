@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, BarChart3, TrendingUp, Shield, Activity, Zap, Users, Lock, Globe, ChartLine, Database, Rocket, Search, Bell, Wallet, LineChart, DollarSign, Coins, Sparkles, Star, Crown, Gem, Eye, AlertCircle, PieChart } from 'lucide-react'
+import { ArrowRight, BarChart3, TrendingUp, Shield, Activity, Zap, Users, Lock, Globe, ChartLine, Database, Rocket, Search, Wallet, LineChart, DollarSign, Coins, Sparkles, Star, Crown, Gem, Eye, PieChart } from 'lucide-react'
 import { StarBorder } from '@/components/ui/star-border'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
@@ -112,14 +112,6 @@ export default function Home() {
       description: 'Professional TradingView charts with indicators',
       color: 'text-gray-400',
       gradient: 'from-black via-gray-900 to-gray-800',
-      glow: 'group-hover:shadow-[0_0_30px_-5px_rgba(156,163,175,0.3)]'
-    },
-    {
-      icon: Bell,
-      title: 'Smart Alerts',
-      description: 'Price alerts and whale movement notifications',
-      color: 'text-gray-400',
-      gradient: 'from-gray-800 via-black to-gray-900',
       glow: 'group-hover:shadow-[0_0_30px_-5px_rgba(156,163,175,0.3)]'
     },
     {

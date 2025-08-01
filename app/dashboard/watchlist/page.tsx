@@ -145,7 +145,17 @@ export default function WatchlistPage() {
     console.log('Adding project to watchlist:', projectId)
   }
 
-  const handleViewProjectDetails = (project: Project) => {
+  const handleViewProjectDetails = async (project: Project) => {
+    // Track view when opening project details
+    try {
+      await fetch(`/api/projects/${project._id}/view`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      console.error('Failed to track project view:', error)
+    }
+    
     setSelectedProject(project)
     setIsDetailModalOpen(true)
   }

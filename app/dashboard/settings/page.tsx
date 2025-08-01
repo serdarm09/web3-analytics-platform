@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/contexts/AuthContext"
 import { toast } from "sonner"
 import {
   User,
-  Bell,
   Shield,
   Palette,
   Globe,
@@ -19,7 +18,6 @@ import {
   ChevronRight,
   Check,
   X,
-  AlertCircle,
   LogOut
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
@@ -36,14 +34,6 @@ interface UserSettings {
     walletAddress?: string
     avatar: string
     bio: string
-  }
-  notifications: {
-    email: boolean
-    push: boolean
-    priceAlerts: boolean
-    portfolioUpdates: boolean
-    marketNews: boolean
-    whaleAlerts: boolean
   }
   appearance: {
     theme: "light" | "dark" | "system"
@@ -65,17 +55,11 @@ interface UserSettings {
 const mockSettings: UserSettings = {
   profile: {
     name: "John Doe",
-    email: "john.doe@example.com",
+    email: "john@example.com",
+    username: "johndoe",
+    walletAddress: "0x1234567890123456789012345678901234567890",
     avatar: "",
     bio: "Crypto enthusiast and DeFi investor"
-  },
-  notifications: {
-    email: true,
-    push: true,
-    priceAlerts: true,
-    portfolioUpdates: false,
-    marketNews: true,
-    whaleAlerts: true
   },
   appearance: {
     theme: "dark",
@@ -85,15 +69,12 @@ const mockSettings: UserSettings = {
   },
   security: {
     twoFactor: false,
-    apiKeys: [
-      { name: "Trading Bot API", created: new Date("2024-01-01"), lastUsed: new Date("2024-01-20") },
-      { name: "Mobile App", created: new Date("2024-01-15"), lastUsed: new Date("2024-01-25") }
-    ]
+    apiKeys: []
   },
   subscription: {
-    plan: "pro",
+    plan: "free",
     billingCycle: "monthly",
-    nextBilling: new Date("2024-02-15")
+    nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
   }
 }
 
@@ -130,7 +111,6 @@ export default function SettingsPage() {
 
   const sections = [
     { id: "profile", label: "Profile", icon: User },
-    { id: "notifications", label: "Notifications", icon: Bell },
     { id: "appearance", label: "Appearance", icon: Palette },
     { id: "security", label: "Security", icon: Shield },
     { id: "subscription", label: "Subscription", icon: CreditCard }
@@ -408,115 +388,6 @@ export default function SettingsPage() {
                 <div className="mt-6">
                   <ActivityHistory userId={user?.id || ''} />
                 </div>
-              </motion.div>
-            )}
-
-            {/* Notifications Section */}
-            {activeSection === "notifications" && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-6"
-              >
-                <PremiumCard>
-                  <div className="p-6 border-b">
-                    <h2 className="text-xl font-semibold">Notification Preferences</h2>
-                  </div>
-                  <div className="p-6 space-y-6">
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Delivery Methods</h3>
-                      <div className="space-y-3">
-                        <label className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer">
-                          <div className="flex items-center gap-3">
-                            <Mail className="h-5 w-5 text-accent-slate" />
-                            <div>
-                              <p className="font-medium">Email Notifications</p>
-                              <p className="text-sm text-muted-foreground">
-                                Receive alerts via email
-                              </p>
-                            </div>
-                          </div>
-                          <input
-                            type="checkbox"
-                            checked={settings.notifications.email}
-                            onChange={(e) => {
-                              setSettings({
-                                ...settings,
-                                notifications: {
-                                  ...settings.notifications,
-                                  email: e.target.checked
-                                }
-                              })
-                              setUnsavedChanges(true)
-                            }}
-                            className="h-4 w-4"
-                          />
-                        </label>
-
-                        <label className="flex items-center justify-between p-3 rounded-lg bg-muted/50 cursor-pointer">
-                          <div className="flex items-center gap-3">
-                            <Smartphone className="h-5 w-5 text-accent-slate" />
-                            <div>
-                              <p className="font-medium">Push Notifications</p>
-                              <p className="text-sm text-muted-foreground">
-                                Get instant alerts on your device
-                              </p>
-                            </div>
-                          </div>
-                          <input
-                            type="checkbox"
-                            checked={settings.notifications.push}
-                            onChange={(e) => {
-                              setSettings({
-                                ...settings,
-                                notifications: {
-                                  ...settings.notifications,
-                                  push: e.target.checked
-                                }
-                              })
-                              setUnsavedChanges(true)
-                            }}
-                            className="h-4 w-4"
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h3 className="font-medium">Alert Types</h3>
-                      <div className="space-y-3">
-                        {[
-                          { key: "priceAlerts", label: "Price Alerts", desc: "When prices hit your targets" },
-                          { key: "portfolioUpdates", label: "Portfolio Updates", desc: "Daily portfolio summaries" },
-                          { key: "marketNews", label: "Market News", desc: "Important market updates" },
-                          { key: "whaleAlerts", label: "Whale Alerts", desc: "Large transaction notifications" }
-                        ].map((item) => (
-                          <label key={item.key} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 cursor-pointer">
-                            <div>
-                              <p className="font-medium">{item.label}</p>
-                              <p className="text-sm text-muted-foreground">{item.desc}</p>
-                            </div>
-                            <input
-                              type="checkbox"
-                              checked={settings.notifications[item.key as keyof typeof settings.notifications] as boolean}
-                              onChange={(e) => {
-                                setSettings({
-                                  ...settings,
-                                  notifications: {
-                                    ...settings.notifications,
-                                    [item.key]: e.target.checked
-                                  }
-                                })
-                                setUnsavedChanges(true)
-                              }}
-                              className="h-4 w-4"
-                            />
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </PremiumCard>
               </motion.div>
             )}
 

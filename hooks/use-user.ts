@@ -3,20 +3,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/contexts/AuthContext'
 
+interface UserPreferences {
+  theme: 'light' | 'dark' | 'auto'
+  currency: string
+  language: string
+}
+
 interface UserProfile {
   id: string
-  email: string
   username: string
-  role: string
-  subscriptionType: 'free' | 'pro' | 'enterprise'
-  avatar?: string
+  email: string
   bio?: string
-  settings?: {
-    notifications: boolean
-    emailAlerts: boolean
-    theme: 'light' | 'dark'
-    language: string
-  }
+  avatar?: string
+  settings: UserPreferences
   createdAt: string
   updatedAt: string
 }

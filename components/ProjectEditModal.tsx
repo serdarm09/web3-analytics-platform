@@ -90,21 +90,40 @@ export default function ProjectEditModal({ isOpen, onClose, projectId, onProject
   }, [isOpen, projectId])
 
   const fetchProject = async () => {
+    console.log('fetchProject called with projectId:', projectId)
     setIsLoadingProject(true)
     setError(null)
 
     try {
+      console.log('Making fetch request to:', `/api/projects/${projectId}`)
       const response = await fetch(`/api/projects/${projectId}`)
+      console.log('Response status:', response.status)
+      console.log('Response ok:', response.ok)
+      
       if (!response.ok) {
+        const errorText = await response.text()
+        console.log('Error response:', errorText)
         throw new Error('Failed to fetch project')
       }
 
-      const project = await response.json()
-      console.log('Fetched project for editing:', { 
+      const response_data = await response.json()
+      
+      // Extract the actual project data from the nested structure
+      const project = response_data.project || response_data
+      
+      console.log('Fetched project for editing:', project)
+      console.log('Project keys:', Object.keys(project))
+      console.log('Project details:', { 
         id: project._id, 
-        name: project.name, 
+        name: project.name,
+        symbol: project.symbol,
+        description: project.description,
+        category: project.category,
+        website: project.website,
         isPublic: project.isPublic,
-        hasIsPublic: 'isPublic' in project 
+        hasIsPublic: 'isPublic' in project,
+        socialLinks: project.socialLinks,
+        marketData: project.marketData
       })
 
       // Transform the project data to match the form structure
@@ -164,6 +183,8 @@ export default function ProjectEditModal({ isOpen, onClose, projectId, onProject
         tags: project.tags || []
       }
 
+      console.log('Transformed form data:', formData)
+      console.log('Setting initial data...')
       setInitialData(formData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load project')

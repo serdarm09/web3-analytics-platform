@@ -74,7 +74,7 @@ const trendingCoinSchema = new Schema<ITrendingCoin>(
     category: {
       type: String,
       required: true,
-      enum: ['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Other']
+      enum: ['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'Layer1', 'Layer2', 'Meme', 'Metaverse', 'AI', 'Oracle', 'Exchange', 'Other']
     },
     lastUpdated: {
       type: Date,

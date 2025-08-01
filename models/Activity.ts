@@ -3,7 +3,7 @@ import mongoose, { Document, Model, Schema, Types } from 'mongoose'
 export interface IActivity extends Document {
   _id: Types.ObjectId
   userId: Types.ObjectId
-  type: 'login' | 'logout' | 'portfolio_update' | 'project_add' | 'project_remove' | 'watchlist_add' | 'watchlist_remove' | 'transaction' | 'wallet_connect' | 'settings_update' | 'whale_track' | 'alert_create' | 'alert_trigger'
+  type: 'login' | 'logout' | 'portfolio_update' | 'project_add' | 'project_remove' | 'watchlist_add' | 'watchlist_remove' | 'transaction' | 'wallet_connect' | 'settings_update' | 'whale_track'
   description: string
   metadata: {
     ip?: string
@@ -41,7 +41,7 @@ const activitySchema = new Schema<IActivity>(
       enum: {
         values: [
           'login',
-          'logout', 
+          'logout',
           'portfolio_update',
           'project_add',
           'project_remove',
@@ -50,9 +50,7 @@ const activitySchema = new Schema<IActivity>(
           'transaction',
           'wallet_connect',
           'settings_update',
-          'whale_track',
-          'alert_create',
-          'alert_trigger'
+          'whale_track'
         ],
         message: 'Invalid activity type'
       },

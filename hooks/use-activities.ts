@@ -176,9 +176,7 @@ export function formatActivityType(type: string): string {
     'transaction': 'Transaction',
     'wallet_connect': 'Wallet Connected',
     'settings_update': 'Settings Updated',
-    'whale_track': 'Whale Tracked',
-    'alert_create': 'Alert Created',
-    'alert_trigger': 'Alert Triggered'
+    'whale_track': 'Whale Tracked'
   }
 
   return typeMap[type] || type
@@ -197,9 +195,7 @@ export function getActivityIcon(type: string): string {
     'transaction': '💰',
     'wallet_connect': '👛',
     'settings_update': '⚙️',
-    'whale_track': '🐋',
-    'alert_create': '🔔',
-    'alert_trigger': '📢'
+    'whale_track': '🐋'
   }
 
   return iconMap[type] || '📝'
@@ -218,9 +214,7 @@ export function getActivityColor(type: string): string {
     'transaction': 'text-purple-400',
     'wallet_connect': 'text-indigo-400',
     'settings_update': 'text-gray-400',
-    'whale_track': 'text-cyan-400',
-    'alert_create': 'text-amber-400',
-    'alert_trigger': 'text-pink-400'
+    'whale_track': 'text-cyan-400'
   }
 
   return colorMap[type] || 'text-gray-400'
