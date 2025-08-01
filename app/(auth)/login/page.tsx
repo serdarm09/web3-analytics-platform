@@ -379,13 +379,22 @@ export default function LoginPage() {
               transition={{ delay: 0.8 }}
               className="text-center mt-8 pt-6 border-t border-gray-800"
             >
-              <p className="text-gray-400">
+              <p className="text-gray-400 mb-3">
                 Don't have an account?{' '}
                 <Link
                   href="/register"
                   className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
                 >
                   Sign up for free
+                </Link>
+              </p>
+              <p className="text-gray-400">
+                Have an invite code?{' '}
+                <Link
+                  href="/code-register"
+                  className="text-accent-slate hover:text-accent-teal transition-colors font-medium"
+                >
+                  Join with invite code
                 </Link>
               </p>
             </motion.div>

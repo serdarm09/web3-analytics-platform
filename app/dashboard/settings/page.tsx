@@ -45,11 +45,6 @@ interface UserSettings {
     twoFactor: boolean
     apiKeys: { name: string; created: Date; lastUsed: Date }[]
   }
-  subscription: {
-    plan: "free" | "pro" | "enterprise"
-    billingCycle: "monthly" | "yearly"
-    nextBilling: Date
-  }
 }
 
 const mockSettings: UserSettings = {
@@ -70,11 +65,6 @@ const mockSettings: UserSettings = {
   security: {
     twoFactor: false,
     apiKeys: []
-  },
-  subscription: {
-    plan: "free",
-    billingCycle: "monthly",
-    nextBilling: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
   }
 }
 
@@ -97,10 +87,6 @@ export default function SettingsPage() {
           walletAddress: user.walletAddress || '',
           bio: prev.profile.bio
         },
-        subscription: {
-          ...prev.subscription,
-          plan: user.subscription || 'free'
-        },
         security: {
           ...prev.security,
           twoFactor: user.twoFactorEnabled || false
@@ -112,8 +98,7 @@ export default function SettingsPage() {
   const sections = [
     { id: "profile", label: "Profile", icon: User },
     { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "security", label: "Security", icon: Shield },
-    { id: "subscription", label: "Subscription", icon: CreditCard }
+    { id: "security", label: "Security", icon: Shield }
   ]
 
   const handleSave = async () => {
@@ -530,58 +515,6 @@ export default function SettingsPage() {
                                 Created {key.created.toLocaleDateString()} • Last used {key.lastUsed.toLocaleDateString()}
                               </p>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </PremiumCard>
-              </motion.div>
-            )}
-
-            {/* Subscription Section */}
-            {activeSection === "subscription" && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-6"
-              >
-                <PremiumCard>
-                  <div className="p-6 border-b">
-                    <h2 className="text-xl font-semibold">Subscription & Billing</h2>
-                  </div>
-                  <div className="p-6 space-y-6">
-                    <div className="p-4 rounded-lg bg-gradient-to-r from-accent-slate/20 to-accent-teal/20">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold">Current Plan</h3>
-                        <PremiumBadge>{(user?.subscription || 'free').toUpperCase()}</PremiumBadge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Unlimited portfolio tracking, advanced analytics, and priority support
-                      </p>
-                      <div className="flex justify-between text-sm">
-                        <span>Next billing date:</span>
-                        <span className="font-medium">{settings.subscription.nextBilling.toLocaleDateString()}</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                    </div>
-
-                    <div className="pt-4 border-t">
-                      <h3 className="font-medium mb-3">Plan Features</h3>
-                      <div className="space-y-2">
-                        {[
-                          "Unlimited portfolio tracking",
-                          "Real-time market data",
-                          "Advanced analytics & charts",
-                          "Whale tracking & alerts",
-                          "Priority customer support",
-                          "API access"
-                        ].map((feature) => (
-                          <div key={feature} className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-green-500" />
-                            <span className="text-sm">{feature}</span>
                           </div>
                         ))}
                       </div>

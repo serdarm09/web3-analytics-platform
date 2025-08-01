@@ -16,54 +16,12 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  User
+  User,
+  Shield
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/contexts/AuthContext'
-
-const sidebarItems = [
-  {
-    title: 'Dashboard',
-    icon: LayoutDashboard,
-    href: '/dashboard',
-  },
-  {
-    title: 'Portfolio',
-    icon: Wallet,
-    href: '/dashboard/portfolio',
-  },
-  {
-    title: 'Projects',
-    icon: FolderOpen,
-    href: '/dashboard/projects',
-  },
-  {
-    title: 'Trending',
-    icon: TrendingUp,
-    href: '/dashboard/trending',
-  },
-  {
-    title: 'Watch Projects',
-    icon: Eye,
-    href: '/dashboard/watchlist',
-  },
-  {
-    title: 'Wallet Tracker',
-    icon: Activity,
-    href: '/dashboard/wallet-tracker',
-  },
-  {
-    title: 'Analytics',
-    icon: BarChart3,
-    href: '/dashboard/analytics',
-  },
-  {
-    title: 'Profile',
-    icon: User,
-    href: '/dashboard/profile',
-  },
-]
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -73,9 +31,66 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarProps) {
   const pathname = usePathname()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+
+  // Dynamic sidebar items based on user role
+  const getSidebarItems = () => {
+    const baseItems = [
+      {
+        title: 'Dashboard',
+        icon: LayoutDashboard,
+        href: '/dashboard',
+      },
+      {
+        title: 'Portfolio',
+        icon: Wallet,
+        href: '/dashboard/portfolio',
+      },
+      {
+        title: 'Projects',
+        icon: FolderOpen,
+        href: '/dashboard/projects',
+      },
+      {
+        title: 'Trending',
+        icon: TrendingUp,
+        href: '/dashboard/trending',
+      },
+      {
+        title: 'Watch Projects',
+        icon: Eye,
+        href: '/dashboard/watchlist',
+      },
+      {
+        title: 'Whale Tracker',
+        icon: Activity,
+        href: '/dashboard/whale-tracker',
+      },
+      {
+        title: 'Analytics',
+        icon: BarChart3,
+        href: '/dashboard/analytics',
+      },
+      {
+        title: 'Profile',
+        icon: User,
+        href: '/dashboard/profile',
+      },
+    ]
+
+    // Add admin link if user is admin
+    if (user?.role === 'admin') {
+      baseItems.push({
+        title: 'Admin Panel',
+        icon: Shield,
+        href: '/dashboard/admin',
+      })
+    }
+
+    return baseItems
+  }
 
   useEffect(() => {
     const checkMobile = () => {
@@ -134,7 +149,7 @@ export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarPr
 
       {/* Navigation */}
       <nav className="p-4 space-y-1">
-        {sidebarItems.map((item) => {
+        {getSidebarItems().map((item) => {
           const isActive = pathname === item.href
           return (
             <Link

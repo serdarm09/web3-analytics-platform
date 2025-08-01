@@ -7,7 +7,6 @@ import {
   ArrowUpRight, 
   ArrowDownLeft, 
   Eye, 
-  AlertCircle, 
   TrendingUp,
   Fish,
   Activity,
