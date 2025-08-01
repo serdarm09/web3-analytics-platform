@@ -39,8 +39,8 @@ const SYMBOL_TO_ID_MAP: Record<string, string> = {
   'ldo': 'lido-dao'
 }
 
-// Rate limiting
-const RATE_LIMIT_DELAY = 1200
+// Rate limiting - increased to prevent 429 errors
+const RATE_LIMIT_DELAY = 2000 // Increased to 2 seconds
 let lastCallTime = 0
 
 const rateLimit = () => {

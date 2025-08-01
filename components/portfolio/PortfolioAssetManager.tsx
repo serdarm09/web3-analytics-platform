@@ -125,19 +125,24 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
         });
         setPrices(priceMap);
         setLastUpdate(new Date());
+        console.log(`🟢 Portfolio prices updated successfully for ${assetSymbols.join(', ')}`);
+      } else {
+        console.log(`🟡 API returned success=false: ${data.error || 'Unknown error'}`);
+        // Don't throw error, just log it
       }
     } catch (error) {
-      console.error('Error fetching prices:', error);
+      console.error('🔴 Error fetching prices:', error);
+      // Don't throw error to prevent UI breaks, just log
     } finally {
       setPricesLoading(false);
     }
   }, [assetSymbols]);
 
-  // Auto-refresh prices - reduced frequency to prevent excessive API calls
+  // Auto-refresh prices - increased frequency to reduce API calls and prevent rate limiting
   useEffect(() => {
     if (assetSymbols.length > 0) {
       refreshPrices();
-      const interval = setInterval(refreshPrices, 300000); // Refresh every 5 minutes to reduce API load
+      const interval = setInterval(refreshPrices, 600000); // Refresh every 10 minutes to reduce API load
       return () => clearInterval(interval);
     }
   }, [assetSymbols]); // Depend on memoized assetSymbols
@@ -149,7 +154,15 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
     assets.forEach(asset => {
       const realTimePrice = prices[asset.symbol.toUpperCase()]
-      const currentPrice = realTimePrice?.price || asset.currentPrice || asset.purchasePrice
+      
+      // Use better price logic: real-time > stored current price > purchase price
+      let currentPrice = asset.purchasePrice; // Default fallback
+      if (realTimePrice?.price && realTimePrice.price > 0) {
+        currentPrice = realTimePrice.price;
+      } else if (asset.currentPrice && asset.currentPrice > 0) {
+        currentPrice = asset.currentPrice;
+      }
+      
       const currentValue = asset.amount * currentPrice
       const purchaseValue = asset.amount * asset.purchasePrice
 
@@ -490,14 +503,28 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${pricesLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
                 <p className="text-xs text-gray-500">
-                  Last update: {lastUpdate.toLocaleTimeString()}
+                  Son güncelleme: {lastUpdate.toLocaleTimeString('tr-TR')}
                 </p>
                 <button
                   onClick={refreshPrices}
                   className="text-xs text-blue-400 hover:text-blue-300 underline"
                   disabled={pricesLoading}
                 >
-                  Refresh
+                  {pricesLoading ? 'Güncelleniyor...' : 'Yenile'}
+                </button>
+              </div>
+            )}
+            {!lastUpdate && !pricesLoading && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                <p className="text-xs text-gray-500">
+                  Fiyatlar henüz yüklenmedi
+                </p>
+                <button
+                  onClick={refreshPrices}
+                  className="text-xs text-blue-400 hover:text-blue-300 underline"
+                >
+                  Fiyatları Yükle
                 </button>
               </div>
             )}
@@ -741,7 +768,8 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Alış Fiyatı ($)
+                      Alış Fiyatı ($) 
+                      <span className="text-blue-400 text-xs ml-1">- Düzenlenebilir</span>
                     </label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -752,12 +780,19 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                         value={formData.purchasePrice}
                         onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
                         required
-                        className="pl-10"
+                        className="pl-10 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
                     {selectedCoin && !editingAsset && selectedCoin.price > 0 && (
                       <p className="text-xs text-gray-400 mt-1">
                         Güncel fiyat: ${selectedCoin.price.toFixed(selectedCoin.price < 1 ? 6 : 2)}
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, purchasePrice: selectedCoin.price!.toFixed(selectedCoin.price! < 1 ? 6 : 2) })}
+                          className="ml-2 text-blue-400 hover:text-blue-300 underline text-xs"
+                        >
+                          Güncel fiyatı kullan
+                        </button>
                       </p>
                     )}
                   </div>
@@ -844,7 +879,19 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
           assets.map((asset, index) => {
             // Get real-time price data for this asset
             const realTimePrice = prices[asset.symbol.toUpperCase()]
-            const currentPrice = realTimePrice?.price || asset.currentPrice || asset.purchasePrice
+            
+            // Improved price fallback logic
+            let currentPrice = asset.purchasePrice; // Start with purchase price as baseline
+            let isPriceReal = false;
+            
+            if (realTimePrice?.price && realTimePrice.price > 0) {
+              currentPrice = realTimePrice.price;
+              isPriceReal = true;
+            } else if (asset.currentPrice && asset.currentPrice > 0) {
+              currentPrice = asset.currentPrice;
+              isPriceReal = true;
+            }
+            
             const currentValue = asset.amount * currentPrice
             const profitLoss = currentValue - (asset.amount * asset.purchasePrice)
             const profitLossPercentage = asset.purchasePrice > 0 ? (profitLoss / (asset.amount * asset.purchasePrice)) * 100 : 0
@@ -882,8 +929,11 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                         </p>
                         <p className="text-gray-400 text-sm">
                           Current Value
-                          {realTimePrice && (
-                            <span className="ml-1 text-green-400 text-xs">●</span>
+                          {isPriceReal && realTimePrice && (
+                            <span className="ml-1 text-green-400 text-xs">● Live</span>
+                          )}
+                          {!isPriceReal && (
+                            <span className="ml-1 text-yellow-400 text-xs">⚠ Estimated</span>
                           )}
                         </p>
                       </div>
@@ -945,17 +995,25 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                       <div>
                         <p className="text-gray-400">
                           Current Price
-                          {realTimePrice && (
-                            <span className="ml-1 text-green-400 text-xs">●</span>
+                          {isPriceReal && realTimePrice && (
+                            <span className="ml-1 text-green-400 text-xs">● Real-time</span>
+                          )}
+                          {!isPriceReal && (
+                            <span className="ml-1 text-yellow-400 text-xs">⚠ Using purchase price</span>
                           )}
                         </p>
                         <div className="flex items-center gap-2">
                           <p className="text-white font-medium">
                             {formatCurrency(currentPrice)}
                           </p>
-                          {realTimePrice && realTimePrice.change24h !== 0 && (
+                          {isPriceReal && realTimePrice && realTimePrice.change24h !== 0 && (
                             <span className={`text-xs ${realTimePrice.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                               ({realTimePrice.change24h >= 0 ? '+' : ''}{realTimePrice.change24h.toFixed(2)}%)
+                            </span>
+                          )}
+                          {!isPriceReal && (
+                            <span className="text-xs text-yellow-400">
+                              (Rate limited)
                             </span>
                           )}
                         </div>

@@ -57,22 +57,16 @@ export default function DashboardPage() {
     totalValue: 0,
     change24h: 0,
     totalProjects: 0,
-    activeAlerts: 0,
+    trendingProjects: 0,
+    marketChange: 0,
     totalPnL: 0,
     bestPerforming: null,
     worstPerforming: null,
     totalAssets: 0
   })
   const [recentActivities, setRecentActivities] = useState<any[]>([])
-  const [alerts, setAlerts] = useState<any[]>([])
-  const [whaleActivities, setWhaleActivities] = useState<any[]>([])
-
-  useEffect(() => {
-    setPortfolioData(prev => ({
-      ...prev,
-      activeAlerts: 0
-    }))
-  }, [])
+  const [trendingProjects, setTrendingProjects] = useState<any[]>([])
+  const [globalMarketChange, setGlobalMarketChange] = useState(0)
 
   useEffect(() => {
     if (authUser) {
@@ -81,8 +75,26 @@ export default function DashboardPage() {
     fetchMarketData()
     fetchPortfolioData()
     fetchUserProjects()
+    fetchTrendingProjects()
     fetchRecentActivities()
   }, [authUser])
+
+  const fetchTrendingProjects = async () => {
+    try {
+      const response = await fetch('/api/projects/trending?period=7d')
+      if (response.ok) {
+        const data = await response.json()
+        setTrendingProjects(data.projects || [])
+        setPortfolioData(prev => ({
+          ...prev,
+          trendingProjects: data.projects?.length || 0
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching trending projects:', error)
+      setTrendingProjects([])
+    }
+  }
 
   const fetchRecentActivities = async () => {
     try {
@@ -108,6 +120,16 @@ export default function DashboardPage() {
       if (cryptos.length > 0) {
         const sorted = [...cryptos].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
         
+        // Calculate global market change average
+        const avgMarketChange = cryptos.reduce((sum, coin) => 
+          sum + coin.price_change_percentage_24h, 0) / cryptos.length
+        
+        setGlobalMarketChange(avgMarketChange)
+        setPortfolioData(prev => ({
+          ...prev,
+          marketChange: avgMarketChange
+        }))
+        
         setMarketData({
           topGainers: sorted.slice(0, 5).map(coin => ({
             symbol: coin.symbol.toUpperCase(),
@@ -132,6 +154,13 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error fetching market data:', error)
+      // Set fallback market change
+      setGlobalMarketChange(2.1)
+      setPortfolioData(prev => ({
+        ...prev,
+        marketChange: 2.1
+      }))
+      
       setMarketData({
         topGainers: [
           { symbol: 'BTC', name: 'Bitcoin', price: 45000, change: 2.5 },
@@ -212,11 +241,12 @@ export default function DashboardPage() {
         fetchMarketData(),
         fetchPortfolioData(),
         fetchUserProjects(),
+        fetchTrendingProjects(),
         fetchRecentActivities()
       ]), 
       {
-        loading: 'Refreshing market data...',
-        success: 'Market data updated!',
+        loading: 'Refreshing data...',
+        success: 'Data updated successfully!',
         error: 'Using cached data'
       }
     )
@@ -271,16 +301,16 @@ export default function DashboardPage() {
           />
         )}
         <StatsCard
-          title="Active Alerts"
-          value={portfolioData.activeAlerts.toString()}
-          change={-2.1}
-          icon={<Bell className="w-6 h-6 text-accent-orange" />}
+          title="Trending Projects"
+          value={portfolioData.trendingProjects.toString()}
+          change={trendingProjects.length > 0 ? 12.5 : 0}
+          icon={<TrendingUp className="w-6 h-6 text-accent-green" />}
         />
         <StatsCard
-          title="Whale Activities"
-          value="24"
-          change={15.3}
-          icon={<Activity className="w-6 h-6 text-accent-red" />}
+          title="Market Sentiment"
+          value={globalMarketChange >= 0 ? "Bullish" : "Bearish"}
+          change={portfolioData.marketChange}
+          icon={<Activity className="w-6 h-6 text-accent-purple" />}
         />
       </motion.div>
 
@@ -443,6 +473,147 @@ export default function DashboardPage() {
           </PremiumCard>
         </motion.div>
       </div>
+
+      {/* Trending Projects Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+      >
+        {/* Trending Projects */}
+        <PremiumCard>
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">Trending Projects</h2>
+                <p className="text-gray-400 text-sm">Most popular projects this week</p>
+              </div>
+              <PremiumBadge variant="gradient" className="text-xs">
+                {trendingProjects.length} Active
+              </PremiumBadge>
+            </div>
+            
+            <div className="space-y-3">
+              {trendingProjects.length > 0 ? (
+                trendingProjects.slice(0, 5).map((project, index) => (
+                  <motion.div
+                    key={project._id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    className="flex items-center justify-between p-3 bg-gray-secondary rounded-lg hover:bg-gray-secondary/80 transition-colors cursor-pointer"
+                    onClick={() => window.location.href = `/dashboard/trending`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <span className="text-xs font-bold text-white">#{index + 1}</span>
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{project.name}</p>
+                        <p className="text-gray-400 text-xs">{project.symbol}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white font-medium">{project.stats?.views || 0} views</p>
+                      <p className="text-green-400 text-sm flex items-center justify-end">
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                        Score: {project.trendingScore || 0}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                  <p className="text-gray-400">No trending projects yet</p>
+                  <p className="text-gray-500 text-sm">Projects will appear here as they gain popularity</p>
+                </div>
+              )}
+            </div>
+            
+            {trendingProjects.length > 5 && (
+              <div className="mt-4 pt-4 border-t border-gray-800">
+                <PremiumButton
+                  onClick={() => window.location.href = '/dashboard/trending'}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  View All Trending Projects
+                </PremiumButton>
+              </div>
+            )}
+          </div>
+        </PremiumCard>
+
+        {/* Market Sentiment */}
+        <PremiumCard>
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">Market Sentiment</h2>
+                <p className="text-gray-400 text-sm">Overall market performance</p>
+              </div>
+              <PremiumBadge 
+                variant={globalMarketChange >= 0 ? "success" : "error"}
+                className="text-xs"
+              >
+                {globalMarketChange >= 0 ? "Bullish" : "Bearish"}
+              </PremiumBadge>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Market Change Indicator */}
+              <div className="text-center p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-lg">
+                <div className={`text-3xl font-bold ${globalMarketChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {globalMarketChange >= 0 ? '+' : ''}{globalMarketChange.toFixed(2)}%
+                </div>
+                <p className="text-gray-400 text-sm mt-1">24h Average Change</p>
+                <div className="flex items-center justify-center mt-2">
+                  {globalMarketChange >= 0 ? (
+                    <TrendingUp className="w-5 h-5 text-green-400 mr-2" />
+                  ) : (
+                    <TrendingDown className="w-5 h-5 text-red-400 mr-2" />
+                  )}
+                  <span className="text-gray-300 text-sm">
+                    Market is {globalMarketChange >= 0 ? 'rising' : 'declining'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-gray-secondary rounded-lg">
+                  <div className="text-lg font-bold text-green-400">
+                    {marketData.topGainers.length}
+                  </div>
+                  <div className="text-xs text-gray-400">Top Gainers</div>
+                </div>
+                <div className="text-center p-3 bg-gray-secondary rounded-lg">
+                  <div className="text-lg font-bold text-red-400">
+                    {marketData.topLosers.length}
+                  </div>
+                  <div className="text-xs text-gray-400">Top Losers</div>
+                </div>
+              </div>
+              
+              {/* Call to Action */}
+              <div className="pt-4">
+                <PremiumButton
+                  onClick={() => window.location.href = '/dashboard/analytics'}
+                  variant="gradient"
+                  size="sm"
+                  className="w-full"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  View Market Analytics
+                </PremiumButton>
+              </div>
+            </div>
+          </div>
+        </PremiumCard>
+      </motion.div>
     </div>
   )
 }

@@ -61,7 +61,7 @@ export default function PortfolioPage() {
   const [showTotalValue, setShowTotalValue] = useState(true)
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
 
-  // Auto-refresh prices every 30 seconds
+  // Auto-refresh prices every 60 seconds (reduced frequency to prevent rate limiting)
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -69,8 +69,9 @@ export default function PortfolioPage() {
         setLastRefresh(new Date())
       } catch (error) {
         console.error('Auto-refresh failed:', error)
+        // Don't show toast for auto-refresh failures to avoid spam
       }
-    }, 30000) // 30 seconds
+    }, 60000) // 1 minute intervals to reduce API calls
 
     return () => clearInterval(interval)
   }, [refreshPrices])
