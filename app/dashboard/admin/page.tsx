@@ -240,13 +240,28 @@ export default function AdminPage() {
     toast.success('Code copied to clipboard!')
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-16 w-16 text-gray-400 mx-auto mb-4 animate-spin" />
+          <h1 className="text-2xl font-bold text-white mb-2">Loading...</h1>
+          <p className="text-gray-400">Checking your permissions...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (user.role !== 'admin') {
+    console.log('🚫 Access denied - User role:', user.role, 'User:', user)
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
         <div className="text-center">
           <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
           <p className="text-gray-400">You don't have permission to access this page.</p>
+          <p className="text-sm text-gray-500 mt-2">Current role: {user.role}</p>
+          <p className="text-sm text-gray-500">User ID: {user._id}</p>
         </div>
       </div>
     )

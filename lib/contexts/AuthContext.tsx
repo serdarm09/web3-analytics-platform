@@ -157,40 +157,66 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     console.log('🚪 Logout function called')
     
-    try {
-      // First call logout API to clear server-side cookies
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      
-      if (response.ok) {
-        console.log('✅ Server-side logout successful')
-      } else {
-        console.warn('⚠️ Server-side logout failed, but proceeding with client-side cleanup')
-      }
-    } catch (error) {
-      console.error('❌ Logout API error:', error)
-      console.log('🔄 Proceeding with client-side cleanup anyway')
-    }
-    
-    // Clear all client-side storage using token manager
-    TokenManager.clearToken()
-    
-    // Update auth state
+    // Clear client-side state immediately to update UI
     setAuthState({
       isAuthenticated: false,
       user: null,
       isLoading: false,
       token: null
     })
-
-    console.log('✅ Logout completed, all storage cleared')
     
-    // Force redirect to login
-    window.location.href = '/login'
+    // Clear all client-side storage first
+    TokenManager.clearToken()
+    
+    // Aggressively clear cookies on client-side first
+    try {
+      // Clear with multiple variations to ensure compatibility
+      const cookieVariations = [
+        'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT',
+        'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict',
+        'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict; Secure',
+        'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT',
+        'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict',
+        'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict; Secure'
+      ]
+      
+      cookieVariations.forEach(cookieStr => {
+        try {
+          document.cookie = cookieStr
+        } catch (e) {
+          // Ignore individual failures
+        }
+      })
+      
+      console.log('🍪 Aggressively cleared cookies on client-side')
+    } catch (error) {
+      console.log('⚠️ Client-side cookie clearing failed:', error)  
+    }
+    
+    try {
+      // Call logout API to clear server-side cookies
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        console.log('✅ Server-side logout successful')
+      } else {
+        console.warn('⚠️ Server-side logout failed, but proceeding with redirect')
+      }
+    } catch (error) {
+      console.error('❌ Logout API error:', error)
+      console.log('🔄 Proceeding with redirect anyway')
+    }
+
+    console.log('✅ Logout completed, forcing redirect')
+    
+    // Force a hard redirect that bypasses middleware caching
+    window.location.href = '/login?_t=' + Date.now()
   }
 
   const register = (token: string, user: any, rememberMe: boolean = true) => {

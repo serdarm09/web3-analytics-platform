@@ -40,16 +40,17 @@ async function handler(request: NextRequest): Promise<NextResponse> {
     }
 
     const userResponse = {
+      _id: (user._id as any).toString(),
       id: (user._id as any).toString(),
       email: user.email,
       username: user.username,
       name: user.name,
       walletAddress: user.walletAddress,
       registrationMethod: user.registrationMethod,
-      subscription: user.subscription,
       isVerified: user.isVerified,
       avatar: user.avatar,
       twoFactorEnabled: user.twoFactorEnabled,
+      role: user.role || 'user', // Added role field!
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     }

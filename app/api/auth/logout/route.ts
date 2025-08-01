@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🚪 Logout API called')
+    
     // Create response
     const response = NextResponse.json(
       { 
@@ -11,23 +13,42 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
 
-    // Clear the httpOnly cookie
+    // Try multiple approaches to clear the httpOnly token cookie
+    response.cookies.delete('token')
     response.cookies.set('token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 0, // Expire immediately
-      path: '/'
+      maxAge: 0,
+      path: '/',
+      expires: new Date(0)
     })
 
-    // Also clear any other auth-related cookies
+    // Try multiple approaches to clear the client-side auth_token cookie  
+    response.cookies.delete('auth_token')
     response.cookies.set('auth_token', '', {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 0,
-      path: '/'
+      path: '/',
+      expires: new Date(0)
     })
+
+    // Additional cookie clearing with different configurations for compatibility
+    response.cookies.set('token', '', {
+      maxAge: 0,
+      path: '/',
+      expires: new Date(0)
+    })
+
+    response.cookies.set('auth_token', '', {
+      maxAge: 0,
+      path: '/',
+      expires: new Date(0)
+    })
+
+    console.log('🍪 Logout: Applied multiple cookie clearing strategies')
 
     return response
   } catch (error) {

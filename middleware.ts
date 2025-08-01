@@ -2,16 +2,26 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')?.value || request.cookies.get('auth_token')?.value
+  const tokenCookie = request.cookies.get('token')?.value
+  const authTokenCookie = request.cookies.get('auth_token')?.value
+  const token = tokenCookie || authTokenCookie
   const pathname = request.nextUrl.pathname
+  
+  // Check for logout indicator
+  const isLogoutRequest = request.nextUrl.searchParams.has('_t')
 
   console.log('🔧 Middleware:', { 
     pathname, 
     hasToken: !!token, 
     tokenLength: token?.length || 0,
+    isLogoutRequest,
     cookies: {
-      token: !!request.cookies.get('token')?.value,
-      auth_token: !!request.cookies.get('auth_token')?.value
+      token: !!tokenCookie,
+      auth_token: !!authTokenCookie
+    },
+    cookieDetails: {
+      tokenValue: tokenCookie ? `${tokenCookie.substring(0, 10)}...` : null,
+      authTokenValue: authTokenCookie ? `${authTokenCookie.substring(0, 10)}...` : null
     }
   })
 
@@ -37,9 +47,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
+  // If this is a logout request (has _t parameter), allow access to login even with token
+  if (isAuthRoute && isLogoutRequest) {
+    console.log('🔓 Allowing login access due to logout request')
+    return NextResponse.next()
+  }
+
   // If user has token and trying to access auth pages or home, redirect to dashboard
   if ((isAuthRoute || pathname === '/') && token) {
-    console.log('🔄 Redirecting to dashboard: has token')
+    console.log('🔄 Redirecting to dashboard: has token', {
+      tokenSource: tokenCookie ? 'httpOnly-token' : 'client-auth_token',
+      tokenPreview: token.substring(0, 10) + '...'
+    })
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
   

@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 
 // Helper function to verify admin token
 async function verifyAdmin(request: NextRequest) {
-  const token = request.cookies.get('auth-token')?.value
+  const token = request.cookies.get('token')?.value || request.cookies.get('auth_token')?.value
 
   if (!token) {
     throw new Error('No authentication token')
@@ -13,7 +13,7 @@ async function verifyAdmin(request: NextRequest) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-    const user = await User.findById(decoded.id)
+    const user = await User.findById(decoded.userId || decoded.id)
     
     if (!user || user.role !== 'admin') {
       throw new Error('Admin access required')
@@ -21,6 +21,7 @@ async function verifyAdmin(request: NextRequest) {
 
     return user
   } catch (error) {
+    console.error('Admin verification error:', error)
     throw new Error('Invalid token or insufficient permissions')
   }
 }
