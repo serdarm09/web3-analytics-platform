@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { 
   TrendingUp, 
   TrendingDown,
@@ -15,7 +15,10 @@ import {
   Plus,
   Activity,
   User,
-  Heart
+  Heart,
+  X,
+  Calendar,
+  Globe
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumBadge } from "@/components/ui/premium-badge"
@@ -34,6 +37,8 @@ export default function UserBasedTrendingPage() {
   const [addingProjects, setAddingProjects] = useState<Set<string>>(new Set())
   const [likingProjects, setLikingProjects] = useState<Set<string>>(new Set())
   const [projectLikes, setProjectLikes] = useState<Record<string, { likeCount: number; isLiked: boolean }>>({})
+  const [selectedProject, setSelectedProject] = useState<any>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -48,11 +53,17 @@ export default function UserBasedTrendingPage() {
   }
 
   const handleProjectClick = async (project: any) => {
-    // Track view
+    // Track view first
     await trackProjectView(project._id)
     
-    // Navigate to project details
-    router.push(`/dashboard/projects/${project._id}`)
+    // Open modal instead of navigating
+    setSelectedProject(project)
+    setIsDetailModalOpen(true)
+  }
+
+  const closeDetailModal = () => {
+    setIsDetailModalOpen(false)
+    setSelectedProject(null)
   }
 
   const handleAddToMyProjects = async (e: React.MouseEvent, projectId: string) => {
@@ -452,6 +463,207 @@ export default function UserBasedTrendingPage() {
           </p>
         </PremiumCard>
       )}
+
+      {/* Project Detail Modal */}
+      <AnimatePresence>
+        {isDetailModalOpen && selectedProject && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={closeDetailModal}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-gray-900/90 backdrop-blur-xl border-b border-gray-700/30 p-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Project Details
+                </h2>
+                <button
+                  onClick={closeDetailModal}
+                  className="p-2 rounded-lg bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 space-y-6">
+                {/* Project Header */}
+                <div className="flex items-start space-x-4">
+                  {selectedProject.logo ? (
+                    <img 
+                      src={selectedProject.logo} 
+                      alt={selectedProject.name}
+                      className="w-20 h-20 rounded-xl object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${selectedProject.name}&background=6366f1&color=fff&size=80`
+                      }}
+                    />
+                  ) : (
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                      <span className="text-white font-bold text-2xl">
+                        {selectedProject.symbol?.charAt(0) || selectedProject.name?.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-white mb-2">
+                      {selectedProject.name}
+                    </h3>
+                    <p className="text-lg text-gray-300 mb-2">
+                      ${selectedProject.symbol}
+                    </p>
+                    <div className="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-lg text-sm font-medium inline-block">
+                      {selectedProject.category}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trending Badge */}
+                <div className="flex items-center space-x-2">
+                  <TrendingUp className="w-5 h-5 text-green-400" />
+                  <span className="text-green-400 font-medium">Trending #{projects.findIndex(p => p._id === selectedProject._id) + 1}</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-gray-400">Score: {selectedProject.trendingScore || 0}</span>
+                </div>
+
+                {/* Publisher Information */}
+                {selectedProject.addedBy && (
+                  <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-4">
+                    <h4 className="text-lg font-semibold text-white mb-3 flex items-center">
+                      <User className="w-5 h-5 text-purple-400 mr-2" />
+                      Added By
+                    </h4>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-medium text-lg">
+                          {selectedProject.addedBy.name || selectedProject.addedBy.username || 'Anonymous User'}
+                        </p>
+                        {selectedProject.addedBy.username && selectedProject.addedBy.name && (
+                          <p className="text-gray-400 text-sm">
+                            @{selectedProject.addedBy.username}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center text-gray-400">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        <span className="text-sm">
+                          {new Date(selectedProject.createdAt || selectedProject.addedAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Project Description */}
+                {selectedProject.description && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-3">Description</h4>
+                    <p className="text-gray-300 leading-relaxed">
+                      {selectedProject.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Project Website */}
+                {selectedProject.website && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-white mb-3">Website</h4>
+                    <a
+                      href={selectedProject.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center space-x-2 text-purple-400 hover:text-purple-300 transition-colors"
+                    >
+                      <Globe className="w-4 h-4" />
+                      <span>{selectedProject.website}</span>
+                      <ExternalLink className="w-4 w-4" />
+                    </a>
+                  </div>
+                )}
+
+                {/* Project Stats */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-gray-800/30 rounded-lg p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <Heart className="w-5 h-5 text-red-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-white">{projectLikes[selectedProject._id]?.likeCount || selectedProject.likeCount || 0}</p>
+                    <p className="text-gray-400 text-sm">Likes</p>
+                  </div>
+                  <div className="bg-gray-800/30 rounded-lg p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <Eye className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-white">{selectedProject.totalViews || selectedProject.viewCount || selectedProject.views || 0}</p>
+                    <p className="text-gray-400 text-sm">Views</p>
+                  </div>
+                  <div className="bg-gray-800/30 rounded-lg p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <Plus className="w-5 h-5 text-green-400" />
+                    </div>
+                    <p className="text-2xl font-bold text-white">{selectedProject.totalAdds || selectedProject.addCount || selectedProject.watchlistCount || 0}</p>
+                    <p className="text-gray-400 text-sm">Adds</p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex space-x-3 pt-4">
+                  <PremiumButton
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleLikeProject(e, selectedProject._id)
+                    }}
+                    className={`flex-1 flex items-center justify-center space-x-2 ${
+                      projectLikes[selectedProject._id]?.isLiked
+                        ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                        : ''
+                    }`}
+                    variant={projectLikes[selectedProject._id]?.isLiked ? "outline" : "gradient"}
+                    disabled={likingProjects.has(selectedProject._id)}
+                  >
+                    {likingProjects.has(selectedProject._id) ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Heart className={`h-4 w-4 ${projectLikes[selectedProject._id]?.isLiked ? 'fill-current' : ''}`} />
+                    )}
+                    <span>{projectLikes[selectedProject._id]?.isLiked ? 'Liked' : 'Like'}</span>
+                  </PremiumButton>
+                  
+                  <PremiumButton
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleAddToMyProjects(e, selectedProject._id)
+                    }}
+                    variant="outline"
+                    className="flex-1 flex items-center justify-center space-x-2"
+                    disabled={addingProjects.has(selectedProject._id)}
+                  >
+                    {addingProjects.has(selectedProject._id) ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    )}
+                    <span>Add to My Projects</span>
+                  </PremiumButton>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -22,6 +22,8 @@ interface Project {
   createdAt: string
   likes: number
   views: number
+  likeCount?: number  // New field from database
+  viewCount?: number  // New field from database
 }
 
 export default function WatchlistPage() {
@@ -48,6 +50,8 @@ export default function WatchlistPage() {
       
       if (response.ok && data.projects) {
         setProjects(data.projects)
+        // Fetch user's liked projects
+        await fetchUserLikedProjects(data.projects)
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
@@ -56,26 +60,84 @@ export default function WatchlistPage() {
     }
   }
 
+  const fetchUserLikedProjects = async (projects: Project[]) => {
+    try {
+      const likedProjectIds = new Set<string>()
+      
+      // Check each project's like status
+      const likePromises = projects.map(async (project) => {
+        try {
+          const response = await fetch(`/api/projects/${project._id}/like`, {
+            method: 'GET',
+          })
+          if (response.ok) {
+            const data = await response.json()
+            if (data.isLiked) {
+              likedProjectIds.add(project._id)
+            }
+          }
+        } catch (error) {
+          console.error(`Error checking like status for project ${project._id}:`, error)
+        }
+      })
+      
+      await Promise.all(likePromises)
+      setLikedProjects(likedProjectIds)
+    } catch (error) {
+      console.error('Error fetching user liked projects:', error)
+    }
+  }
+
   const handleLikeProject = async (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation()
     
-    const isLiked = likedProjects.has(projectId)
-    
-    if (isLiked) {
-      setLikedProjects(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(projectId)
-        return newSet
+    try {
+      const response = await fetch(`/api/projects/${projectId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
-    } else {
-      setLikedProjects(prev => new Set(prev).add(projectId))
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Update local state based on server response
+        if (data.isLiked) {
+          setLikedProjects(prev => new Set(prev).add(projectId))
+        } else {
+          setLikedProjects(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(projectId)
+            return newSet
+          })
+        }
+        
+        // Update project in list with server-side count
+        setProjects(prev => prev.map(p => 
+          p._id === projectId 
+            ? { 
+                ...p, 
+                likeCount: data.likeCount,
+                likes: data.likeCount
+              }
+            : p
+        ))
+
+        // Update selected project if it's open in modal
+        if (selectedProject && selectedProject._id === projectId) {
+          setSelectedProject(prev => prev ? {
+            ...prev,
+            likeCount: data.likeCount,
+            likes: data.likeCount
+          } : null)
+        }
+      } else {
+        console.error('Failed to like/unlike project')
+      }
+    } catch (error) {
+      console.error('Error liking project:', error)
     }
-    
-    setProjects(prev => prev.map(p => 
-      p._id === projectId 
-        ? { ...p, likes: p.likes + (isLiked ? -1 : 1) }
-        : p
-    ))
   }
 
   const handleAddToMyProjects = async (e: React.MouseEvent, projectId: string) => {
@@ -267,12 +329,12 @@ export default function WatchlistPage() {
                         }`}
                       >
                         <Heart className={`h-4 w-4 ${likedProjects.has(project._id) ? 'fill-current' : ''}`} />
-                        <span className="text-sm">{project.likes || 0}</span>
+                        <span className="text-sm">{project.likeCount || project.likes || 0}</span>
                       </button>
                       
                       <div className="flex items-center space-x-1 text-gray-400">
                         <Eye className="h-4 w-4" />
-                        <span className="text-sm">{project.views || 0}</span>
+                        <span className="text-sm">{project.viewCount || project.views || 0}</span>
                       </div>
                     </div>
 
@@ -421,14 +483,14 @@ export default function WatchlistPage() {
                     <div className="flex items-center justify-center mb-2">
                       <Heart className="w-5 h-5 text-red-400" />
                     </div>
-                    <p className="text-2xl font-bold text-white">{selectedProject.likes || 0}</p>
+                    <p className="text-2xl font-bold text-white">{selectedProject.likeCount || selectedProject.likes || 0}</p>
                     <p className="text-gray-400 text-sm">Beğeni</p>
                   </div>
                   <div className="bg-gray-800/30 rounded-lg p-4 text-center">
                     <div className="flex items-center justify-center mb-2">
                       <Eye className="w-5 h-5 text-blue-400" />
                     </div>
-                    <p className="text-2xl font-bold text-white">{selectedProject.views || 0}</p>
+                    <p className="text-2xl font-bold text-white">{selectedProject.viewCount || selectedProject.views || 0}</p>
                     <p className="text-gray-400 text-sm">Görüntülenme</p>
                   </div>
                   <div className="bg-gray-800/30 rounded-lg p-4 text-center">
@@ -436,7 +498,7 @@ export default function WatchlistPage() {
                       <TrendingUp className="w-5 h-5 text-green-400" />
                     </div>
                     <p className="text-2xl font-bold text-white">
-                      {Math.floor((selectedProject.likes || 0) / Math.max((selectedProject.views || 1), 1) * 100)}%
+                      {Math.floor(((selectedProject.likeCount || selectedProject.likes || 0) / Math.max((selectedProject.viewCount || selectedProject.views || 1), 1)) * 100)}%
                     </p>
                     <p className="text-gray-400 text-sm">Beğeni Oranı</p>
                   </div>

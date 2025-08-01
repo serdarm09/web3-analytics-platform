@@ -82,6 +82,11 @@ export async function GET(request: NextRequest) {
     const processedProjects = projects.map(project => ({
       ...project,
       id: project._id?.toString() || '',
+      // Normalize like/view fields for consistency with database schema
+      likes: project.likeCount || 0,
+      views: project.viewCount || project.views || 0,
+      likeCount: project.likeCount || 0,
+      viewCount: project.viewCount || project.views || 0,
       marketData: {
         ...(project.marketData || {}),
         price: project.marketData?.price ?? 0,
