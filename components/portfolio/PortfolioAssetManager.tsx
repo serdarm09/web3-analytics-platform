@@ -14,7 +14,8 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  Bitcoin
+  Bitcoin,
+  Edit
 } from 'lucide-react'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumButton } from '@/components/ui/premium-button'
@@ -345,6 +346,15 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
   const handleAddAsset = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (editingAsset) {
+      await handleUpdateAsset()
+    } else {
+      await handleAddNewAsset()
+    }
+  }
+
+  const handleAddNewAsset = async () => {
     setIsLoading(true)
 
     try {
@@ -410,6 +420,59 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
     }
   }
 
+  const handleEditAsset = (asset: Asset) => {
+    setEditingAsset(asset)
+    setFormData({
+      symbol: asset.symbol,
+      amount: asset.amount.toString(),
+      purchasePrice: asset.purchasePrice.toString(),
+      purchaseDate: new Date(asset.purchaseDate).toISOString().split('T')[0]
+    })
+    setShowAddForm(true)
+  }
+
+  const handleUpdateAsset = async () => {
+    if (!editingAsset || !formData.symbol || !formData.amount || !formData.purchasePrice) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      
+      const response = await fetch(`/api/portfolios/${portfolioId}/assets/${editingAsset._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({
+          symbol: formData.symbol.toUpperCase(),
+          amount: parseFloat(formData.amount),
+          purchasePrice: parseFloat(formData.purchasePrice),
+          purchaseDate: formData.purchaseDate
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to update asset')
+      }
+
+      toast.success('Asset updated successfully!')
+      resetForm()
+      setEditingAsset(null)
+      onAssetsUpdate()
+    } catch (error) {
+      console.error('Error updating asset:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update asset')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleDeleteAsset = async (assetId: string) => {
     if (!confirm('Bu varlığı kaldırmak istediğinizden emin misiniz?')) return
 
@@ -418,7 +481,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
     try {
       const token = localStorage.getItem('auth_token')
       
-      const response = await fetch(`/api/portfolios/${portfolioId}/assets?assetId=${assetId}`, {
+      const response = await fetch(`/api/portfolios/${portfolioId}/assets/${assetId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
@@ -801,10 +864,10 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                     {isLoading ? (
                       <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Saving...</span>
+                        <span>{editingAsset ? 'Updating...' : 'Saving...'}</span>
                       </div>
                     ) : (
-                      <span>Add to Portfolio</span>
+                      <span>{editingAsset ? 'Update Asset' : 'Add to Portfolio'}</span>
                     )}
                   </StarBorder>
                 </div>
@@ -916,9 +979,18 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={() => handleEditAsset(asset)}
+                          className="p-2 text-gray-400 hover:text-blue-400 transition-colors"
+                          disabled={isLoading}
+                          title="Edit Asset"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => asset._id && handleDeleteAsset(asset._id)}
                           className="p-2 text-gray-400 hover:text-red-400 transition-colors"
                           disabled={isLoading}
+                          title="Delete Asset"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

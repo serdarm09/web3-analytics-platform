@@ -83,6 +83,7 @@ export default function PortfolioPage() {
       _id: portfolio.id,
       id: portfolio.id,
       assets: portfolio.assets.map((asset: any) => ({
+        _id: asset._id,
         symbol: asset.symbol,
         name: asset.name,
         amount: asset.amount,
