@@ -122,7 +122,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const allowedUpdates = ['role', 'isVerified']
+    const allowedUpdates = ['role', 'isVerified', 'isVerifiedCreator']
     const validUpdates = Object.keys(updates).filter(key => allowedUpdates.includes(key))
     
     if (validUpdates.length === 0) {

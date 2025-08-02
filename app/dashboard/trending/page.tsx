@@ -20,7 +20,8 @@ import { motion, AnimatePresence } from "framer-motion"
   Calendar,
   Globe,
   Filter,
-  ChevronDown
+  ChevronDown,
+  Award
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumBadge } from "@/components/ui/premium-badge"
@@ -489,6 +490,9 @@ export default function UserBasedTrendingPage() {
                         <span className="text-xs text-gray-500">
                           by {project.addedBy.username || project.addedBy.name || 'Unknown'}
                         </span>
+                        {project.addedBy.isVerifiedCreator && (
+                          <Award className="w-3 h-3 text-blue-500" />
+                        )}
                       </div>
                     )}
                   </div>
@@ -732,9 +736,14 @@ export default function UserBasedTrendingPage() {
                     </h4>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-white font-medium text-lg">
-                          {selectedProject.addedBy.name || selectedProject.addedBy.username || 'Anonymous User'}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-medium text-lg">
+                            {selectedProject.addedBy.name || selectedProject.addedBy.username || 'Anonymous User'}
+                          </p>
+                          {selectedProject.addedBy.isVerifiedCreator && (
+                            <Award className="w-4 h-4 text-blue-500" />
+                          )}
+                        </div>
                         {selectedProject.addedBy.username && selectedProject.addedBy.name && (
                           <p className="text-gray-400 text-sm">
                             @{selectedProject.addedBy.username}

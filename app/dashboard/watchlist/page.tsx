@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Eye, Search, Filter, RefreshCw, User, Plus, TrendingUp, ExternalLink, X, Calendar, Globe } from 'lucide-react'
+import { Heart, Eye, Search, Filter, RefreshCw, User, Plus, TrendingUp, ExternalLink, X, Calendar, Globe, Award } from 'lucide-react'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumInput } from '@/components/ui/premium-input'
@@ -18,11 +18,13 @@ interface Project {
   addedBy?: {
     username?: string
     name?: string
+    isVerifiedCreator?: boolean
   }
   createdBy?: {
     userId: string
     username?: string
     email?: string
+    isVerifiedCreator?: boolean
   }
   createdAt: string
   likes: number
@@ -324,6 +326,9 @@ export default function WatchlistPage() {
                       <span className="text-sm text-gray-300">
                         By {project.createdBy?.username || project.createdBy?.email || project.addedBy?.username || project.addedBy?.name || 'Anonymous'}
                       </span>
+                      {(project.createdBy?.isVerifiedCreator || project.addedBy?.isVerifiedCreator) && (
+                        <Award className="w-4 h-4 text-yellow-400" />
+                      )}
                       <div className="flex items-center space-x-1 text-gray-400 ml-auto">
                         <span className="text-xs">
                           {new Date(project.createdAt).toLocaleDateString()}
@@ -442,9 +447,14 @@ export default function WatchlistPage() {
                     </h4>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-white font-medium text-lg">
-                          {selectedProject.createdBy?.username || selectedProject.createdBy?.email || selectedProject.addedBy?.name || selectedProject.addedBy?.username || 'Anonymous User'}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-medium text-lg">
+                            {selectedProject.createdBy?.username || selectedProject.createdBy?.email || selectedProject.addedBy?.name || selectedProject.addedBy?.username || 'Anonymous User'}
+                          </p>
+                          {(selectedProject.createdBy?.isVerifiedCreator || selectedProject.addedBy?.isVerifiedCreator) && (
+                            <Award className="w-5 h-5 text-yellow-400" />
+                          )}
+                        </div>
                         {(selectedProject.createdBy?.username || selectedProject.addedBy?.username) && (
                           <p className="text-gray-400 text-sm">
                             @{selectedProject.createdBy?.username || selectedProject.addedBy?.username}

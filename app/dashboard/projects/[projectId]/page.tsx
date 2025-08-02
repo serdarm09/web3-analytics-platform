@@ -27,7 +27,8 @@ import {
   Loader2,
   Network,
   Zap,
-  Copy
+  Copy,
+  Award
 } from "lucide-react"
 import { PremiumCard } from "@/components/ui/premium-card"
 import { PremiumButton } from "@/components/ui/premium-button"
@@ -72,6 +73,7 @@ interface ProjectData {
     name: string
     username?: string
     email: string
+    isVerifiedCreator?: boolean
   }
   addedAt: string
   lastUpdated: string
@@ -394,6 +396,9 @@ export default function ProjectDetailPage() {
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
                 <span>By {project.addedBy.name || project.addedBy.username}</span>
+                {project.addedBy.isVerifiedCreator && (
+                  <Award className="w-4 h-4 text-yellow-400 ml-1" title="Verified Creator" />
+                )}
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />

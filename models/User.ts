@@ -11,6 +11,7 @@ export interface IUser extends Document {
   registrationMethod: 'email' | 'wallet' | 'code'
   avatar?: string
   isVerified: boolean
+  isVerifiedCreator: boolean
   twoFactorEnabled: boolean
   role: 'user' | 'admin'
   trackedProjects: Types.ObjectId[]
@@ -98,6 +99,10 @@ const userSchema = new Schema<IUser>(
       default: function() {
         return this.registrationMethod === 'code'
       },
+    },
+    isVerifiedCreator: {
+      type: Boolean,
+      default: false,
     },
     twoFactorEnabled: {
       type: Boolean,

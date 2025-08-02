@@ -26,7 +26,9 @@ import {
   RefreshCw,
   Copy,
   Eye,
-  EyeOff
+  EyeOff,
+  Award,
+  FolderOpen
 } from "lucide-react"
 
 interface User {
@@ -35,6 +37,7 @@ interface User {
   email?: string
   registrationMethod: 'email' | 'wallet' | 'code'
   isVerified: boolean
+  isVerifiedCreator: boolean
   role: 'user' | 'admin'
   createdAt: string
 }
@@ -66,9 +69,10 @@ interface UserStats {
 
 export default function AdminPage() {
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState<'users' | 'codes'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'codes' | 'projects'>('users')
   const [users, setUsers] = useState<User[]>([])
   const [codes, setCodes] = useState<InviteCode[]>([])
+  const [projects, setProjects] = useState<any[]>([])
   const [userStats, setUserStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -125,10 +129,26 @@ export default function AdminPage() {
     }
   }
 
+  // Fetch all projects
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch('/api/admin/projects')
+      const data = await response.json()
+
+      if (response.ok) {
+        setProjects(data.projects)
+      } else {
+        throw new Error(data.error)
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to fetch projects')
+    }
+  }
+
   // Initial load
   useEffect(() => {
     if (user?.role === 'admin') {
-      Promise.all([fetchUsers(), fetchCodes()]).finally(() => setLoading(false))
+      Promise.all([fetchUsers(), fetchCodes(), fetchProjects()]).finally(() => setLoading(false))
     }
   }, [user])
 
@@ -232,6 +252,28 @@ export default function AdminPage() {
       }
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete user')
+    }
+  }
+
+  // Delete project
+  const handleDeleteProject = async (projectId: string, projectName: string) => {
+    if (!confirm(`Are you sure you want to delete project "${projectName}"?`)) return
+
+    try {
+      const response = await fetch(`/api/admin/projects?id=${projectId}`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('Project deleted successfully')
+        fetchProjects()
+      } else {
+        throw new Error(data.error)
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete project')
     }
   }
 
@@ -375,6 +417,17 @@ export default function AdminPage() {
             <span className="truncate">Users ({users.length})</span>
           </button>
           <button
+            onClick={() => setActiveTab('projects')}
+            className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+              activeTab === 'projects'
+                ? 'bg-gradient-to-r from-accent-slate to-accent-teal text-white shadow-lg'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+            }`}
+          >
+            <FolderOpen className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">Projects ({projects.length})</span>
+          </button>
+          <button
             onClick={() => setActiveTab('codes')}
             className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'codes'
@@ -457,6 +510,9 @@ export default function AdminPage() {
                                 {u.isVerified && (
                                   <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-400 flex-shrink-0" />
                                 )}
+                                {u.isVerifiedCreator && (
+                                  <Award className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 flex-shrink-0" />
+                                )}
                                 {u.role === 'admin' && (
                                   <PremiumBadge className="text-xs">ADMIN</PremiumBadge>
                                 )}
@@ -484,6 +540,16 @@ export default function AdminPage() {
                             >
                               {u.isVerified ? <XCircle className="h-3 w-3 sm:h-4 sm:w-4" /> : <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
                             </button>
+
+                            <button
+                              onClick={() => handleUpdateUser(u._id, { isVerifiedCreator: !u.isVerifiedCreator })}
+                              className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
+                                u.isVerifiedCreator ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-gray-500/20 text-gray-400 hover:bg-gray-500/30'
+                              }`}
+                              title={u.isVerifiedCreator ? 'Remove Creator Badge' : 'Add Creator Badge'}
+                            >
+                              <Award className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </button>
                             
                             {u.role !== 'admin' && (
                               <button
@@ -504,6 +570,98 @@ export default function AdminPage() {
                                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                               </button>
                             )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </PremiumCard>
+            </motion.div>
+          )}
+
+          {activeTab === 'projects' && (
+            <motion.div
+              key="projects"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <PremiumCard className="overflow-hidden">
+                <div className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Project Management</h3>
+                      <p className="text-sm text-gray-400">Manage all projects created by users</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-400">Total: {projects.length}</span>
+                    </div>
+                  </div>
+
+                  {projects.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-400">No projects found</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {projects.map((project: any) => (
+                        <div
+                          key={project._id}
+                          className="flex items-center gap-3 p-3 sm:p-4 bg-gray-800/30 rounded-lg border border-gray-700/50 hover:border-gray-600/50 transition-colors"
+                        >
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-700/50 flex-shrink-0">
+                            {project.logo ? (
+                              <img 
+                                src={project.logo} 
+                                alt={project.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent-slate to-accent-teal text-white font-bold">
+                                {project.symbol?.charAt(0) || project.name?.charAt(0) || 'P'}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-white text-sm sm:text-base truncate">
+                                {project.name} ({project.symbol})
+                              </span>
+                              {project.isPublic ? (
+                                <Eye className="h-4 w-4 text-green-400 flex-shrink-0" title="Public" />
+                              ) : (
+                                <EyeOff className="h-4 w-4 text-gray-400 flex-shrink-0" title="Private" />
+                              )}
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <span>Created by: {project.createdBy?.username || project.createdBy?.email || 'Unknown'}</span>
+                                {project.createdBy?.isVerifiedCreator && (
+                                  <Award className="h-3 w-3 text-yellow-400" title="Verified Creator" />
+                                )}
+                              </span>
+                              <span className="flex-shrink-0">
+                                {new Date(project.createdAt || project.addedAt).toLocaleDateString()}
+                              </span>
+                              <span className="flex-shrink-0">
+                                Views: {project.views || project.viewCount || 0}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              onClick={() => handleDeleteProject(project._id, project.name)}
+                              className="p-1.5 sm:p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                              title="Delete Project"
+                            >
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </button>
                           </div>
                         </div>
                       ))}

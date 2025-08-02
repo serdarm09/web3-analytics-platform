@@ -21,7 +21,7 @@ export async function GET(
     await dbConnect()
 
     const project = await Project.findById(projectId)
-      .populate('addedBy', 'name username email')
+      .populate('addedBy', 'name username email isVerifiedCreator')
       .lean()
 
     console.log('Found project:', { 

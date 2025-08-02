@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
     const projects = await Project.find({
       isPublic: true
     })
+    .populate('addedBy', 'username name email isVerifiedCreator')
     .select({
       name: 1,
       symbol: 1,
@@ -95,6 +96,7 @@ export async function GET(request: NextRequest) {
           name: project.createdBy.username || project.createdBy.email || 'Anonymous',
           email: project.createdBy.email
         } : null,
+        addedBy: project.addedBy,
         addedAt: project.addedAt
       }
     })

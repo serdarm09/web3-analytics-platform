@@ -31,6 +31,7 @@ export interface TrendingProject {
     username?: string
     name?: string
     email?: string
+    isVerifiedCreator?: boolean
   } | string
   createdBy?: {
     userId: string
