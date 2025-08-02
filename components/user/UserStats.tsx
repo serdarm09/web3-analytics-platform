@@ -189,7 +189,7 @@ export function UserStats() {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-white">Account Overview</h3>
               <PremiumBadge variant="outline">
-                {stats.subscription.toUpperCase()} Plan
+                {stats.verificationStatus ? 'Verified' : 'Unverified'}
               </PremiumBadge>
             </div>
 
@@ -280,9 +280,7 @@ export function UserStats() {
                   <span className="text-gray-400">API Calls This Month</span>
                   <div className="text-right">
                     <div className="text-white font-bold">{stats.apiCalls.toLocaleString()}</div>
-                    <div className="text-xs text-gray-400">
-                      {stats.subscription === 'free' ? '/ 1,000' : '/ Unlimited'}
-                    </div>
+                    <div className="text-xs text-gray-400">Monthly Usage</div>
                   </div>
                 </div>
 

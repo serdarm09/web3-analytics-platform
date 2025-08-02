@@ -54,10 +54,10 @@ export async function GET(request: NextRequest) {
       'metrics.trendingScore': 1,
       lastUpdated: 1,
       addedBy: 1,
+      createdBy: 1,
       addedAt: 1,
       isPublic: 1
     })
-    .populate('addedBy', 'email name username')
     .lean()
 
     // Calculate trending scores and format response
@@ -90,10 +90,10 @@ export async function GET(request: NextRequest) {
         volume24h: project.marketData?.volume24h,
         lastUpdated: project.lastUpdated,
         trendingScore,
-        creator: typeof project.addedBy === 'object' && project.addedBy ? {
-          id: (project.addedBy as any)._id || project.addedBy,
-          name: (project.addedBy as any).name || (project.addedBy as any).username || 'Anonymous',
-          email: (project.addedBy as any).email
+        creator: project.createdBy ? {
+          id: project.createdBy.userId,
+          name: project.createdBy.username || project.createdBy.email || 'Anonymous',
+          email: project.createdBy.email
         } : null,
         addedAt: project.addedAt
       }

@@ -353,7 +353,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
       const symbol = formData.symbol || (manualEntry ? searchQuery.toUpperCase() : '')
       
       if (!symbol) {
-        toast.error('Lütfen bir coin seçin veya sembol girin')
+        toast.error('Please select a coin or enter a symbol')
         setIsLoading(false)
         return
       }
@@ -397,15 +397,15 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
           error: error,
           url: response.url
         })
-        throw new Error(error.error || 'Varlık eklenemedi')
+        throw new Error(error.error || 'Failed to add asset')
       }
 
-      toast.success('Varlık başarıyla eklendi!')
+      toast.success('Asset added successfully!')
       resetForm()
       onAssetsUpdate()
     } catch (error) {
       console.error('Error adding asset:', error)
-      toast.error(error instanceof Error ? error.message : 'Varlık eklenemedi')
+      toast.error(error instanceof Error ? error.message : 'Failed to add asset')
     } finally {
       setIsLoading(false)
     }
@@ -447,15 +447,15 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Varlık güncellenemedi')
+        throw new Error(error.error || 'Failed to update asset')
       }
 
-      toast.success('Varlık başarıyla güncellendi!')
+      toast.success('Asset updated successfully!')
       resetForm()
       onAssetsUpdate()
     } catch (error) {
       console.error('Error updating asset:', error)
-      toast.error(error instanceof Error ? error.message : 'Varlık güncellenemedi')
+      toast.error(error instanceof Error ? error.message : 'Failed to update asset')
     } finally {
       setIsLoading(false)
     }
@@ -478,14 +478,14 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Varlık kaldırılamadı')
+        throw new Error(error.error || 'Failed to remove asset')
       }
 
-      toast.success('Varlık başarıyla kaldırıldı!')
+      toast.success('Asset removed successfully!')
       onAssetsUpdate()
     } catch (error) {
       console.error('Error deleting asset:', error)
-      toast.error(error instanceof Error ? error.message : 'Varlık kaldırılamadı')
+      toast.error(error instanceof Error ? error.message : 'Failed to remove asset')
     } finally {
       setIsLoading(false)
     }
@@ -503,14 +503,14 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${pricesLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
                 <p className="text-xs text-gray-500">
-                  Son güncelleme: {lastUpdate.toLocaleTimeString('tr-TR')}
+                  Last updated: {lastUpdate.toLocaleTimeString('en-US')}
                 </p>
                 <button
                   onClick={refreshPrices}
                   className="text-xs text-blue-400 hover:text-blue-300 underline"
                   disabled={pricesLoading}
                 >
-                  {pricesLoading ? 'Güncelleniyor...' : 'Yenile'}
+                  {pricesLoading ? 'Updating...' : 'Refresh'}
                 </button>
               </div>
             )}
@@ -518,13 +518,13 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-gray-500"></div>
                 <p className="text-xs text-gray-500">
-                  Fiyatlar henüz yüklenmedi
+                  Prices not loaded yet
                 </p>
                 <button
                   onClick={refreshPrices}
                   className="text-xs text-blue-400 hover:text-blue-300 underline"
                 >
-                  Fiyatları Yükle
+                  Load Prices
                 </button>
               </div>
             )}
@@ -558,7 +558,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
             <PremiumCard className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-medium text-white">
-                  {editingAsset ? 'Varlığı Düzenle' : 'Yeni Varlık Ekle'}
+                  {editingAsset ? 'Edit Asset' : 'Add New Asset'}
                 </h4>
                 <button
                   onClick={resetForm}
@@ -573,7 +573,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                 {!editingAsset && (
                   <div className="relative">
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Kripto Para Seç veya Sembol Gir
+                      Select Cryptocurrency or Enter Symbol
                     </label>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -652,7 +652,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                                     </p>
                                   </>
                                 ) : (
-                                  <p className="text-gray-500 text-sm">Fiyat alınıyor...</p>
+                                  <p className="text-gray-500 text-sm">Getting price...</p>
                                 )}
                               </div>
                             </button>
@@ -679,7 +679,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                         <div className="flex items-center gap-2">
                           <AlertCircle className="w-4 h-4 text-yellow-500" />
                           <p className="text-sm text-yellow-200">
-                            "{searchQuery.toUpperCase()}" bulunamadı. Manuel olarak ekleyebilirsiniz.
+                            "{searchQuery.toUpperCase()}" not found. You can add it manually.
                           </p>
                         </div>
                       </motion.div>
@@ -698,10 +698,10 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                       <div className="flex items-center gap-3">
                         <CheckCircle className="w-5 h-5 text-green-400" />
                         <div>
-                          <p className="text-white font-medium">{selectedCoin.name} seçildi</p>
+                          <p className="text-white font-medium">{selectedCoin.name} selected</p>
                           {selectedCoin.price > 0 ? (
                             <p className="text-gray-400 text-sm">
-                              Güncel fiyat: ${selectedCoin.price.toFixed(selectedCoin.price < 1 ? 6 : 2)}
+                              Current price: ${selectedCoin.price.toFixed(selectedCoin.price < 1 ? 6 : 2)}
                               {selectedCoin.change24h !== 0 && (
                                 <span className={`ml-2 ${selectedCoin.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                   ({selectedCoin.change24h >= 0 ? '+' : ''}{selectedCoin.change24h.toFixed(2)}%)
@@ -709,7 +709,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                               )}
                             </p>
                           ) : (
-                            <p className="text-yellow-400 text-sm">Fiyat bilgisi bulunamadı, manuel giriş yapınız</p>
+                            <p className="text-yellow-400 text-sm">Price information not found, please enter manually</p>
                           )}
                         </div>
                       </div>
@@ -746,7 +746,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Miktar
+                      Amount
                     </label>
                     <div className="relative">
                       <PremiumInput
@@ -768,7 +768,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Alış Fiyatı ($) 
+                      Purchase Price ($) 
                       <span className="text-blue-400 text-xs ml-1">- Düzenlenebilir</span>
                     </label>
                     <div className="relative">
@@ -785,13 +785,13 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                     </div>
                     {selectedCoin && !editingAsset && selectedCoin.price > 0 && (
                       <p className="text-xs text-gray-400 mt-1">
-                        Güncel fiyat: ${selectedCoin.price.toFixed(selectedCoin.price < 1 ? 6 : 2)}
+                        Current price: ${selectedCoin.price.toFixed(selectedCoin.price < 1 ? 6 : 2)}
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, purchasePrice: selectedCoin.price!.toFixed(selectedCoin.price! < 1 ? 6 : 2) })}
                           className="ml-2 text-blue-400 hover:text-blue-300 underline text-xs"
                         >
-                          Güncel fiyatı kullan
+                          Use Current Price
                         </button>
                       </p>
                     )}
@@ -799,7 +799,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Alış Tarihi
+                      Purchase Date
                     </label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -839,7 +839,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                     onClick={resetForm}
                     className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-all hover:shadow-lg"
                   >
-                    İptal
+                    Cancel
                   </button>
                   <StarBorder
                     as="button"
@@ -855,7 +855,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                         <span>Kaydediliyor...</span>
                       </div>
                     ) : (
-                      <span>{editingAsset ? 'Güncelle' : 'Portföye Ekle'}</span>
+                      <span>{editingAsset ? 'Update' : 'Add to Portfolio'}</span>
                     )}
                   </StarBorder>
                 </div>
@@ -871,8 +871,8 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
           <PremiumCard className="p-8 text-center">
             <div className="text-gray-400">
               <DollarSign className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg mb-2">Henüz portföyünüzde varlık yok</p>
-              <p className="text-sm">Portföy performansınızı takip etmek için ilk kripto varlığınızı ekleyin</p>
+              <p className="text-lg mb-2">No assets found in your portfolio</p>
+              <p className="text-sm">Add your first crypto asset to track your portfolio performance</p>
             </div>
           </PremiumCard>
         ) : (

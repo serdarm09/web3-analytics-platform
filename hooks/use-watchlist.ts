@@ -53,10 +53,10 @@ export function useWatchlist() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
-      toast.success('Watchlist\'e eklendi!')
+      toast.success('Added to watchlist!')
     },
     onError: (error) => {
-      toast.error(error.message || 'Watchlist\'e eklenemedi')
+      toast.error(error.message || 'Could not add to watchlist')
     }
   })
 

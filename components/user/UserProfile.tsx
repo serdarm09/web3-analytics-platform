@@ -12,7 +12,8 @@ import {
   Settings,
   Edit2,
   Copy,
-  CheckCircle
+  CheckCircle,
+  RefreshCw
 } from 'lucide-react'
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumBadge } from '@/components/ui/premium-badge'
@@ -26,8 +27,9 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ showActions = true, compact = false }: UserProfileProps) {
-  const { user } = useAuth()
+  const { user, checkAuth } = useAuth()
   const [copied, setCopied] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   if (!user) return null
 
@@ -40,19 +42,16 @@ export function UserProfile({ showActions = true, compact = false }: UserProfile
     }
   }
 
-  const getSubscriptionColor = (subscription: string) => {
-    switch (subscription) {
-      case 'pro':
-        return 'from-blue-500 to-cyan-500'
-      case 'enterprise':
-        return 'from-purple-500 to-pink-500'
-      default:
-        return 'from-gray-500 to-gray-600'
+  const refreshProfile = async () => {
+    setRefreshing(true)
+    try {
+      await checkAuth()
+      toast.success('Profile refreshed!')
+    } catch (error) {
+      toast.error('Failed to refresh profile')
+    } finally {
+      setRefreshing(false)
     }
-  }
-
-  const getSubscriptionLabel = (subscription: string) => {
-    return subscription.charAt(0).toUpperCase() + subscription.slice(1)
   }
 
   if (compact) {
@@ -76,7 +75,7 @@ export function UserProfile({ showActions = true, compact = false }: UserProfile
           </div>
         </div>
         <PremiumBadge variant="outline" className="text-xs">
-          {getSubscriptionLabel(user.subscription || 'free')}
+          {user.isVerified ? 'Verified' : 'Unverified'}
         </PremiumBadge>
       </motion.div>
     )
@@ -99,14 +98,25 @@ export function UserProfile({ showActions = true, compact = false }: UserProfile
                   {user.username?.charAt(0).toUpperCase() || user.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-gray-900 flex items-center justify-center">
-                <CheckCircle className="w-4 h-4 text-white" />
-              </div>
+              {user.isVerified && (
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-gray-900 flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 text-white" />
+                </div>
+              )}
+              {!user.isVerified && (
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-red-500 rounded-full border-4 border-gray-900 flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">!</span>
+                </div>
+              )}
             </motion.div>
 
-            <div className={`px-4 py-2 rounded-full bg-gradient-to-r ${getSubscriptionColor(user.subscription || 'free')} text-white text-sm font-medium shadow-lg`}>
-              <Crown className="w-4 h-4 inline mr-2" />
-              {getSubscriptionLabel(user.subscription || 'free')} Plan
+            <div className={`px-4 py-2 rounded-full ${
+              user.isVerified 
+                ? 'bg-gradient-to-r from-green-500 to-green-600' 
+                : 'bg-gradient-to-r from-gray-500 to-gray-600'
+            } text-white text-sm font-medium shadow-lg`}>
+              <CheckCircle className="w-4 h-4 inline mr-2" />
+              {user.isVerified ? 'Verified User' : 'Unverified User'}
             </div>
           </div>
 
@@ -216,15 +226,34 @@ export function UserProfile({ showActions = true, compact = false }: UserProfile
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
-                className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg"
+                className={`flex items-center gap-3 p-3 rounded-lg ${
+                  user.isVerified 
+                    ? 'bg-green-500/10 border border-green-500/20' 
+                    : 'bg-red-500/10 border border-red-500/20'
+                }`}
               >
-                <CheckCircle className="w-5 h-5 text-green-400" />
-                <div>
+                <CheckCircle className={`w-5 h-5 ${user.isVerified ? 'text-green-400' : 'text-red-400'}`} />
+                <div className="flex-1">
                   <div className="text-xs text-gray-400">Account Status</div>
-                  <div className="text-white font-medium">
-                    {user.isVerified ? 'Verified' : 'Unverified'}
+                  <div className={`font-medium ${user.isVerified ? 'text-green-400' : 'text-red-400'}`}>
+                    {user.isVerified ? '✓ Verified Account' : '⚠ Unverified Account'}
                   </div>
+                  {!user.isVerified && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Contact admin for verification
+                    </div>
+                  )}
                 </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={refreshProfile}
+                  disabled={refreshing}
+                  className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 transition-colors disabled:opacity-50"
+                  title="Refresh profile data"
+                >
+                  <RefreshCw className={`w-4 h-4 text-gray-400 ${refreshing ? 'animate-spin' : ''}`} />
+                </motion.button>
               </motion.div>
             </div>
 

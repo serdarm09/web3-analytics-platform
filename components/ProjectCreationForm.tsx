@@ -147,66 +147,110 @@ export default function ProjectCreationForm({ onSubmit, onCancel, isLoading = fa
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <PremiumCard className="p-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent mb-2">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <PremiumCard className="p-4 sm:p-6 lg:p-8">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent mb-2">
             Add New Project
           </h2>
-          <p className="text-gray-400">Fill in the details to add a new crypto project to the platform</p>
+          <p className="text-gray-400 text-sm sm:text-base">Fill in the details to add a new crypto project to the platform</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
           {/* Basic Information Section */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">Basic Information</h3>
+          <div className="space-y-4 sm:space-y-6">
+            <h3 className="text-base sm:text-lg font-semibold text-white border-b border-gray-700 pb-2">Basic Information</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormInput
-                label="Project Name"
-                placeholder="Enter project name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                error={errors.name}
-                required
-              />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <div>
+                <FormInput
+                  label="Project Name"
+                  placeholder="Enter project name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  error={errors.name}
+                  required
+                  className={errors.name ? 'border-red-500 ring-red-500/20' : ''}
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                    {errors.name}
+                  </p>
+                )}
+              </div>
               
-              <FormInput
-                label="Symbol"
-                placeholder="Enter token symbol (e.g., BTC)"
-                value={formData.symbol}
-                onChange={(e) => handleInputChange('symbol', e.target.value.toUpperCase())}
-                error={errors.symbol}
-                required
-              />
+              <div>
+                <FormInput
+                  label="Symbol"
+                  placeholder="Enter token symbol (e.g., BTC)"
+                  value={formData.symbol}
+                  onChange={(e) => handleInputChange('symbol', e.target.value.toUpperCase())}
+                  error={errors.symbol}
+                  required
+                  className={errors.symbol ? 'border-red-500 ring-red-500/20' : ''}
+                />
+                {errors.symbol && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                    {errors.symbol}
+                  </p>
+                )}
+              </div>
             </div>
 
-            <FormInput
-              label="Logo URL"
-              placeholder="Enter logo image URL"
-              value={formData.logo}
-              onChange={(e) => handleInputChange('logo', e.target.value)}
-              error={errors.logo}
-              required
-            />
+            <div>
+              <FormInput
+                label="Logo URL"
+                placeholder="Enter logo image URL"
+                value={formData.logo}
+                onChange={(e) => handleInputChange('logo', e.target.value)}
+                error={errors.logo}
+                required
+                className={errors.logo ? 'border-red-500 ring-red-500/20' : ''}
+              />
+              {errors.logo && (
+                <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.logo}
+                </p>
+              )}
+            </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-300">Description</label>
+              <label className="block text-sm font-medium text-gray-300">
+                Description <span className="text-red-400">*</span>
+              </label>
               <textarea
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none h-24"
+                className={`w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-800/50 border rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:border-transparent resize-none h-20 sm:h-24 text-sm sm:text-base ${
+                  errors.description 
+                    ? 'border-red-500 focus:ring-red-500/20' 
+                    : 'border-gray-700 focus:ring-blue-500'
+                }`}
                 placeholder="Enter project description"
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 required
               />
-              {errors.description && <p className="text-red-400 text-sm">{errors.description}</p>}
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                  {errors.description}
+                </p>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">Category</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  Category <span className="text-red-400">*</span>
+                </label>
                 <select
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-800/50 border rounded-lg text-white focus:ring-2 focus:border-transparent text-sm sm:text-base ${
+                    errors.category 
+                      ? 'border-red-500 focus:ring-red-500/20' 
+                      : 'border-gray-700 focus:ring-blue-500'
+                  }`}
                   value={formData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
                   required
@@ -216,13 +260,24 @@ export default function ProjectCreationForm({ onSubmit, onCancel, isLoading = fa
                     <option key={category} value={category}>{category}</option>
                   ))}
                 </select>
-                {errors.category && <p className="text-red-400 text-sm">{errors.category}</p>}
+                {errors.category && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                    {errors.category}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">Blockchain</label>
+                <label className="block text-sm font-medium text-gray-300">
+                  Blockchain <span className="text-red-400">*</span>
+                </label>
                 <select
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-800/50 border rounded-lg text-white focus:ring-2 focus:border-transparent text-sm sm:text-base ${
+                    errors.blockchain 
+                      ? 'border-red-500 focus:ring-red-500/20' 
+                      : 'border-gray-700 focus:ring-blue-500'
+                  }`}
                   value={formData.blockchain}
                   onChange={(e) => handleInputChange('blockchain', e.target.value)}
                   required
@@ -232,19 +287,33 @@ export default function ProjectCreationForm({ onSubmit, onCancel, isLoading = fa
                     <option key={blockchain} value={blockchain}>{blockchain}</option>
                   ))}
                 </select>
-                {errors.blockchain && <p className="text-red-400 text-sm">{errors.blockchain}</p>}
+                {errors.blockchain && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                    {errors.blockchain}
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormInput
-                label="Website"
-                placeholder="https://example.com"
-                value={formData.website}
-                onChange={(e) => handleInputChange('website', e.target.value)}
-                error={errors.website}
-                required
-              />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <div>
+                <FormInput
+                  label="Website"
+                  placeholder="https://example.com"
+                  value={formData.website}
+                  onChange={(e) => handleInputChange('website', e.target.value)}
+                  error={errors.website}
+                  required
+                  className={errors.website ? 'border-red-500 ring-red-500/20' : ''}
+                />
+                {errors.website && (
+                  <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+                    <span className="w-1 h-1 bg-red-400 rounded-full"></span>
+                    {errors.website}
+                  </p>
+                )}
+              </div>
 
               <FormInput
                 label="Contract Address (Optional)"
@@ -256,10 +325,10 @@ export default function ProjectCreationForm({ onSubmit, onCancel, isLoading = fa
           </div>
 
           {/* Social Links Section */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">Social Links</h3>
+          <div className="space-y-4 sm:space-y-6">
+            <h3 className="text-base sm:text-lg font-semibold text-white border-b border-gray-700 pb-2">Social Links</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <FormInput
                 label="Twitter"
                 placeholder="https://twitter.com/..."
@@ -387,11 +456,12 @@ export default function ProjectCreationForm({ onSubmit, onCancel, isLoading = fa
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-700">
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-gray-700">
             <PremiumButton
               variant="outline"
               onClick={onCancel}
               disabled={isLoading}
+              className="w-full sm:w-auto order-2 sm:order-1"
             >
               Cancel
             </PremiumButton>
@@ -400,6 +470,7 @@ export default function ProjectCreationForm({ onSubmit, onCancel, isLoading = fa
               type="submit"
               variant="gradient"
               disabled={isLoading}
+              className="w-full sm:w-auto order-1 sm:order-2"
             >
               {isLoading ? 'Creating Project...' : 'Create Project'}
             </PremiumButton>

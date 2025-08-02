@@ -1,6 +1,6 @@
 'use client'
 
-import { User, Menu, Mail, Calendar, Wallet } from 'lucide-react'
+import { User, Menu, Mail, Calendar, Wallet, CheckCircle } from 'lucide-react'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -44,17 +44,32 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
             }}
             className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-secondary transition-colors"
           >
-            <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
+            <div className="relative">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">
+                  {user?.username?.charAt(0).toUpperCase() || user?.name?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </div>
+              {user?.isVerified && (
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
+                  <CheckCircle className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
             </div>
-            {user?.subscription && (
-              <PremiumBadge 
-                variant={user.subscription === 'enterprise' ? 'gold' : user.subscription === 'pro' ? 'success' : 'primary'} 
-                size="sm"
-              >
-                {user.subscription.charAt(0).toUpperCase() + user.subscription.slice(1)}
-              </PremiumBadge>
-            )}
+            
+            <div className="hidden sm:block text-left">
+              <div className="flex items-center gap-2">
+                <span className="text-white text-sm font-medium">
+                  {user?.username || user?.name || 'User'}
+                </span>
+                {user?.isVerified && (
+                  <CheckCircle className="w-4 h-4 text-green-400" />
+                )}
+              </div>
+              <div className="text-xs text-gray-400">
+                {user?.isVerified ? 'Verified Account' : 'Unverified'}
+              </div>
+            </div>
           </button>
 
           <AnimatePresence>
@@ -68,12 +83,28 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
               >
                 <div className="pb-3 border-b border-gray-border">
                   <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-white" />
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span className="text-white text-lg font-bold">
+                          {user?.username?.charAt(0).toUpperCase() || user?.name?.charAt(0).toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                      {user?.isVerified && (
+                        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-gray-900 flex items-center justify-center">
+                          <CheckCircle className="w-3.5 h-3.5 text-white" />
+                        </div>
+                      )}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-white">{user?.username || 'User'}</p>
-                      <p className="text-xs text-gray-400">{user?.email || user?.walletAddress?.slice(0, 10) + '...' || 'No email'}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-white">{user?.username || user?.name || 'User'}</p>
+                        {user?.isVerified && (
+                          <CheckCircle className="w-4 h-4 text-green-400" />
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400">
+                        {user?.isVerified ? 'Verified Account' : 'Unverified Account'}
+                      </p>
                     </div>
                   </div>
                   
@@ -105,9 +136,6 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                   </a>
                   <a href="/dashboard/settings" className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-secondary rounded-lg transition-colors">
                     Account Settings
-                  </a>
-                  <a href="/dashboard/settings#billing" className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-secondary rounded-lg transition-colors">
-                    Billing & Plans
                   </a>
                   <div className="pt-2 mt-2 border-t border-gray-border">
                     <button 

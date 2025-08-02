@@ -19,6 +19,11 @@ interface Project {
     username?: string
     name?: string
   }
+  createdBy?: {
+    userId: string
+    username?: string
+    email?: string
+  }
   createdAt: string
   likes: number
   views: number
@@ -313,11 +318,11 @@ export default function WatchlistPage() {
                   )}
 
                   {/* Added By */}
-                  {project.addedBy && (
+                  {(project.createdBy || project.addedBy) && (
                     <div className="flex items-center space-x-2 mb-4 p-3 bg-gray-800/20 rounded-lg">
                       <User className="w-4 h-4 text-purple-400" />
                       <span className="text-sm text-gray-300">
-                        By {project.addedBy.username || project.addedBy.name || 'Anonymous'}
+                        By {project.createdBy?.username || project.createdBy?.email || project.addedBy?.username || project.addedBy?.name || 'Anonymous'}
                       </span>
                       <div className="flex items-center space-x-1 text-gray-400 ml-auto">
                         <span className="text-xs">
@@ -438,11 +443,11 @@ export default function WatchlistPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-white font-medium text-lg">
-                          {selectedProject.addedBy.name || selectedProject.addedBy.username || 'Anonim Kullanıcı'}
+                          {selectedProject.createdBy?.username || selectedProject.createdBy?.email || selectedProject.addedBy?.name || selectedProject.addedBy?.username || 'Anonymous User'}
                         </p>
-                        {selectedProject.addedBy.username && selectedProject.addedBy.name && (
+                        {(selectedProject.createdBy?.username || selectedProject.addedBy?.username) && (
                           <p className="text-gray-400 text-sm">
-                            @{selectedProject.addedBy.username}
+                            @{selectedProject.createdBy?.username || selectedProject.addedBy?.username}
                           </p>
                         )}
                       </div>
@@ -541,7 +546,7 @@ export default function WatchlistPage() {
                     className="flex-1 flex items-center justify-center space-x-2"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>Watchlist'e Ekle</span>
+                    <span>Add to Watchlist</span>
                   </PremiumButton>
                 </div>
               </div>

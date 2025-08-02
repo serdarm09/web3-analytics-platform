@@ -72,7 +72,6 @@ export async function GET(request: NextRequest) {
     }
 
     const projects = await Project.find(query)
-      .populate('addedBy', 'email name username')
       .sort(sortQuery)
       .skip(skip)
       .limit(limit)

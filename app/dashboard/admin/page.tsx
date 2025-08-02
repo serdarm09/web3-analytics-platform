@@ -286,27 +286,31 @@ export default function AdminPage() {
         className="max-w-7xl mx-auto space-y-6"
       >
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent truncate">
               Admin Panel
             </h1>
-            <p className="text-gray-400 mt-2">
+            <p className="text-gray-400 mt-1 text-sm sm:text-base">
               Manage users and invite codes
             </p>
           </div>
           
-          <div className="flex gap-3">
-            <StarBorder
+          <div className="flex gap-2 sm:gap-3 flex-shrink-0">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => {
-                fetchUsers()
-                fetchCodes()
+                setLoading(true)
+                Promise.all([fetchUsers(), fetchCodes()]).finally(() => setLoading(false))
               }}
-              className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4"
+              disabled={loading}
+              className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-slate/50 disabled:pointer-events-none disabled:opacity-50 border border-gray-700 bg-gray-800/50 backdrop-blur-sm shadow-lg hover:bg-gray-700/50 hover:border-accent-slate/50 text-white h-9 px-3 sm:px-4"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </StarBorder>
+              <RefreshCw className={`h-4 w-4 mr-1 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+              <span className="sm:hidden">↻</span>
+            </motion.button>
           </div>
         </div>
 
@@ -358,28 +362,28 @@ export default function AdminPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-gray-800/50 rounded-lg backdrop-blur-sm">
+        <div className="flex gap-1 p-1 bg-gray-800/50 rounded-lg backdrop-blur-sm overflow-x-auto">
           <button
             onClick={() => setActiveTab('users')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'users'
                 ? 'bg-gradient-to-r from-accent-slate to-accent-teal text-white shadow-lg'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
             }`}
           >
-            <Users className="h-4 w-4" />
-            Users ({users.length})
+            <Users className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">Users ({users.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('codes')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 min-w-0 flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'codes'
                 ? 'bg-gradient-to-r from-accent-slate to-accent-teal text-white shadow-lg'
                 : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
             }`}
           >
-            <Key className="h-4 w-4" />
-            Invite Codes ({codes.length})
+            <Key className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">Codes ({codes.length})</span>
           </button>
         </div>
 
@@ -394,16 +398,16 @@ export default function AdminPage() {
               className="space-y-6"
             >
               {/* Users Filters */}
-              <PremiumCard className="p-6 bg-gray-900/50 backdrop-blur-xl border border-gray-700">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1">
+              <PremiumCard className="p-4 sm:p-6 bg-gray-900/50 backdrop-blur-xl border border-gray-700">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <PremiumInput
                         placeholder="Search users..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 w-full"
                       />
                     </div>
                   </div>
@@ -411,93 +415,93 @@ export default function AdminPage() {
                   <select
                     value={userFilter}
                     onChange={(e) => setUserFilter(e.target.value)}
-                    className="px-4 py-2 rounded-lg border bg-gray-900/50 border-gray-600 text-white focus:outline-none focus:border-accent-slate"
+                    className="px-3 sm:px-4 py-2 rounded-lg border bg-gray-900/50 border-gray-600 text-white focus:outline-none focus:border-accent-slate text-sm min-w-0 flex-shrink-0"
                   >
                     <option value="">All Users</option>
-                    <option value="verified">Verified Users</option>
+                    <option value="verified">Verified</option>
                     <option value="admin">Admins</option>
-                    <option value="email">Email Registration</option>
-                    <option value="wallet">Wallet Registration</option>
-                    <option value="code">Code Registration</option>
+                    <option value="email">Email Reg</option>
+                    <option value="wallet">Wallet Reg</option>
+                    <option value="code">Code Reg</option>
                   </select>
                 </div>
               </PremiumCard>
 
               {/* Users List */}
               <PremiumCard className="bg-gray-900/50 backdrop-blur-xl border border-gray-700">
-                <div className="p-6 border-b border-gray-700">
-                  <h2 className="text-xl font-semibold text-white">Users</h2>
+                <div className="p-4 sm:p-6 border-b border-gray-700">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white">Users</h2>
                 </div>
                 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {users.length === 0 ? (
                     <div className="text-center py-8">
                       <Users className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                       <p className="text-gray-400">No users found</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       {users.map((u) => (
                         <div
                           key={u._id}
-                          className="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg border border-gray-700/50"
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-800/30 rounded-lg border border-gray-700/50"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-slate to-accent-teal flex items-center justify-center text-white font-medium">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-accent-slate to-accent-teal flex items-center justify-center text-white font-medium text-sm sm:text-base flex-shrink-0">
                               {u.username.charAt(0).toUpperCase()}
                             </div>
                             
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-white">{u.username}</span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium text-white text-sm sm:text-base truncate">{u.username}</span>
                                 {u.isVerified && (
-                                  <CheckCircle className="h-4 w-4 text-green-400" />
+                                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-green-400 flex-shrink-0" />
                                 )}
                                 {u.role === 'admin' && (
-                                  <PremiumBadge>ADMIN</PremiumBadge>
+                                  <PremiumBadge className="text-xs">ADMIN</PremiumBadge>
                                 )}
                               </div>
-                              <div className="flex items-center gap-4 text-sm text-gray-400">
-                                <span className="flex items-center gap-1">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-400">
+                                <span className="flex items-center gap-1 flex-shrink-0">
                                   {u.registrationMethod === 'email' && <Mail className="h-3 w-3" />}
                                   {u.registrationMethod === 'wallet' && <Wallet className="h-3 w-3" />}
                                   {u.registrationMethod === 'code' && <Code className="h-3 w-3" />}
                                   {u.registrationMethod}
                                 </span>
-                                {u.email && <span>{u.email}</span>}
-                                <span>{new Date(u.createdAt).toLocaleDateString()}</span>
+                                {u.email && <span className="truncate min-w-0">{u.email}</span>}
+                                <span className="flex-shrink-0">{new Date(u.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                             <button
                               onClick={() => handleUpdateUser(u._id, { isVerified: !u.isVerified })}
-                              className={`p-2 rounded-lg transition-colors ${
+                              className={`p-1.5 sm:p-2 rounded-lg transition-colors ${
                                 u.isVerified ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
                               }`}
                               title={u.isVerified ? 'Unverify' : 'Verify'}
                             >
-                              {u.isVerified ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                              {u.isVerified ? <XCircle className="h-3 w-3 sm:h-4 sm:w-4" /> : <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />}
                             </button>
                             
                             {u.role !== 'admin' && (
                               <button
                                 onClick={() => handleUpdateUser(u._id, { role: u.role === 'admin' ? 'user' : 'admin' })}
-                                className="p-2 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors"
+                                className="p-1.5 sm:p-2 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors"
                                 title="Toggle Admin"
                               >
-                                <Shield className="h-4 w-4" />
+                                <Shield className="h-3 w-3 sm:h-4 sm:w-4" />
                               </button>
                             )}
                             
                             {u._id !== user._id && (
                               <button
                                 onClick={() => handleDeleteUser(u._id, u.username)}
-                                className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                                className="p-1.5 sm:p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
                                 title="Delete User"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                               </button>
                             )}
                           </div>

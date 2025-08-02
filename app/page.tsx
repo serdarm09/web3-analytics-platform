@@ -19,7 +19,6 @@ export default function Home() {
   const [stats, setStats] = useState({
     activeUsers: '0',
     projectsTracked: '0',
-    totalVolume: '$0',
     walletTracker: '0'
   })
   const [statsLoading, setStatsLoading] = useState(true)
@@ -181,11 +180,10 @@ export default function Home() {
                   <span>Live data</span>
                 </motion.div>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-relaxed">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-relaxed">
               {[
                 { label: 'Active Users', value: stats.activeUsers },
                 { label: 'Projects Tracked', value: stats.projectsTracked },
-                { label: 'Total Volume', value: stats.totalVolume },
                 { label: 'Wallet Tracker', value: stats.walletTracker }
               ].map((stat, index) => (
                 <motion.div

@@ -72,6 +72,7 @@ module.exports = {
         'slide-up': 'slide-up 0.5s ease-out',
         'scale-in': 'scale-in 0.3s ease-out',
         'blur-in': 'blur-in 0.6s ease-out',
+        'spin-slow': 'spin-slow 6s linear infinite',
         'shimmer': 'shimmer 2s linear infinite',
         'spotlight': 'spotlight 2s ease .75s 1 forwards',
         'star-movement-bottom': 'star-movement-bottom linear infinite alternate',
@@ -139,6 +140,10 @@ module.exports = {
         'blur-in': {
           '0%': { filter: 'blur(10px)', opacity: '0' },
           '100%': { filter: 'blur(0)', opacity: '1' },
+        },
+        'spin-slow': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
         },
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },

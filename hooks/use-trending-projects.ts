@@ -26,6 +26,17 @@ export interface TrendingProject {
     name: string
     email?: string
   }
+  addedBy?: {
+    _id: string
+    username?: string
+    name?: string
+    email?: string
+  } | string
+  createdBy?: {
+    userId: string
+    username?: string
+    email?: string
+  }
   addedAt?: Date
   likeCount?: number
 }

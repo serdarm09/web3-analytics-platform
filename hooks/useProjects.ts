@@ -33,7 +33,17 @@ export interface Project {
   contractAddress?: string
   isActive: boolean
   isPublic?: boolean
-  addedBy?: string
+  addedBy?: {
+    _id: string
+    username?: string
+    name?: string
+    email?: string
+  } | string
+  createdBy?: {
+    userId: string
+    username?: string
+    email?: string
+  }
   viewCount?: number
   addCount?: number
   likeCount?: number

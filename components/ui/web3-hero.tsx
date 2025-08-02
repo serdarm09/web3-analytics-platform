@@ -205,18 +205,14 @@ function Web3Hero({
                         transition={{ duration: 1, delay: 1.0 }}
                         className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
                     >
-                        <motion.div
+                        <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
+                            onClick={onLaunchApp}
+                            className="px-8 py-4 text-lg font-semibold bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white rounded-xl border border-gray-600 transition-all duration-300 shadow-2xl hover:shadow-gray-500/25"
                         >
-                            <StarBorder 
-                                className="w-full sm:w-auto inline-flex items-center justify-center rounded-lg text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r  text-white shadow "
-                                onClick={onLaunchApp}
-                            >
-                                Launch App
-                            </StarBorder>
-                        </motion.div>
-
+                            Launch App
+                        </motion.button>
                     </motion.div>
 
                     {/* Description */}

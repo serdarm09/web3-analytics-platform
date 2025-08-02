@@ -131,12 +131,12 @@ export default function ProjectCreationModal({ isOpen, onClose, onProjectCreated
       />
       
       {/* Modal */}
-      <div className="relative z-50 flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+      <div className="relative z-50 flex min-h-full items-center justify-center p-2 sm:p-4">
+        <div className="relative bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-xl sm:rounded-2xl shadow-2xl max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-700">
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
+              <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
                 Add New Project
               </h2>
               <p className="text-gray-400 text-sm mt-1">
@@ -147,26 +147,26 @@ export default function ProjectCreationModal({ isOpen, onClose, onProjectCreated
             <button
               onClick={handleClose}
               disabled={isLoading}
-              className="p-2 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1.5 sm:p-2 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <X className="h-6 w-6 text-gray-400" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />
             </button>
           </div>
 
           {/* Content */}
-          <div className="max-h-[calc(90vh-120px)] overflow-y-auto">
+          <div className="max-h-[calc(95vh-100px)] sm:max-h-[calc(90vh-120px)] overflow-y-auto">
             {success ? (
-              <div className="p-12 text-center">
-                <div className="mx-auto w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-8 sm:p-12 text-center">
+                <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Project Created Successfully!</h3>
-                <p className="text-gray-400">The project has been added to the platform.</p>
+                <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">Project Created Successfully!</h3>
+                <p className="text-gray-400 text-sm sm:text-base">The project has been added to the platform.</p>
               </div>
             ) : (
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 {error && (
                   <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
                     <div className="flex items-center">

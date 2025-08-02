@@ -109,7 +109,7 @@ export function AddToWatchlistModal({ isOpen, onClose }: AddToWatchlistModalProp
     e.preventDefault()
     
     if (!selectedCoin) {
-      toast.error('Lütfen bir coin seçin')
+      toast.error('Please select a coin')
       return
     }
 
@@ -168,7 +168,7 @@ export function AddToWatchlistModal({ isOpen, onClose }: AddToWatchlistModalProp
               </button>
               
               <h2 className="text-2xl font-bold text-white mb-6">
-                Watchlist'e Ekle
+                Add to Watchlist
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -312,12 +312,12 @@ export function AddToWatchlistModal({ isOpen, onClose }: AddToWatchlistModalProp
                     {isAdding ? (
                       <div className="flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Ekleniyor...</span>
+                        <span>Adding...</span>
                       </div>
                     ) : (
                       <>
                         <Plus className="w-4 h-4 mr-2" />
-                        Watchlist'e Ekle
+                        Add to Watchlist
                       </>
                     )}
                   </PremiumButton>

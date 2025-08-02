@@ -292,7 +292,19 @@ export default function ProjectsPage() {
                               {project.category}
                             </PremiumBadge>
                           </div>
-                          <p className="text-sm text-gray-500 mt-1">{project.blockchain}</p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <p className="text-sm text-gray-500">{project.blockchain}</p>
+                            {project.createdBy && (
+                              <>
+                                <span className="text-gray-600">•</span>
+                                <p className="text-sm text-gray-400">
+                                  Created by <span className="text-blue-400 font-medium">
+                                    {project.createdBy.username || project.createdBy.email || 'Anonymous'}
+                                  </span>
+                                </p>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

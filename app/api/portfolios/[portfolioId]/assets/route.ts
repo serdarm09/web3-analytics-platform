@@ -13,7 +13,7 @@ export async function POST(
     const authResult = await verifyAuth(request)
     if (!authResult.authenticated) {
       console.error('Auth failed in portfolio assets POST:', authResult)
-      return NextResponse.json({ error: 'Kimlik doğrulama başarısız. Lütfen tekrar giriş yapın.' }, { status: 401 })
+      return NextResponse.json({ error: 'Authentication failed. Please login again.' }, { status: 401 })
     }
 
     const resolvedParams = await params
@@ -131,13 +131,13 @@ export async function POST(
     // MongoDB duplicate key error
     if (error.code === 11000) {
       return NextResponse.json(
-        { error: 'Bu varlık zaten portföyünüzde mevcut' },
+        { error: 'This asset already exists in your portfolio' },
         { status: 409 }
       )
     }
     
     return NextResponse.json(
-      { error: error.message || 'Varlık portföye eklenirken hata oluştu' },
+      { error: error.message || 'An error occurred while adding asset to portfolio' },
       { status: 500 }
     )
   }

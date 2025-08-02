@@ -49,9 +49,9 @@ export default function UserBasedTrendingPage() {
     setRefreshing(true)
     try {
       await refresh()
-      toast.success('Trending data refreshed')
+      toast.success('Trending data refreshed successfully')
     } catch (error) {
-      toast.error('Failed to refresh data')
+      toast.error('Failed to refresh trending data')
     } finally {
       setRefreshing(false)
     }
@@ -88,13 +88,13 @@ export default function UserBasedTrendingPage() {
       })
 
       if (response.ok) {
-        toast.success('Project added to your list!')
+        toast.success('Project added to your portfolio successfully!')
       } else {
         const error = await response.json()
-        toast.error(error.message || 'Failed to add project')
+        toast.error(error.message || 'Failed to add project to portfolio')
       }
     } catch (error) {
-      toast.error('Failed to add project')
+      toast.error('Failed to add project to portfolio')
     } finally {
       setAddingProjects(prev => {
         const newSet = new Set(prev)
@@ -125,12 +125,12 @@ export default function UserBasedTrendingPage() {
             isLiked: data.isLiked
           }
         }))
-        toast.success(data.isLiked ? 'Project liked!' : 'Project unliked!')
+        toast.success(data.isLiked ? 'Project liked successfully!' : 'Project unliked successfully!')
       } else {
-        toast.error('Failed to update like status')
+        toast.error('Failed to update project like status')
       }
     } catch (error) {
-      toast.error('Failed to update like status')
+      toast.error('Failed to update project like status')
     } finally {
       setLikingProjects(prev => {
         const newSet = new Set(prev)
@@ -483,6 +483,14 @@ export default function UserBasedTrendingPage() {
                         </PremiumBadge>
                       )}
                     </div>
+                    {project.addedBy && typeof project.addedBy === 'object' && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <User className="w-3 h-3 text-gray-500" />
+                        <span className="text-xs text-gray-500">
+                          by {project.addedBy.username || project.addedBy.name || 'Unknown'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

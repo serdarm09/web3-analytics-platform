@@ -118,28 +118,24 @@ export function Navbar() {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-comfortable">
-            <Link href="/">
-              <motion.div
+          <div className="hidden md:flex items-center gap-3">
+            <Link href="/login">
+              <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-              >
-                
-              </motion.div>
-            </Link>
-            <Link href="/login">
-              <StarBorder 
-                className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 px-3"
+                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-gray-800/50"
               >
                 Sign In
-              </StarBorder>
+              </motion.button>
             </Link>
             <Link href="/register">
-              <StarBorder 
-                className="inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600 text-white shadow hover:bg-primary/90 h-9"
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white rounded-lg border border-gray-600 transition-all duration-200 shadow-lg"
               >
                 Get Started
-              </StarBorder>
+              </motion.button>
             </Link>
           </div>
 
@@ -180,20 +176,24 @@ export function Navbar() {
                 {item.label}
               </Link>
             ))}
-            <div className="pt-6 space-y-compact border-t border-gray-border">
+            <div className="pt-6 space-y-3 border-t border-gray-border">
               <Link href="/login" className="block">
-                <StarBorder 
-                  className="w-full inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3"
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-gray-800/50 border border-gray-700"
                 >
                   Sign In
-                </StarBorder>
+                </motion.button>
               </Link>
               <Link href="/register" className="block">
-                <StarBorder 
-                  className="w-full inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 border-gray-600 text-white shadow hover:bg-primary/90 h-8 px-3"
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full px-4 py-2 text-sm font-medium bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800 text-white rounded-lg border border-gray-600 transition-all duration-200 shadow-lg"
                 >
                   Get Started
-                </StarBorder>
+                </motion.button>
               </Link>
             </div>
           </div>
