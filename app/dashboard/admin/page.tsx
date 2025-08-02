@@ -136,6 +136,7 @@ export default function AdminPage() {
       const data = await response.json()
 
       if (response.ok) {
+        console.log('Projects data:', data.projects) // Debug log
         setProjects(data.projects)
       } else {
         throw new Error(data.error)
@@ -351,7 +352,6 @@ export default function AdminPage() {
             >
               <RefreshCw className={`h-4 w-4 mr-1 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
-              <span className="sm:hidden">↻</span>
             </motion.button>
           </div>
         </div>
@@ -633,20 +633,26 @@ export default function AdminPage() {
                                 {project.name} ({project.symbol})
                               </span>
                               {project.isPublic ? (
-                                <Eye className="h-4 w-4 text-green-400 flex-shrink-0" title="Public" />
+                                <Eye className="h-4 w-4 text-green-400 flex-shrink-0" />
                               ) : (
-                                <EyeOff className="h-4 w-4 text-gray-400 flex-shrink-0" title="Private" />
+                                <EyeOff className="h-4 w-4 text-gray-400 flex-shrink-0" />
                               )}
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-400">
-                              <span className="flex items-center gap-1">
-                                <span>Created by: {project.createdBy?.username || project.createdBy?.email || 'Unknown'}</span>
-                                {project.createdBy?.isVerifiedCreator && (
-                                  <Award className="h-3 w-3 text-yellow-400" title="Verified Creator" />
-                                )}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span>Created by:</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-white font-medium">
+                                    {project.createdBy?.username || project.createdBy?.name || project.createdBy?.email || 
+                                     project.addedBy?.username || project.addedBy?.name || project.addedBy?.email || 'Unknown User'}
+                                  </span>
+                                  {(project.createdBy?.isVerifiedCreator || project.addedBy?.isVerifiedCreator) && (
+                                    <Award className="h-3 w-3 text-blue-500" />
+                                  )}
+                                </div>
+                              </div>
                               <span className="flex-shrink-0">
-                                {new Date(project.createdAt || project.addedAt).toLocaleDateString()}
+                                {new Date(project.createdAt || project.addedAt).toLocaleDateString('tr-TR')}
                               </span>
                               <span className="flex-shrink-0">
                                 Views: {project.views || project.viewCount || 0}

@@ -62,6 +62,9 @@ export async function GET(request: NextRequest) {
       const projectObj = project.toObject()
       return {
         ...projectObj,
+        // Keep original addedBy for reference
+        addedBy: project.addedBy,
+        // Transform addedBy to createdBy format for compatibility
         createdBy: project.addedBy ? {
           userId: project.addedBy._id,
           username: project.addedBy.username,

@@ -768,8 +768,8 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Purchase Price ($) 
-                      <span className="text-blue-400 text-xs ml-1">- Düzenlenebilir</span>
+                      Your Purchase Price ($) 
+                      <span className="text-blue-400 text-xs ml-1">- The price you paid</span>
                     </label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -785,13 +785,13 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                     </div>
                     {selectedCoin && !editingAsset && selectedCoin.price > 0 && (
                       <p className="text-xs text-gray-400 mt-1">
-                        Current price: ${selectedCoin.price.toFixed(selectedCoin.price < 1 ? 6 : 2)}
+                        Current market price: ${selectedCoin.price.toFixed(selectedCoin.price < 1 ? 6 : 2)}
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, purchasePrice: selectedCoin.price!.toFixed(selectedCoin.price! < 1 ? 6 : 2) })}
                           className="ml-2 text-blue-400 hover:text-blue-300 underline text-xs"
                         >
-                          Use Current Price
+                          Use Current Market Price
                         </button>
                       </p>
                     )}
@@ -930,10 +930,10 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                         <p className="text-gray-400 text-sm">
                           Current Value
                           {isPriceReal && realTimePrice && (
-                            <span className="ml-1 text-green-400 text-xs">● Live</span>
+                            <span className="ml-1 text-green-400 text-xs">● Live Market</span>
                           )}
                           {!isPriceReal && (
-                            <span className="ml-1 text-yellow-400 text-xs">⚠ Estimated</span>
+                            <span className="ml-1 text-yellow-400 text-xs">⚠ Using Purchase Price</span>
                           )}
                         </p>
                       </div>
@@ -943,7 +943,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                           {formatCurrency(asset.amount * asset.purchasePrice)}
                         </p>
                         <p className="text-gray-400 text-sm">
-                          Cost
+                          Initial Investment
                         </p>
                       </div>
 
@@ -987,16 +987,16 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                   <div className="mt-4 pt-4 border-t border-gray-800">
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
-                        <p className="text-gray-400">Purchase Price</p>
+                        <p className="text-gray-400">Your Purchase Price</p>
                         <p className="text-white font-medium">
                           {formatCurrency(asset.purchasePrice)}
                         </p>
                       </div>
                       <div>
                         <p className="text-gray-400">
-                          Current Price
+                          Current Market Price
                           {isPriceReal && realTimePrice && (
-                            <span className="ml-1 text-green-400 text-xs">● Real-time</span>
+                            <span className="ml-1 text-green-400 text-xs">● Live</span>
                           )}
                           {!isPriceReal && (
                             <span className="ml-1 text-yellow-400 text-xs">⚠ Using purchase price</span>
@@ -1013,7 +1013,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                           )}
                           {!isPriceReal && (
                             <span className="text-xs text-yellow-400">
-                              (Rate limited)
+                              (Rate limited - showing your purchase price)
                             </span>
                           )}
                         </div>

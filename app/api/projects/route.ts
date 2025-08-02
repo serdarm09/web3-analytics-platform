@@ -72,36 +72,57 @@ export async function GET(request: NextRequest) {
     }
 
     const projects = await Project.find(query)
+      .populate('addedBy', 'username name email isVerifiedCreator')
       .sort(sortQuery)
       .skip(skip)
       .limit(limit)
       .lean()
 
     // Ensure all projects have required marketData and metrics
-    const processedProjects = projects.map(project => ({
-      ...project,
-      id: project._id?.toString() || '',
-      // Normalize like/view fields for consistency with database schema
-      likes: project.likeCount || 0,
-      views: project.viewCount || project.views || 0,
-      likeCount: project.likeCount || 0,
-      viewCount: project.viewCount || project.views || 0,
-      marketData: {
-        ...(project.marketData || {}),
-        price: project.marketData?.price ?? 0,
-        marketCap: project.marketData?.marketCap ?? 0,
-        volume24h: project.marketData?.volume24h ?? 0,
-        change24h: project.marketData?.change24h ?? 0,
-        change7d: project.marketData?.change7d ?? 0,
-        circulatingSupply: project.marketData?.circulatingSupply ?? 0,
-        totalSupply: project.marketData?.totalSupply ?? 0
-      },
-      metrics: {
-        ...(project.metrics || {}),
-        socialScore: project.metrics?.socialScore ?? 0,
-        trendingScore: project.metrics?.trendingScore ?? 0,
-        hypeScore: project.metrics?.hypeScore ?? 0,
-        holders: project.metrics?.holders ?? 0
+    const processedProjects = await Promise.all(projects.map(async (project) => {
+      let enhancedCreatedBy: any = project.createdBy
+      
+      // If createdBy has userId, fetch user details including isVerifiedCreator
+      if (project.createdBy?.userId) {
+        try {
+          const creator = await User.findById(project.createdBy.userId).select('username name email isVerifiedCreator').lean()
+          if (creator) {
+            enhancedCreatedBy = {
+              ...project.createdBy,
+              isVerifiedCreator: creator.isVerifiedCreator || false
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching creator details:', error)
+        }
+      }
+
+      return {
+        ...project,
+        id: project._id?.toString() || '',
+        createdBy: enhancedCreatedBy,
+        // Normalize like/view fields for consistency with database schema
+        likes: project.likeCount || 0,
+        views: project.viewCount || project.views || 0,
+        likeCount: project.likeCount || 0,
+        viewCount: project.viewCount || project.views || 0,
+        marketData: {
+          ...(project.marketData || {}),
+          price: project.marketData?.price ?? 0,
+          marketCap: project.marketData?.marketCap ?? 0,
+          volume24h: project.marketData?.volume24h ?? 0,
+          change24h: project.marketData?.change24h ?? 0,
+          change7d: project.marketData?.change7d ?? 0,
+          circulatingSupply: project.marketData?.circulatingSupply ?? 0,
+          totalSupply: project.marketData?.totalSupply ?? 0
+        },
+        metrics: {
+          ...(project.metrics || {}),
+          socialScore: project.metrics?.socialScore ?? 0,
+          trendingScore: project.metrics?.trendingScore ?? 0,
+          hypeScore: project.metrics?.hypeScore ?? 0,
+          holders: project.metrics?.holders ?? 0
+        }
       }
     }))
 

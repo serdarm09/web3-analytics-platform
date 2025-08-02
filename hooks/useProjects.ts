@@ -43,6 +43,7 @@ export interface Project {
     userId: string
     username?: string
     email?: string
+    isVerifiedCreator?: boolean
   }
   viewCount?: number
   addCount?: number

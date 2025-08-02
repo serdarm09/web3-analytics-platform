@@ -367,13 +367,13 @@ export default function PortfolioPage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
-              <p className="text-sm text-gray-400 mb-1">Total Portfolio Value</p>
+              <p className="text-sm text-gray-400 mb-1">Current Portfolio Value</p>
               <p className="text-2xl font-bold text-white">
                 {showTotalValue ? formatCurrency(totalValue) : '••••••'}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-400 mb-1">Total Invested</p>
+              <p className="text-sm text-gray-400 mb-1">Total Initial Investment</p>
               <p className="text-xl font-semibold text-gray-300">
                 {showTotalValue ? formatCurrency(totalCost) : '••••••'}
               </p>
@@ -390,7 +390,7 @@ export default function PortfolioPage() {
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-400 mb-1">Total Return</p>
+              <p className="text-sm text-gray-400 mb-1">Total Return %</p>
               <p className={`text-xl font-semibold ${totalProfitLossPercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                 {showTotalValue ? formatPercentage(totalProfitLossPercentage) : '••••'}
               </p>

@@ -15,6 +15,7 @@ export interface IUser extends Document {
   twoFactorEnabled: boolean
   role: 'user' | 'admin'
   trackedProjects: Types.ObjectId[]
+  watchedProjects?: Types.ObjectId[]
   createdAt: Date
   updatedAt: Date
   comparePassword(candidatePassword: string): Promise<boolean>

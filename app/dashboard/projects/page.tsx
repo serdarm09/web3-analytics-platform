@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Heart, HeartOff, Edit2, Trash2 } from 'lucide-react'
+import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Heart, HeartOff, Edit2, Trash2, Award, Calendar } from 'lucide-react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { PremiumCard } from '@/components/ui/premium-card'
@@ -297,11 +297,27 @@ export default function ProjectsPage() {
                             {project.createdBy && (
                               <>
                                 <span className="text-gray-600">•</span>
-                                <p className="text-sm text-gray-400">
-                                  Created by <span className="text-blue-400 font-medium">
-                                    {project.createdBy.username || project.createdBy.email || 'Anonymous'}
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm text-gray-400">
+                                    Created by <span className="text-blue-400 font-medium">
+                                      {project.createdBy.username || project.createdBy.email || 'Anonymous'}
+                                    </span>
+                                  </p>
+                                  {project.createdBy.isVerifiedCreator && (
+                                    <Award className="w-4 h-4 text-blue-500" />
+                                  )}
+                                </div>
+                              </>
+                            )}
+                            {project.createdAt && (
+                              <>
+                                <span className="text-gray-600">•</span>
+                                <div className="flex items-center gap-1 text-gray-500">
+                                  <Calendar className="w-3 h-3" />
+                                  <span className="text-xs">
+                                    {new Date(project.createdAt).toLocaleDateString('tr-TR')}
                                   </span>
-                                </p>
+                                </div>
                               </>
                             )}
                           </div>

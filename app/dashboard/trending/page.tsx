@@ -253,8 +253,8 @@ export default function UserBasedTrendingPage() {
             variant="gradient"
             size="md"
             className="gap-2 w-full sm:w-auto"
+            disabled={loading}
           >
-            <Plus className="w-4 h-4" />
             Add New Project
           </PremiumButton>
           
@@ -265,9 +265,7 @@ export default function UserBasedTrendingPage() {
             size="md"
             className="gap-2 w-full sm:w-auto"
           >
-            <Filter className="w-4 h-4" />
             Filters
-            <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
           </PremiumButton>
           
           {/* Refresh Button */}
@@ -276,10 +274,9 @@ export default function UserBasedTrendingPage() {
             disabled={refreshing}
             variant="glow"
             size="md"
-            className="gap-2 w-full sm:w-auto"
+            className="gap-3 w-full sm:w-auto"
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
+            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
           </PremiumButton>
         </div>
       </div>
@@ -484,15 +481,26 @@ export default function UserBasedTrendingPage() {
                         </PremiumBadge>
                       )}
                     </div>
-                    {project.addedBy && typeof project.addedBy === 'object' && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <User className="w-3 h-3 text-gray-500" />
-                        <span className="text-xs text-gray-500">
-                          by {project.addedBy.username || project.addedBy.name || 'Unknown'}
-                        </span>
-                        {project.addedBy.isVerifiedCreator && (
-                          <Award className="w-3 h-3 text-blue-500" />
-                        )}
+                    {(project.addedBy || project.creator) && (
+                      <div className="flex items-center justify-between mt-1">
+                        <div className="flex items-center gap-2">
+                          <User className="w-3 h-3 text-gray-500" />
+                          <span className="text-xs text-gray-500">
+                            by {(typeof project.addedBy === 'object' ? 
+                                (project.addedBy.username || project.addedBy.name) : 
+                                project.creator?.name) || 'Unknown'}
+                          </span>
+                          {((typeof project.addedBy === 'object' && project.addedBy.isVerifiedCreator) || 
+                            project.creator?.isVerifiedCreator) && (
+                            <Award className="w-3 h-3 text-blue-500" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-gray-500">
+                          <Calendar className="w-3 h-3" />
+                          <span className="text-xs">
+                            {project.addedAt ? new Date(project.addedAt).toLocaleDateString('tr-TR') : 'N/A'}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -728,7 +736,7 @@ export default function UserBasedTrendingPage() {
                 </div>
 
                 {/* Publisher Information */}
-                {selectedProject.addedBy && (
+                {(selectedProject.addedBy || selectedProject.creator) && (
                   <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-4">
                     <h4 className="text-lg font-semibold text-white mb-3 flex items-center">
                       <User className="w-5 h-5 text-purple-400 mr-2" />
@@ -738,22 +746,25 @@ export default function UserBasedTrendingPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="text-white font-medium text-lg">
-                            {selectedProject.addedBy.name || selectedProject.addedBy.username || 'Anonymous User'}
+                            {selectedProject.addedBy?.name || 
+                             selectedProject.addedBy?.username || 
+                             selectedProject.creator?.name ||
+                             'Anonymous User'}
                           </p>
-                          {selectedProject.addedBy.isVerifiedCreator && (
+                          {(selectedProject.addedBy?.isVerifiedCreator || selectedProject.creator?.isVerifiedCreator) && (
                             <Award className="w-4 h-4 text-blue-500" />
                           )}
                         </div>
-                        {selectedProject.addedBy.username && selectedProject.addedBy.name && (
+                        {(selectedProject.addedBy?.username || selectedProject.creator?.username) && (
                           <p className="text-gray-400 text-sm">
-                            @{selectedProject.addedBy.username}
+                            @{selectedProject.addedBy?.username || selectedProject.creator?.username}
                           </p>
                         )}
                       </div>
                       <div className="flex items-center text-gray-400">
                         <Calendar className="w-4 h-4 mr-1" />
                         <span className="text-sm">
-                          {new Date(selectedProject.createdAt || selectedProject.addedAt).toLocaleDateString('en-US', {
+                          {new Date(selectedProject.createdAt || selectedProject.addedAt).toLocaleDateString('tr-TR', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'

@@ -6,6 +6,7 @@ import { Heart, Eye, Search, Filter, RefreshCw, User, Plus, TrendingUp, External
 import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumButton } from '@/components/ui/premium-button'
 import { PremiumInput } from '@/components/ui/premium-input'
+import { toast } from 'sonner'
 
 interface Project {
   _id: string
@@ -149,7 +150,36 @@ export default function WatchlistPage() {
 
   const handleAddToMyProjects = async (e: React.MouseEvent, projectId: string) => {
     e.stopPropagation()
-    console.log('Adding project to watchlist:', projectId)
+    
+    try {
+      console.log('Adding project to watchlist:', projectId)
+      
+      const response = await fetch('/api/user/watchlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          projectId: projectId
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to add project')
+      }
+
+      const result = await response.json()
+      toast.success('Project added to your watchlist successfully!')
+      
+    } catch (error) {
+      console.error('Error adding project:', error)
+      if (error instanceof Error && error.message === 'Project already in watchlist') {
+        toast.info('Project is already in your watchlist')
+      } else {
+        toast.error(error instanceof Error ? error.message : 'Failed to add project to watchlist')
+      }
+    }
   }
 
   const handleViewProjectDetails = async (project: Project) => {
@@ -216,8 +246,8 @@ export default function WatchlistPage() {
             size="sm"
             className="flex items-center space-x-2"
           >
-            <RefreshCw className="h-4 w-4" />
-            <span>Refresh</span>
+              <RefreshCw className={`h-4 w-4 mr-1 sm:mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
           </PremiumButton>
         </div>
       </div>
@@ -323,15 +353,17 @@ export default function WatchlistPage() {
                   {(project.createdBy || project.addedBy) && (
                     <div className="flex items-center space-x-2 mb-4 p-3 bg-gray-800/20 rounded-lg">
                       <User className="w-4 h-4 text-purple-400" />
-                      <span className="text-sm text-gray-300">
-                        By {project.createdBy?.username || project.createdBy?.email || project.addedBy?.username || project.addedBy?.name || 'Anonymous'}
-                      </span>
-                      {(project.createdBy?.isVerifiedCreator || project.addedBy?.isVerifiedCreator) && (
-                        <Award className="w-4 h-4 text-yellow-400" />
-                      )}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-300">
+                          By {project.createdBy?.username || project.createdBy?.email || project.addedBy?.username || project.addedBy?.name || 'Anonymous'}
+                        </span>
+                        {(project.createdBy?.isVerifiedCreator || project.addedBy?.isVerifiedCreator) && (
+                          <Award className="w-4 h-4 text-blue-500" />
+                        )}
+                      </div>
                       <div className="flex items-center space-x-1 text-gray-400 ml-auto">
                         <span className="text-xs">
-                          {new Date(project.createdAt).toLocaleDateString()}
+                          {new Date(project.createdAt).toLocaleDateString('tr-TR')}
                         </span>
                       </div>
                     </div>
@@ -452,7 +484,7 @@ export default function WatchlistPage() {
                             {selectedProject.createdBy?.username || selectedProject.createdBy?.email || selectedProject.addedBy?.name || selectedProject.addedBy?.username || 'Anonymous User'}
                           </p>
                           {(selectedProject.createdBy?.isVerifiedCreator || selectedProject.addedBy?.isVerifiedCreator) && (
-                            <Award className="w-5 h-5 text-yellow-400" />
+                            <Award className="w-5 h-5 text-blue-500" />
                           )}
                         </div>
                         {(selectedProject.createdBy?.username || selectedProject.addedBy?.username) && (
