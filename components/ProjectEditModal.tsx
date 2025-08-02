@@ -258,20 +258,20 @@ export default function ProjectEditModal({ isOpen, onClose, projectId, onProject
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         onClick={handleClose}
       />
       
       {/* Modal */}
       <div className="relative z-50 flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <div className="relative bg-black/95 backdrop-blur-xl border border-gray-800 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <div className="flex items-center justify-between p-6 border-b border-gray-800 bg-gray-900/50">
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-accent-slate to-accent-teal bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                 Edit Project
               </h2>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-gray-500 text-sm mt-1">
                 Update your cryptocurrency project details
               </p>
             </div>
@@ -279,24 +279,24 @@ export default function ProjectEditModal({ isOpen, onClose, projectId, onProject
             <button
               onClick={handleClose}
               disabled={isLoading}
-              className="p-2 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-gray-400 hover:text-white"
             >
-              <X className="h-6 w-6 text-gray-400" />
+              <X className="h-6 w-6" />
             </button>
           </div>
 
           {/* Content */}
-          <div className="max-h-[calc(90vh-120px)] overflow-y-auto">
+          <div className="max-h-[calc(90vh-120px)] overflow-y-auto bg-black">
             {isLoadingProject ? (
               <div className="p-12 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-800 rounded-full mb-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-teal"></div>
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-900 border border-gray-800 rounded-full mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400"></div>
                 </div>
-                <p className="text-gray-400">Loading project details...</p>
+                <p className="text-gray-500">Loading project details...</p>
               </div>
             ) : success ? (
               <div className="p-12 text-center">
-                <div className="mx-auto w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4">
+                <div className="mx-auto w-16 h-16 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center mb-4">
                   <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -327,7 +327,13 @@ export default function ProjectEditModal({ isOpen, onClose, projectId, onProject
               </div>
             ) : (
               <div className="p-12 text-center">
-                <p className="text-red-400">Failed to load project data</p>
+                <div className="flex flex-col items-center space-y-4">
+                  <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-red-400 text-lg font-medium">Failed to load project data</p>
+                  <p className="text-gray-400 text-sm">Please try refreshing the page or contact support</p>
+                </div>
               </div>
             )}
           </div>

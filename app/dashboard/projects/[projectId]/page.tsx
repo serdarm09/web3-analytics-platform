@@ -290,14 +290,15 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <PremiumButton 
-          variant="ghost" 
-          onClick={() => router.back()}
-          className="flex items-center gap-2"
-        >
+    <div className="min-h-screen bg-black text-white">
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <PremiumButton 
+            variant="ghost" 
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-gray-400 hover:text-white border-gray-700 hover:border-gray-600"
+          >
           <ArrowLeft className="w-4 h-4" />
           Back
         </PremiumButton>
@@ -355,9 +356,9 @@ export default function ProjectDetailPage() {
       </div>
 
       {/* Project Header */}
-      <PremiumCard className="p-8">
+      <PremiumCard className="p-8 bg-gray-900/50 border-gray-800 backdrop-blur-xl">
         <div className="flex items-start gap-6">
-          <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0">
+          <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700 flex-shrink-0">
             {project.logo ? (
               <Image
                 src={project.logo}
@@ -366,7 +367,7 @@ export default function ProjectDetailPage() {
                 className="object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-600">
+              <div className="w-full h-full flex items-center justify-center text-gray-500">
                 <Star className="w-8 h-8" />
               </div>
             )}
@@ -374,22 +375,22 @@ export default function ProjectDetailPage() {
           
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-white">{project.name}</h1>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">{project.name}</h1>
               {project.symbol && (
-                <PremiumBadge variant="outline" size="lg">
+                <PremiumBadge variant="outline" size="lg" className="border-gray-600 text-gray-300">
                   {project.symbol}
                 </PremiumBadge>
               )}
-              <PremiumBadge variant="default">
+              <PremiumBadge variant="default" className="bg-gray-800 text-gray-300 border-gray-700">
                 {project.category}
               </PremiumBadge>
             </div>
             
-            <p className="text-gray-300 text-lg mb-4 leading-relaxed">
+            <p className="text-gray-400 text-lg mb-4 leading-relaxed">
               {project.description}
             </p>
             
-            <div className="flex items-center gap-4 text-sm text-gray-400">
+            <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
                 <span>By {project.addedBy.name || project.addedBy.username}</span>
@@ -410,7 +411,7 @@ export default function ProjectDetailPage() {
       </PremiumCard>
 
       {/* Tab Navigation */}
-      <div className="border-b border-gray-700">
+      <div className="border-b border-gray-800">
         <nav className="flex space-x-8">
           {[
             { id: 'overview', label: 'Overview', icon: Eye },
@@ -423,8 +424,8 @@ export default function ProjectDetailPage() {
               onClick={() => setActiveTab(id as any)}
               className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === id
-                  ? 'border-purple-500 text-purple-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-300'
+                  ? 'border-purple-400 text-purple-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-400'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -441,17 +442,20 @@ export default function ProjectDetailPage() {
             <div className="space-y-6">
               {/* Market Data */}
               {project.marketData && (
-                <PremiumCard className="p-6">
-                  <h3 className="text-xl font-semibold text-white mb-4">Market Data</h3>
+                <PremiumCard className="p-6 bg-gray-900/50 border-gray-800 backdrop-blur-xl">
+                  <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-purple-400" />
+                    Market Data
+                  </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-gray-800/30 rounded-lg">
-                      <p className="text-sm text-gray-400 mb-1">Price</p>
+                    <div className="text-center p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+                      <p className="text-sm text-gray-500 mb-1">Price</p>
                       <p className="text-lg font-bold text-white">
                         ${project.marketData.price?.toFixed(6) || '0.000000'}
                       </p>
                     </div>
-                    <div className="text-center p-4 bg-gray-800/30 rounded-lg">
-                      <p className="text-sm text-gray-400 mb-1">24h Change</p>
+                    <div className="text-center p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+                      <p className="text-sm text-gray-500 mb-1">24h Change</p>
                       <p className={`text-lg font-bold flex items-center justify-center gap-1 ${
                         (project.marketData.priceChange24h || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                       }`}>
@@ -463,14 +467,14 @@ export default function ProjectDetailPage() {
                         {Math.abs(project.marketData.priceChange24h || 0).toFixed(2)}%
                       </p>
                     </div>
-                    <div className="text-center p-4 bg-gray-800/30 rounded-lg">
-                      <p className="text-sm text-gray-400 mb-1">Market Cap</p>
+                    <div className="text-center p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+                      <p className="text-sm text-gray-500 mb-1">Market Cap</p>
                       <p className="text-lg font-bold text-white">
                         {formatNumber(project.marketData.marketCap || 0)}
                       </p>
                     </div>
-                    <div className="text-center p-4 bg-gray-800/30 rounded-lg">
-                      <p className="text-sm text-gray-400 mb-1">Volume 24h</p>
+                    <div className="text-center p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+                      <p className="text-sm text-gray-500 mb-1">Volume 24h</p>
                       <p className="text-lg font-bold text-white">
                         {formatNumber(project.marketData.volume24h || 0)}
                       </p>
@@ -480,20 +484,23 @@ export default function ProjectDetailPage() {
               )}
 
               {/* Description & Details */}
-              <PremiumCard className="p-6">
-                <h3 className="text-xl font-semibold text-white mb-4">About {project.name}</h3>
+              <PremiumCard className="p-6 bg-gray-900/50 border-gray-800 backdrop-blur-xl">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-purple-400" />
+                  About {project.name}
+                </h3>
                 <div className="prose prose-gray max-w-none">
-                  <p className="text-gray-300 leading-relaxed">
+                  <p className="text-gray-400 leading-relaxed">
                     {project.description}
                   </p>
                 </div>
                 
                 {project.tags && project.tags.length > 0 && (
                   <div className="mt-6">
-                    <h4 className="text-sm font-medium text-gray-400 mb-3">Tags</h4>
+                    <h4 className="text-sm font-medium text-gray-500 mb-3">Tags</h4>
                     <div className="flex flex-wrap gap-2">
                       {project.tags.map((tag, index) => (
-                        <PremiumBadge key={index} variant="outline" size="sm">
+                        <PremiumBadge key={index} variant="outline" size="sm" className="border-gray-600 text-gray-400">
                           {tag}
                         </PremiumBadge>
                       ))}
@@ -626,42 +633,60 @@ export default function ProjectDetailPage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Quick Stats */}
-          <PremiumCard className="p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Quick Stats</h3>
+          <PremiumCard className="p-6 bg-gray-900/50 border-gray-800 backdrop-blur-xl">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-purple-400" />
+              Quick Stats
+            </h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Views</span>
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+                <span className="text-gray-500 flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Views
+                </span>
                 <span className="text-white font-medium">{formatCompactNumber(project.metrics?.viewCount || 0)}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Likes</span>
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+                <span className="text-gray-500 flex items-center gap-2">
+                  <Heart className="w-4 h-4" />
+                  Likes
+                </span>
                 <span className="text-white font-medium">{formatCompactNumber(project.metrics?.likeCount || 0)}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Tracked by</span>
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+                <span className="text-gray-500 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Tracked by
+                </span>
                 <span className="text-white font-medium">{formatCompactNumber(project.metrics?.addCount || 0)}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Category</span>
+              <div className="flex items-center justify-between p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+                <span className="text-gray-500 flex items-center gap-2">
+                  <Star className="w-4 h-4" />
+                  Category
+                </span>
                 <span className="text-white font-medium">{project.category}</span>
               </div>
             </div>
           </PremiumCard>
 
           {/* Links */}
-          <PremiumCard className="p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Links</h3>
+          <PremiumCard className="p-6 bg-gray-900/50 border-gray-800 backdrop-blur-xl">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <ExternalLink className="w-5 h-5 text-purple-400" />
+              Links
+            </h3>
             <div className="space-y-3">
               {project.website && (
                 <a
                   href={project.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg hover:bg-gray-700/30 transition-colors"
+                  className="flex items-center gap-3 p-3 bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-700/50 transition-colors"
                 >
                   <Globe className="w-5 h-5 text-blue-400" />
                   <span className="text-white">Website</span>
-                  <ExternalLink className="w-4 h-4 text-gray-400 ml-auto" />
+                  <ExternalLink className="w-4 h-4 text-gray-500 ml-auto" />
                 </a>
               )}
               {project.socialLinks?.twitter && (
@@ -669,11 +694,11 @@ export default function ProjectDetailPage() {
                   href={project.socialLinks.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg hover:bg-gray-700/30 transition-colors"
+                  className="flex items-center gap-3 p-3 bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-700/50 transition-colors"
                 >
                   <Twitter className="w-5 h-5 text-blue-400" />
                   <span className="text-white">Twitter</span>
-                  <ExternalLink className="w-4 h-4 text-gray-400 ml-auto" />
+                  <ExternalLink className="w-4 h-4 text-gray-500 ml-auto" />
                 </a>
               )}
               {project.socialLinks?.github && (
@@ -681,11 +706,11 @@ export default function ProjectDetailPage() {
                   href={project.socialLinks.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg hover:bg-gray-700/30 transition-colors"
+                  className="flex items-center gap-3 p-3 bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-700/50 transition-colors"
                 >
                   <Github className="w-5 h-5 text-gray-400" />
                   <span className="text-white">GitHub</span>
-                  <ExternalLink className="w-4 h-4 text-gray-400 ml-auto" />
+                  <ExternalLink className="w-4 h-4 text-gray-500 ml-auto" />
                 </a>
               )}
               {project.socialLinks?.telegram && (
@@ -693,11 +718,11 @@ export default function ProjectDetailPage() {
                   href={project.socialLinks.telegram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg hover:bg-gray-700/30 transition-colors"
+                  className="flex items-center gap-3 p-3 bg-gray-800/50 border border-gray-700 rounded-lg hover:bg-gray-700/50 transition-colors"
                 >
                   <ExternalLink className="w-5 h-5 text-blue-400" />
                   <span className="text-white">Telegram</span>
-                  <ExternalLink className="w-4 h-4 text-gray-400 ml-auto" />
+                  <ExternalLink className="w-4 h-4 text-gray-500 ml-auto" />
                 </a>
               )}
             </div>
@@ -705,10 +730,13 @@ export default function ProjectDetailPage() {
 
           {/* Contract Address */}
           {project.contractAddress && (
-            <PremiumCard className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Contract</h3>
-              <div className="p-3 bg-gray-800/30 rounded-lg">
-                <p className="text-xs text-gray-400 mb-1">Contract Address</p>
+            <PremiumCard className="p-6 bg-gray-900/50 border-gray-800 backdrop-blur-xl">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Network className="w-5 h-5 text-purple-400" />
+                Contract
+              </h3>
+              <div className="p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+                <p className="text-xs text-gray-500 mb-1">Contract Address</p>
                 <div className="flex items-center gap-2">
                   <p className="text-white font-mono text-sm flex-1 truncate">
                     {project.contractAddress}
@@ -718,7 +746,7 @@ export default function ProjectDetailPage() {
                       navigator.clipboard.writeText(project.contractAddress!)
                       toast.success('Address copied!')
                     }}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-500 hover:text-white transition-colors"
                   >
                     <Copy className="w-4 h-4" />
                   </button>
@@ -758,6 +786,7 @@ export default function ProjectDetailPage() {
           )}
         </div>
       </div>
+    </div>
     </div>
   )
 }
