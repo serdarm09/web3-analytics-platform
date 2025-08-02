@@ -9,7 +9,6 @@ import {
   DollarSign, 
   TrendingUp,
   TrendingDown,
-  Edit,
   Trash2,
   Search,
   Loader2,
@@ -411,56 +410,6 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
     }
   }
 
-  const handleEditAsset = (asset: Asset) => {
-    setEditingAsset(asset)
-    setFormData({
-      symbol: asset.symbol,
-      amount: asset.amount.toString(),
-      purchasePrice: asset.purchasePrice.toString(),
-      purchaseDate: new Date(asset.purchaseDate).toISOString().split('T')[0]
-    })
-    setShowAddForm(true)
-  }
-
-  const handleUpdateAsset = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingAsset?._id) return
-
-    setIsLoading(true)
-
-    try {
-      const token = localStorage.getItem('auth_token')
-      
-      const response = await fetch(`/api/portfolios/${portfolioId}/assets`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        body: JSON.stringify({
-          assetId: editingAsset._id,
-          amount: parseFloat(formData.amount),
-          purchasePrice: parseFloat(formData.purchasePrice),
-          purchaseDate: formData.purchaseDate
-        }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to update asset')
-      }
-
-      toast.success('Asset updated successfully!')
-      resetForm()
-      onAssetsUpdate()
-    } catch (error) {
-      console.error('Error updating asset:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to update asset')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleDeleteAsset = async (assetId: string) => {
     if (!confirm('Bu varlığı kaldırmak istediğinizden emin misiniz?')) return
 
@@ -568,7 +517,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                 </button>
               </div>
 
-              <form onSubmit={editingAsset ? handleUpdateAsset : handleAddAsset} className="space-y-6">
+              <form onSubmit={handleAddAsset} className="space-y-6">
                 {/* Coin Search Section */}
                 {!editingAsset && (
                   <div className="relative">
@@ -844,7 +793,7 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                   <StarBorder
                     as="button"
                     type="submit"
-                    disabled={isLoading || (!editingAsset && !formData.symbol)}
+                    disabled={isLoading || !formData.symbol}
                     color="#3B82F6"
                     speed="4s"
                     className="min-w-[150px]"
@@ -852,10 +801,10 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                     {isLoading ? (
                       <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Kaydediliyor...</span>
+                        <span>Saving...</span>
                       </div>
                     ) : (
-                      <span>{editingAsset ? 'Update' : 'Add to Portfolio'}</span>
+                      <span>Add to Portfolio</span>
                     )}
                   </StarBorder>
                 </div>
@@ -966,13 +915,6 @@ export default function PortfolioAssetManager({ portfolioId, assets, onAssetsUpd
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleEditAsset(asset)}
-                          className="p-2 text-gray-400 hover:text-accent-slate transition-colors"
-                          disabled={isLoading}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
                         <button
                           onClick={() => asset._id && handleDeleteAsset(asset._id)}
                           className="p-2 text-gray-400 hover:text-red-400 transition-colors"

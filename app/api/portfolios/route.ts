@@ -57,6 +57,12 @@ async function updatePortfolioMetrics(portfolio: any) {
   const prices = await getCryptoPrices(symbols)
   
   console.log('Fetched prices:', prices)
+  console.log('Portfolio assets before update:', portfolio.assets.map((asset: any) => ({
+    symbol: asset.symbol,
+    amount: asset.amount,
+    purchasePrice: asset.purchasePrice,
+    currentPrice: asset.currentPrice
+  })))
 
   let totalValue = 0
   let totalCost = 0

@@ -8,7 +8,7 @@ interface Asset {
   symbol: string
   name: string
   amount: number
-  avgBuyPrice: number
+  purchasePrice: number
   currentPrice?: number
 }
 
@@ -36,14 +36,14 @@ interface AddAssetData {
   symbol: string
   name: string
   amount: number
-  buyPrice: number
+  purchasePrice: number
 }
 
 interface UpdateAssetData {
   portfolioId: string
   assetSymbol: string
   amount: number
-  avgBuyPrice: number
+  purchasePrice: number
 }
 
 export function usePortfolio() {
