@@ -9,7 +9,7 @@ import { PremiumCard } from '@/components/ui/premium-card'
 import { PremiumInput } from '@/components/ui/premium-input'
 import { PremiumBadge } from '@/components/ui/premium-badge'
 import { PremiumButton } from '@/components/ui/premium-button'
-import ProjectCreationModal from '@/components/ProjectCreationModal'
+import ProjectCreationFormEnhanced from '@/components/ProjectCreationFormEnhanced'
 import ProjectEditModal from '@/components/ProjectEditModal'
 import { useProjects } from '@/hooks/useProjects'
 import { useAuth } from '@/hooks/useAuth'
@@ -72,7 +72,8 @@ export default function ProjectsPage() {
     })
   })() : []
 
-  const handleProjectCreated = () => {
+  const handleProjectCreated = (data?: any) => {
+    setIsModalOpen(false)
     refetch()
   }
 
@@ -488,11 +489,25 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      <ProjectCreationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onProjectCreated={handleProjectCreated}
-      />
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-lg border border-gray-700 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-white">Create New Project</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <ProjectCreationFormEnhanced 
+              onSubmit={handleProjectCreated}
+              onCancel={() => setIsModalOpen(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {editingProjectId && (
         <ProjectEditModal

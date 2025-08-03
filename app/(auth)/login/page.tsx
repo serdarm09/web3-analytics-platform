@@ -251,8 +251,8 @@ export default function LoginPage() {
               >
                 <PremiumInput
                   icon={Mail}
-                  type="email"
-                  placeholder="Email address"
+                  type="text"
+                  placeholder="Email or Username"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required

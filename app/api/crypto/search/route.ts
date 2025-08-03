@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         if (listResponse.ok) {
           coinListCache = await listResponse.json()
           cacheTimestamp = now
-          console.log(`Cached ${coinListCache.length} coins`)
+
         }
       } catch (error) {
         console.error('Error fetching coin list:', error)

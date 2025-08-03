@@ -6,8 +6,6 @@ import { rateLimitPresets } from '@/lib/middleware/rateLimiter'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔐 Login attempt started')
-    
     // Check database connection first
     const dbConnection = await dbConnect()
     if (!dbConnection) {
@@ -28,7 +26,6 @@ export async function POST(request: NextRequest) {
         let body
         try {
           const text = await req.text()
-          console.log('📋 Raw request body length:', text?.length || 0)
           
           if (!text || text.trim() === '') {
             return NextResponse.json(
@@ -52,13 +49,6 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        console.log('📋 Login data received:', {
-          email: body.email ? 'PROVIDED' : 'NOT PROVIDED',
-          password: body.password ? 'PROVIDED' : 'NOT PROVIDED',
-          walletAddress: body.walletAddress ? 'PROVIDED' : 'NOT PROVIDED',
-          loginMethod: body.loginMethod
-        })
-        
         const { email, password, walletAddress, loginMethod } = body
 
         // Validate based on login method
@@ -97,8 +87,8 @@ export async function POST(request: NextRequest) {
             name: user.name,
             walletAddress: user.walletAddress,
             registrationMethod: user.registrationMethod,
-            subscription: user.subscription,
             isVerified: user.isVerified,
+            isAdmin: user.isAdmin || false,
             avatar: user.avatar,
             createdAt: user.createdAt,
           }
@@ -131,54 +121,45 @@ export async function POST(request: NextRequest) {
             path: '/'
           })
 
-          console.log('✅ Wallet login cookies set successfully')
           return response
 
         } else if (loginMethod === 'email') {
-          // Email login validation
+          // Email/Username login validation
           if (!email || !password) {
             return NextResponse.json(
               { 
-                error: 'Email and password are required',
+                error: 'Email/Username and password are required',
                 success: false 
               },
               { status: 400 }
             )
           }
 
-          // Email format validation
+          // Check if input is email or username
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-          if (!emailRegex.test(email)) {
-            return NextResponse.json(
-              { 
-                error: 'Please provide a valid email address',
-                success: false 
-              },
-              { status: 400 }
-            )
-          }
+          const isEmail = emailRegex.test(email)
 
-          // Find user by email
-          console.log('🔍 Looking for user with email:', email?.toLowerCase())
-          const user = await User.findOne({ email: email.toLowerCase() })
+          let user;
+          if (isEmail) {
+            // Find user by email
+            user = await User.findOne({ email: email.toLowerCase() })
+          } else {
+            // Find user by username
+            user = await User.findOne({ username: email })
+          }
 
           if (!user) {
-            console.log('❌ User not found with email:', email?.toLowerCase())
             return NextResponse.json(
               { 
-                error: 'Invalid email or password',
+                error: 'Invalid credentials',
                 success: false 
               },
               { status: 401 }
             )
           }
-          
-          console.log('✅ User found:', { id: user._id, email: user.email, username: user.username, registrationMethod: user.registrationMethod })
 
           // Check password
-          console.log('🔐 Checking password...')
           const isPasswordValid = await user.comparePassword(password)
-          console.log('🔐 Password check result:', isPasswordValid)
 
           if (!isPasswordValid) {
             return NextResponse.json(
@@ -201,8 +182,8 @@ export async function POST(request: NextRequest) {
             name: user.name,
             walletAddress: user.walletAddress,
             registrationMethod: user.registrationMethod,
-            subscription: user.subscription,
             isVerified: user.isVerified,
+            isAdmin: user.isAdmin || false,
             avatar: user.avatar,
             createdAt: user.createdAt,
           }
@@ -235,7 +216,6 @@ export async function POST(request: NextRequest) {
             path: '/'
           })
 
-          console.log('✅ Login cookies set successfully')
           return response
 
         } else {

@@ -1,22 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/lib/database/mongoose'
+import dbConnect from '@/lib/database/mongoose'
 import InviteCode from '@/models/InviteCode'
 import User from '@/models/User'
-import jwt from 'jsonwebtoken'
+import { verifyToken } from '@/lib/auth/jwt'
 
 // Helper function to verify admin token
 async function verifyAdmin(request: NextRequest) {
-  const token = request.cookies.get('token')?.value || request.cookies.get('auth_token')?.value
+  const token = request.cookies.get('token')?.value || 
+                request.headers.get('authorization')?.replace('Bearer ', '')
 
   if (!token) {
     throw new Error('No authentication token')
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-    const user = await User.findById(decoded.userId || decoded.id)
+    const decoded = verifyToken(token)
+    if (!decoded) {
+      throw new Error('Invalid token')
+    }
     
-    if (!user || user.role !== 'admin') {
+    const user = await User.findById(decoded.userId)
+    
+    if (!user) {
+      throw new Error('User not found')
+    }
+
+    // Check if user is admin (you can modify this logic as needed)
+    const isAdmin = user.isAdmin === true || user.username === 'admin'
+    
+    if (!isAdmin) {
       throw new Error('Admin access required')
     }
 
@@ -30,16 +42,34 @@ async function verifyAdmin(request: NextRequest) {
 // GET - List all invite codes
 export async function GET(request: NextRequest) {
   try {
-    await connectDB()
+    await dbConnect()
     await verifyAdmin(request)
 
     const codes = await InviteCode.find()
-      .populate('createdBy', 'username email')
-      .populate('usedBy', 'username email')
+      .populate('createdBy', 'username name')
+      .populate('usedBy', 'username name')
       .sort({ createdAt: -1 })
       .limit(100)
 
-    return NextResponse.json({ codes })
+    const formattedCodes = codes.map(code => ({
+      id: code._id,
+      code: code.code,
+      usageLimit: code.usageLimit,
+      usageCount: code.usageCount,
+      remainingUses: code.usageLimit - code.usageCount,
+      isUsed: code.isUsed,
+      expiresAt: code.expiresAt,
+      createdAt: code.createdAt,
+      createdBy: (code.createdBy as any)?.name || (code.createdBy as any)?.username || 'Unknown',
+      usedBy: Array.isArray(code.usedBy) 
+        ? (code.usedBy as any[]).map(u => u.name || u.username)
+        : []
+    }))
+
+    return NextResponse.json({ 
+      success: true,
+      codes: formattedCodes 
+    })
 
   } catch (error: any) {
     console.error('Get invite codes error:', error)
@@ -53,10 +83,18 @@ export async function GET(request: NextRequest) {
 // POST - Create new invite code
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
+    await dbConnect()
     const admin = await verifyAdmin(request)
 
-    const { code, expiresAt } = await request.json()
+    const { code, expiresAt, usageLimit = 1 } = await request.json()
+
+    // Validate usage limit
+    if (usageLimit < 1 || usageLimit > 1000) {
+      return NextResponse.json(
+        { error: 'Usage limit must be between 1 and 1000' },
+        { status: 400 }
+      )
+    }
 
     // Generate code if not provided
     let finalCode = code
@@ -78,18 +116,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate expiration date
+    let expirationDate = null
+    if (expiresAt) {
+      expirationDate = new Date(expiresAt)
+      if (expirationDate <= new Date()) {
+        return NextResponse.json(
+          { error: 'Expiration date must be in the future' },
+          { status: 400 }
+        )
+      }
+    }
+
     const inviteCode = new InviteCode({
       code: finalCode.toUpperCase(),
       createdBy: admin._id,
-      expiresAt: expiresAt ? new Date(expiresAt) : null
+      usageLimit,
+      usageCount: 0,
+      isUsed: false,
+      expiresAt: expirationDate,
+      usedBy: []
     })
 
     await inviteCode.save()
 
     return NextResponse.json(
       { 
+        success: true,
         message: 'Invite code created successfully',
-        code: inviteCode
+        inviteCode: {
+          id: inviteCode._id,
+          code: inviteCode.code,
+          usageLimit: inviteCode.usageLimit,
+          usageCount: inviteCode.usageCount,
+          remainingUses: inviteCode.usageLimit - inviteCode.usageCount,
+          expiresAt: inviteCode.expiresAt,
+          createdAt: inviteCode.createdAt,
+          createdBy: admin.name || admin.username
+        }
       },
       { status: 201 }
     )
@@ -106,7 +170,7 @@ export async function POST(request: NextRequest) {
 // DELETE - Delete invite code
 export async function DELETE(request: NextRequest) {
   try {
-    await connectDB()
+    await dbConnect()
     await verifyAdmin(request)
 
     const { searchParams } = new URL(request.url)

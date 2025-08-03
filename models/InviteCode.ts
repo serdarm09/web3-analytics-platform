@@ -4,8 +4,10 @@ export interface IInviteCode extends Document {
   _id: Types.ObjectId
   code: string
   createdBy: Types.ObjectId
-  usedBy?: Types.ObjectId
+  usedBy?: Types.ObjectId[]
   isUsed: boolean
+  usageLimit: number
+  usageCount: number
   expiresAt?: Date
   createdAt: Date
   updatedAt: Date
@@ -27,14 +29,24 @@ const inviteCodeSchema = new Schema<IInviteCode>(
       ref: 'User',
       required: [true, 'Creator is required']
     },
-    usedBy: {
+    usedBy: [{
       type: Schema.Types.ObjectId,
-      ref: 'User',
-      default: null
-    },
+      ref: 'User'
+    }],
     isUsed: {
       type: Boolean,
       default: false
+    },
+    usageLimit: {
+      type: Number,
+      required: [true, 'Usage limit is required'],
+      min: [1, 'Usage limit must be at least 1'],
+      default: 1
+    },
+    usageCount: {
+      type: Number,
+      default: 0,
+      min: [0, 'Usage count cannot be negative']
     },
     expiresAt: {
       type: Date,
@@ -65,15 +77,18 @@ inviteCodeSchema.statics.generateCode = function(length: number = 8): string {
 
 // Check if code is valid and not expired
 inviteCodeSchema.methods.isValid = function(): boolean {
-  if (this.isUsed) return false
+  if (this.usageCount >= this.usageLimit) return false
   if (this.expiresAt && this.expiresAt < new Date()) return false
   return true
 }
 
 // Mark code as used
 inviteCodeSchema.methods.markAsUsed = function(userId: Types.ObjectId) {
-  this.isUsed = true
-  this.usedBy = userId
+  this.usedBy.push(userId)
+  this.usageCount += 1
+  if (this.usageCount >= this.usageLimit) {
+    this.isUsed = true
+  }
   return this.save()
 }
 

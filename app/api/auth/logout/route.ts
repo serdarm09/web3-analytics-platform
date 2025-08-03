@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚪 Logout API called')
+
     
     // Create response
     const response = NextResponse.json(
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       expires: new Date(0)
     })
 
-    console.log('🍪 Logout: Applied multiple cookie clearing strategies')
+
 
     return response
   } catch (error) {

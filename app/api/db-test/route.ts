@@ -3,7 +3,7 @@ import dbConnect from '@/lib/database/mongoose'
 
 export async function GET() {
   try {
-    console.log('🔍 Testing MongoDB connection...')
+
     
     const connection = await dbConnect()
     

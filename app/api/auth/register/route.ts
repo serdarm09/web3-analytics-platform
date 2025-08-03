@@ -1,39 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/database/mongoose'
 import User from '@/models/User'
+import InviteCode from '@/models/InviteCode'
 import { generateToken } from '@/lib/auth/jwt'
 import { rateLimitPresets } from '@/lib/middleware/rateLimiter'
 
 export async function POST(request: NextRequest) {
-  return rateLimitPresets.auth(request, async (req) => {
   try {
-    console.log('📝 Registration attempt started')
-    
+    // Check database connection
     const dbConnection = await dbConnect()
     if (!dbConnection) {
       console.error('❌ Database connection failed')
       return NextResponse.json(
         { 
-          error: 'Database connection failed. Please try again later.',
+          error: 'Database connection failed',
           success: false 
         },
         { status: 500 }
       )
     }
-    
-    console.log('✅ Database connected successfully')
 
-    const body = await req.json()
-    console.log('📋 Registration data received:', {
-      email: body.email ? 'PROVIDED' : 'NOT PROVIDED',
-      username: body.username,
-      password: body.password ? 'PROVIDED' : 'NOT PROVIDED',
-      name: body.name,
-      walletAddress: body.walletAddress ? 'PROVIDED' : 'NOT PROVIDED',
-      registrationMethod: body.registrationMethod
+
+
+    const { username, email, password, inviteCode, registrationMethod = 'email', name, walletAddress } = await request.json()
+
+    // Validate invite code - REQUIRED for all registrations
+    if (!inviteCode) {
+      return NextResponse.json(
+        { 
+          error: 'Invite code is required for registration',
+          success: false 
+        },
+        { status: 400 }
+      )
+    }
+
+    // Find and validate invite code
+    const inviteCodeDoc = await InviteCode.findOne({ 
+      code: inviteCode.toUpperCase() 
     })
-    
-    const { email, username, password, name, walletAddress, registrationMethod } = body
+
+    if (!inviteCodeDoc) {
+      return NextResponse.json(
+        { 
+          error: 'Invalid invite code',
+          success: false 
+        },
+        { status: 400 }
+      )
+    }
+
+    // Check if invite code is still valid
+    const isExpired = inviteCodeDoc.expiresAt && inviteCodeDoc.expiresAt < new Date()
+    const hasReachedLimit = inviteCodeDoc.usageCount >= inviteCodeDoc.usageLimit
+
+    if (isExpired) {
+      return NextResponse.json(
+        { 
+          error: 'Invite code has expired',
+          success: false 
+        },
+        { status: 400 }
+      )
+    }
+
+    if (hasReachedLimit) {
+      return NextResponse.json(
+        { 
+          error: 'Invite code has reached its usage limit',
+          success: false 
+        },
+        { status: 400 }
+      )
+    }
+
+
 
     // Validate username for both registration methods
     if (!username) {
@@ -47,10 +88,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if username already exists
-    console.log('🔍 Checking if username exists:', username)
+
     const existingUsername = await User.findOne({ username })
     if (existingUsername) {
-      console.log('❌ Username already exists:', username)
+
       return NextResponse.json(
         { 
           error: 'Username is already taken',
@@ -59,7 +100,7 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       )
     }
-    console.log('✅ Username is available:', username)
+
 
     // Validate required fields based on registration method
     if (registrationMethod === 'wallet') {
@@ -120,10 +161,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if user already exists (only for email registration)
-      console.log('🔍 Checking if email exists:', email?.toLowerCase())
+
       const existingUser = await User.findOne({ email: email.toLowerCase() })
       if (existingUser) {
-        console.log('❌ Email already exists:', email?.toLowerCase())
+
         return NextResponse.json(
           { 
             error: 'User with this email already exists',
@@ -132,7 +173,7 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         )
       }
-      console.log('✅ Email is available:', email?.toLowerCase())
+
     } else {
       return NextResponse.json(
         { 
@@ -161,6 +202,18 @@ export async function POST(request: NextRequest) {
     // Create new user
     const user = await User.create(userData)
 
+
+    // Update invite code usage
+    if (!inviteCodeDoc.usedBy) {
+      inviteCodeDoc.usedBy = []
+    }
+    inviteCodeDoc.usedBy.push(user._id)
+    inviteCodeDoc.usageCount += 1
+    if (inviteCodeDoc.usageCount >= inviteCodeDoc.usageLimit) {
+      inviteCodeDoc.isUsed = true
+    }
+    await inviteCodeDoc.save()
+
     // Generate JWT token
     const token = generateToken(user)
 
@@ -172,8 +225,8 @@ export async function POST(request: NextRequest) {
       name: user.name,
       walletAddress: user.walletAddress,
       registrationMethod: user.registrationMethod,
-      subscription: user.subscription,
       isVerified: user.isVerified,
+      isAdmin: user.isAdmin || false,
       avatar: user.avatar,
       createdAt: user.createdAt,
     }
@@ -234,5 +287,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-  })
 }

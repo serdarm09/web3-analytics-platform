@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     }
 
     const symbols = symbolsParam.split(',').map(s => s.trim().toLowerCase())
-    console.log('🔍 API Debug - Requested symbols:', symbolsParam)
+
 
     if (symbols.length === 0) {
       return NextResponse.json({ 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       .filter(Boolean)
 
     if (validIds.length === 0) {
-      console.log('⚠️ No supported symbols found in:', symbols)
+
       return NextResponse.json({ 
         success: true, 
         data: [] 
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
       }
     }).filter(item => item.price > 0)
 
-    console.log('🔍 API Debug - Results:', results.map(r => `${r.symbol}: $${r.price}`).join(', '))
+
 
     return NextResponse.json({
       success: true,

@@ -14,6 +14,7 @@ export interface IUser extends Document {
   isVerifiedCreator: boolean
   twoFactorEnabled: boolean
   role: 'user' | 'admin'
+  isAdmin: boolean
   trackedProjects: Types.ObjectId[]
   watchedProjects?: Types.ObjectId[]
   createdAt: Date
@@ -116,6 +117,10 @@ const userSchema = new Schema<IUser>(
         message: 'Role must be user or admin'
       },
       default: 'user',
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
     },
     trackedProjects: [{
       type: Schema.Types.ObjectId,

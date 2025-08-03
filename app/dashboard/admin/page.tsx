@@ -46,6 +46,8 @@ interface InviteCode {
   _id: string
   code: string
   isUsed: boolean
+  usageLimit: number
+  usageCount: number
   createdBy: {
     _id: string
     username: string
@@ -53,7 +55,7 @@ interface InviteCode {
   usedBy?: {
     _id: string
     username: string
-  }
+  }[]
   expiresAt?: string
   createdAt: string
 }
@@ -80,6 +82,7 @@ export default function AdminPage() {
   const [showCreateCodeModal, setShowCreateCodeModal] = useState(false)
   const [newCode, setNewCode] = useState('')
   const [codeExpiry, setCodeExpiry] = useState('')
+  const [usageLimit, setUsageLimit] = useState<number>(1)
 
   // Redirect if not admin
   useEffect(() => {
@@ -136,7 +139,6 @@ export default function AdminPage() {
       const data = await response.json()
 
       if (response.ok) {
-        console.log('Projects data:', data.projects) // Debug log
         setProjects(data.projects)
       } else {
         throw new Error(data.error)
@@ -170,7 +172,8 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           code: newCode.trim() || undefined,
-          expiresAt: codeExpiry || undefined
+          expiresAt: codeExpiry || undefined,
+          usageLimit: usageLimit
         })
       })
 
@@ -180,6 +183,7 @@ export default function AdminPage() {
         toast.success('Invite code created successfully')
         setNewCode('')
         setCodeExpiry('')
+        setUsageLimit(1)
         setShowCreateCodeModal(false)
         fetchCodes()
       } else {
@@ -296,7 +300,6 @@ export default function AdminPage() {
   }
 
   if (user.role !== 'admin') {
-    console.log('🚫 Access denied - User role:', user.role, 'User:', user)
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
         <div className="text-center">
@@ -718,7 +721,7 @@ export default function AdminPage() {
                         >
                           <div className="flex items-center gap-4">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              code.isUsed ? 'bg-gray-600' : 'bg-gradient-to-br from-accent-slate to-accent-teal'
+                              (code.usageCount >= code.usageLimit) ? 'bg-gray-600' : 'bg-gradient-to-br from-accent-slate to-accent-teal'
                             }`}>
                               <Key className="h-5 w-5 text-white" />
                             </div>
@@ -726,8 +729,8 @@ export default function AdminPage() {
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-mono text-lg font-medium text-white">{code.code}</span>
-                                {code.isUsed ? (
-                                  <PremiumBadge variant="outline">USED</PremiumBadge>
+                                {(code.usageCount >= code.usageLimit) ? (
+                                  <PremiumBadge variant="outline">USED UP</PremiumBadge>
                                 ) : (
                                   <PremiumBadge variant="success">ACTIVE</PremiumBadge>
                                 )}
@@ -735,11 +738,12 @@ export default function AdminPage() {
                               <div className="flex items-center gap-4 text-sm text-gray-400">
                                 <span>Created by {code.createdBy.username}</span>
                                 <span>{new Date(code.createdAt).toLocaleDateString()}</span>
+                                <span>Usage: {code.usageCount || 0}/{code.usageLimit || 1}</span>
                                 {code.expiresAt && (
                                   <span>Expires: {new Date(code.expiresAt).toLocaleDateString()}</span>
                                 )}
-                                {code.usedBy && (
-                                  <span>Used by {code.usedBy.username}</span>
+                                {code.usedBy && code.usedBy.length > 0 && (
+                                  <span>Last used by {code.usedBy[code.usedBy.length - 1].username}</span>
                                 )}
                               </div>
                             </div>
@@ -804,6 +808,21 @@ export default function AdminPage() {
                     value={codeExpiry}
                     onChange={(e) => setCodeExpiry(e.target.value)}
                     className="w-full px-4 py-2 rounded-lg border bg-gray-900/50 border-gray-600 text-white focus:outline-none focus:border-accent-slate"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-300 mb-2 block">
+                    Usage Limit
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={usageLimit}
+                    onChange={(e) => setUsageLimit(parseInt(e.target.value) || 1)}
+                    className="w-full px-4 py-2 rounded-lg border bg-gray-900/50 border-gray-600 text-white focus:outline-none focus:border-accent-slate"
+                    placeholder="Number of times this code can be used"
                   />
                 </div>
 

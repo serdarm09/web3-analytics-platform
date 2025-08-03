@@ -18,6 +18,7 @@ export default function RegisterPage() {
   const { connectWallet, address, isConnecting } = useWallet()
   
   const [formData, setFormData] = useState({
+    inviteCode: '',
     name: '',
     email: '',
     password: '',
@@ -28,6 +29,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [inviteCodeValid, setInviteCodeValid] = useState<boolean | null>(null)
+  const [inviteCodeInfo, setInviteCodeInfo] = useState<any>(null)
 
   // Redirect to dashboard if user is already logged in
   useEffect(() => {
@@ -36,9 +39,66 @@ export default function RegisterPage() {
     }
   }, [user, authLoading, router])
 
+  // Validate invite code
+  const validateInviteCode = async (code: string) => {
+    if (!code.trim()) {
+      setInviteCodeValid(null)
+      setInviteCodeInfo(null)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/auth/validate-invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: code.trim() }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.valid) {
+        setInviteCodeValid(true)
+        setInviteCodeInfo(data)
+      } else {
+        setInviteCodeValid(false)
+        setInviteCodeInfo(null)
+      }
+    } catch (error) {
+      console.error('Invite code validation error:', error)
+      setInviteCodeValid(false)
+      setInviteCodeInfo(null)
+    }
+  }
+
+  // Handle invite code change
+  const handleInviteCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const code = e.target.value.toUpperCase()
+    setFormData(prev => ({ ...prev, inviteCode: code }))
+    
+    // Debounce validation
+    const timeoutId = setTimeout(() => {
+      validateInviteCode(code)
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    // Validate invite code first
+    if (!formData.inviteCode.trim()) {
+      setError('Invite code is required')
+      return
+    }
+
+    if (inviteCodeValid !== true) {
+      setError('Please enter a valid invite code')
+      return
+    }
 
     // Validation
     if (!formData.agreeToTerms) {
@@ -65,9 +125,10 @@ export default function RegisterPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          inviteCode: formData.inviteCode,
           username: formData.name,
           name: formData.name,
-          email: formData.email,
+          email: formData.email || undefined, // Make email optional
           password: formData.password,
           registrationMethod: 'email'
         }),
@@ -223,15 +284,62 @@ export default function RegisterPage() {
 
             {/* Register Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Invite Code Field */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
+                className="relative"
+              >
+                <PremiumInput
+                  icon={Check}
+                  type="text"
+                  placeholder="Invite Code (Required)"
+                  value={formData.inviteCode}
+                  onChange={handleInviteCodeChange}
+                  required
+                  className={`
+                    ${inviteCodeValid === true ? 'border-green-500/50 bg-green-500/5' : ''}
+                    ${inviteCodeValid === false ? 'border-red-500/50 bg-red-500/5' : ''}
+                  `}
+                />
+                {/* Invite Code Status */}
+                {inviteCodeValid === true && inviteCodeInfo && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg"
+                  >
+                    <div className="text-green-400 text-sm">
+                      ✓ Valid invite code
+                    </div>
+                    <div className="text-green-300 text-xs mt-1">
+                      {inviteCodeInfo.remainingUses} uses remaining • Created by {inviteCodeInfo.createdBy}
+                    </div>
+                  </motion.div>
+                )}
+                {inviteCodeValid === false && formData.inviteCode.trim() && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg"
+                  >
+                    <div className="text-red-400 text-sm">
+                      ✗ Invalid or expired invite code
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
               >
                 <PremiumInput
                   icon={User}
                   type="text"
-                  placeholder="Full name"
+                  placeholder="Username"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
@@ -241,22 +349,21 @@ export default function RegisterPage() {
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.5 }}
               >
                 <PremiumInput
                   icon={Mail}
                   type="email"
-                  placeholder="Email address"
+                  placeholder="Email address (optional)"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
                 />
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.6 }}
                 className="relative"
               >
                 <PremiumInput
@@ -349,50 +456,11 @@ export default function RegisterPage() {
               </motion.div>
             </form>
 
-            {/* Divider */}
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-700" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-gray-900/80 text-gray-400">Or continue with</span>
-              </div>
-            </div>
-
-            {/* Wallet Connect */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.9 }}
-            >
-              <StarBorder
-                as="button"
-                type="button"
-                className="w-full"
-                color="#8B5CF6"
-                speed="5s"
-                onClick={handleWalletConnect}
-                disabled={isLoading || isConnecting}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Wallet className="w-4 h-4" />
-                  {isConnecting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 border-2 border-gray-400 border-t-white rounded-full animate-spin" />
-                      <span>Connecting...</span>
-                    </div>
-                  ) : (
-                    'Connect Wallet'
-                  )}
-                </div>
-              </StarBorder>
-            </motion.div>
-
             {/* Login Link */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.0 }}
+              transition={{ delay: 0.9 }}
               className="text-center mt-8 pt-6 border-t border-gray-800"
             >
               <p className="text-gray-400">
@@ -403,6 +471,9 @@ export default function RegisterPage() {
                 >
                   Sign in
                 </Link>
+              </p>
+              <p className="text-gray-500 text-sm mt-2">
+                Need an invite code? Contact an admin for access.
               </p>
             </motion.div>
           </PremiumCard>

@@ -37,6 +37,12 @@ export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarPr
 
   // Dynamic sidebar items based on user role
   const getSidebarItems = () => {
+    console.log('📋 Current user in sidebar:', { 
+      username: user?.username, 
+      isAdmin: user?.isAdmin, 
+      role: user?.role 
+    })
+    
     const baseItems = [
       {
         title: 'Dashboard',
@@ -81,7 +87,7 @@ export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarPr
     ]
 
     // Add admin link if user is admin
-    if (user?.role === 'admin') {
+    if (user?.isAdmin === true) {
       baseItems.push({
         title: 'Admin Panel',
         icon: Shield,

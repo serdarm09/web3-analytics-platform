@@ -96,15 +96,9 @@ export default function WalletTrackerPage() {
 
   useEffect(() => {
     // Test crypto polyfill on component mount
-    console.log('🔧 Wallet Tracker: Testing crypto polyfill...')
-    console.log('🔧 crypto object exists:', !!crypto)
-    console.log('🔧 crypto.randomUUID exists:', !!crypto?.randomUUID)
-    console.log('🔧 crypto.getRandomValues exists:', !!crypto?.getRandomValues)
-    
     if (crypto?.randomUUID) {
       try {
         const testUuid = crypto.randomUUID()
-        console.log('✅ crypto.randomUUID test successful:', testUuid)
       } catch (error) {
         console.error('❌ crypto.randomUUID test failed:', error)
       }

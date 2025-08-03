@@ -5,19 +5,14 @@ import { withAuth } from '@/lib/auth/middleware'
 
 async function handler(request: NextRequest): Promise<NextResponse> {
   try {
-    console.log('🔍 /api/auth/me request started')
+
     await dbConnect()
 
     const userId = request.headers.get('x-user-id')
     const authHeader = request.headers.get('authorization')
     
-    console.log('📋 Auth headers:', {
-      'x-user-id': userId ? 'PROVIDED' : 'NOT PROVIDED',
-      'authorization': authHeader ? 'PROVIDED' : 'NOT PROVIDED'
-    })
-    
     if (!userId) {
-      console.log('❌ User ID not found in request headers')
+
       return NextResponse.json(
         { 
           error: 'User ID not found in request',
@@ -50,7 +45,8 @@ async function handler(request: NextRequest): Promise<NextResponse> {
       isVerified: user.isVerified,
       avatar: user.avatar,
       twoFactorEnabled: user.twoFactorEnabled,
-      role: user.role || 'user', // Added role field!
+      role: user.role || 'user',
+      isAdmin: user.isAdmin || false, // Added isAdmin field!
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     }
