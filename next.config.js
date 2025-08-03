@@ -39,6 +39,10 @@ const nextConfig = {
         hostname: 'coin-images.coingecko.com',
       },
       {
+        protocol: 'https',
+        hostname: 'cdn.prod.website-files.com',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
       }

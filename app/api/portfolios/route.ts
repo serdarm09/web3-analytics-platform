@@ -45,10 +45,19 @@ async function getCryptoPrices(symbols: string[]) {
 // Update portfolio with current market prices
 async function updatePortfolioMetrics(portfolio: any) {
   if (!portfolio.assets || portfolio.assets.length === 0) {
-    portfolio.totalValue = 0
-    portfolio.totalCost = 0
-    portfolio.totalProfitLoss = 0
-    portfolio.totalProfitLossPercentage = 0
+    const updateData = {
+      totalValue: 0,
+      totalCost: 0,
+      totalProfitLoss: 0,
+      totalProfitLossPercentage: 0,
+      lastUpdated: new Date()
+    }
+    
+    // Update in database
+    await Portfolio.findByIdAndUpdate(portfolio._id, updateData)
+    
+    // Update local object
+    Object.assign(portfolio, updateData)
     return portfolio
   }
 
@@ -68,33 +77,48 @@ async function updatePortfolioMetrics(portfolio: any) {
   let totalCost = 0
 
   // Update each asset with current prices
-  portfolio.assets.forEach((asset: any) => {
+  const updatedAssets = portfolio.assets.map((asset: any) => {
     const symbolLower = asset.symbol.toLowerCase()
     const priceData = prices[symbolLower]
     const currentPrice = priceData?.usd || asset.purchasePrice // Fallback to purchase price
     const change24h = priceData?.usd_24h_change || 0
     
-    asset.currentPrice = currentPrice
-    asset.currentValue = asset.amount * currentPrice
-    asset.change24h = change24h
-    
+    const currentValue = asset.amount * currentPrice
     const cost = asset.amount * asset.purchasePrice
-    const profitLoss = asset.currentValue - cost
-    
-    asset.profitLoss = profitLoss
-    asset.profitLossPercentage = cost > 0 ? (profitLoss / cost) * 100 : 0
+    const profitLoss = currentValue - cost
     
     totalCost += cost
-    totalValue += asset.currentValue
+    totalValue += currentValue
     
     console.log(`Asset ${asset.symbol}: Purchase Price: $${asset.purchasePrice}, Current Price: $${currentPrice}, P&L: $${profitLoss}`)
+    
+    return {
+      ...asset,
+      currentPrice,
+      currentValue,
+      change24h,
+      profitLoss,
+      profitLossPercentage: cost > 0 ? (profitLoss / cost) * 100 : 0
+    }
   })
 
-  portfolio.totalValue = totalValue
-  portfolio.totalCost = totalCost
-  portfolio.totalProfitLoss = totalValue - totalCost
-  portfolio.totalProfitLossPercentage = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0
-  portfolio.lastUpdated = new Date()
+  const totalProfitLoss = totalValue - totalCost
+  const totalProfitLossPercentage = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0
+  
+  const updateData = {
+    assets: updatedAssets,
+    totalValue,
+    totalCost,
+    totalProfitLoss,
+    totalProfitLossPercentage,
+    lastUpdated: new Date()
+  }
+
+  // Update in database
+  await Portfolio.findByIdAndUpdate(portfolio._id, updateData)
+
+  // Update local object
+  Object.assign(portfolio, updateData)
 
   return portfolio
 }

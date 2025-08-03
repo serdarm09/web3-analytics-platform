@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Filter, TrendingUp, TrendingDown, Star, ExternalLink, Plus, Heart, HeartOff, Edit2, Trash2, Award, Calendar } from 'lucide-react'
 import Image from 'next/image'
@@ -20,16 +20,57 @@ export default function ProjectsPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
   const [showTrendingProjects, setShowTrendingProjects] = useState(false)
+  const [favoriteProjects, setFavoriteProjects] = useState<Set<string>>(new Set())
   
   const { user } = useAuth()
   const { projects, loading, error, refetch } = useProjects({
     search: searchQuery,
     category: selectedCategory === 'All' ? '' : selectedCategory
   })
+
+  // Load favorite projects from localStorage on component mount
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('favoriteProjects')
+    if (savedFavorites) {
+      setFavoriteProjects(new Set(JSON.parse(savedFavorites)))
+    }
+  }, [])
+
+  const handleToggleFavorite = (projectId: string) => {
+    const newFavorites = new Set(favoriteProjects)
+    if (newFavorites.has(projectId)) {
+      newFavorites.delete(projectId)
+    } else {
+      newFavorites.add(projectId)
+    }
+    setFavoriteProjects(newFavorites)
+    localStorage.setItem('favoriteProjects', JSON.stringify(Array.from(newFavorites)))
+  }
+
+  // Sort projects to show favorites first and apply favorites filter
+  const sortedProjects = projects ? (() => {
+    let filteredProjects = [...projects]
+    
+    // Filter by favorites if showFavoritesOnly is true
+    if (showFavoritesOnly) {
+      filteredProjects = filteredProjects.filter(project => favoriteProjects.has(project._id))
+    }
+    
+    // Sort to show favorites first
+    return filteredProjects.sort((a, b) => {
+      const aIsFavorite = favoriteProjects.has(a._id)
+      const bIsFavorite = favoriteProjects.has(b._id)
+      
+      if (aIsFavorite && !bIsFavorite) return -1
+      if (!aIsFavorite && bIsFavorite) return 1
+      return 0
+    })
+  })() : []
 
   const handleProjectCreated = () => {
     refetch()
@@ -148,14 +189,25 @@ export default function ProjectsPage() {
             icon={Search}
           />
         </div>
-        <PremiumButton
-          variant="outline"
-          size="md"
-          className="gap-2 w-full md:w-auto"
-        >
-          <Filter className="w-4 h-4" />
-          Filters
-        </PremiumButton>
+        <div className="flex gap-2">
+          <PremiumButton
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            variant={showFavoritesOnly ? "gradient" : "outline"}
+            size="md"
+            className="gap-2 w-full md:w-auto"
+          >
+            <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+            {showFavoritesOnly ? 'Show All' : 'Favorites Only'}
+          </PremiumButton>
+          <PremiumButton
+            variant="outline"
+            size="md"
+            className="gap-2 w-full md:w-auto"
+          >
+            <Filter className="w-4 h-4" />
+            Filters
+          </PremiumButton>
+        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -271,7 +323,7 @@ export default function ProjectsPage() {
               )}
             </PremiumCard>
           ) : (
-            projects.map((project, index) => (
+            sortedProjects.map((project, index) => (
               <motion.div
                 key={project._id}
                 initial={{ opacity: 0, y: 20 }}
@@ -288,6 +340,12 @@ export default function ProjectsPage() {
                           <div className="flex items-center gap-2">
                             <h3 className="text-lg font-semibold text-white">{project.name}</h3>
                             <span className="text-gray-400">{project.symbol}</span>
+                            {favoriteProjects.has(project._id) && (
+                              <PremiumBadge variant="outline" size="sm" className="text-yellow-400 border-yellow-400">
+                                <Star className="w-3 h-3 mr-1 fill-current" />
+                                Favorite
+                              </PremiumBadge>
+                            )}
                             <PremiumBadge variant="outline" size="sm">
                               {project.category}
                             </PremiumBadge>
@@ -412,12 +470,13 @@ export default function ProjectsPage() {
                         </PremiumButton>
                         
                         <PremiumButton 
+                          onClick={() => handleToggleFavorite(project._id)}
                           variant="ghost" 
                           size="sm" 
-                          className="p-2 gap-1"
-                          title="Add to favorites"
+                          className={`p-2 gap-1 ${favoriteProjects.has(project._id) ? 'text-yellow-400' : 'text-gray-400'}`}
+                          title={favoriteProjects.has(project._id) ? "Remove from favorites" : "Add to favorites"}
                         >
-                          <Star className="w-4 h-4" />
+                          <Star className={`w-4 h-4 ${favoriteProjects.has(project._id) ? 'fill-current' : ''}`} />
                         </PremiumButton>
                       </div>
                     </div>

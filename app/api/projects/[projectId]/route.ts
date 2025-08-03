@@ -37,7 +37,16 @@ export async function GET(
     }
 
     // Check if project is public or owned by the user
-    if (!project.isPublic && (project.addedBy as any)?._id?.toString() !== authResult.userId) {
+    const projectOwnerId = (project.addedBy as any)?._id?.toString() || (project.addedBy as any)?.toString() || project.addedBy
+    
+    console.log('Access check:', { 
+      isPublic: project.isPublic, 
+      projectOwnerId, 
+      authUserId: authResult.userId,
+      matches: projectOwnerId === authResult.userId 
+    })
+    
+    if (!project.isPublic && projectOwnerId !== authResult.userId) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 

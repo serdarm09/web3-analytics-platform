@@ -100,10 +100,31 @@ export default function PortfolioPage() {
     })) || []
   , [dbPortfolios])
 
-  const totalValue = portfolios?.reduce((sum: number, p: Portfolio) => sum + p.totalValue, 0) || 0
-  const totalCost = portfolios?.reduce((sum: number, p: Portfolio) => sum + p.totalCost, 0) || 0
+  // Calculate totals from individual portfolios (using their calculated metrics)
+  const totalValue = portfolios?.reduce((sum: number, p: Portfolio) => {
+    return sum + (p.totalValue || 0)
+  }, 0) || 0
+  
+  const totalCost = portfolios?.reduce((sum: number, p: Portfolio) => {
+    return sum + (p.totalCost || 0)
+  }, 0) || 0
+  
   const totalProfitLoss = totalValue - totalCost
-  const totalProfitLossPercentage = totalCost > 0 ? (totalProfitLoss / totalCost) * 100 : 0
+  const totalProfitLossPercentage = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0
+
+  console.log('Portfolio Debug:', {
+    portfoliosCount: portfolios?.length || 0,
+    totalValue,
+    totalCost,
+    totalProfitLoss,
+    totalProfitLossPercentage,
+    portfolioDetails: portfolios?.map(p => ({
+      name: p.name,
+      totalValue: p.totalValue,
+      totalCost: p.totalCost,
+      assetsCount: p.assets?.length || 0
+    }))
+  })
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
