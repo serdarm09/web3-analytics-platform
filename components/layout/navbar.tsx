@@ -16,6 +16,19 @@ export function Navbar() {
     { label: 'Contact', href: '#contact' },
   ]
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('#')) {
+      e.preventDefault()
+      const element = document.querySelector(href)
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    }
+  }
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black-primary/80 glassmorphism-dark">
       <div className="max-w-7xl mx-auto px-6">
@@ -53,17 +66,41 @@ export function Navbar() {
                 
                 {/* Icon */}
                 <motion.div className="relative flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-white" />
+                  {/* VelocityCrypto SVG Logo */}
+                  <svg width="20" height="20" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="navLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style={{stopColor:"#00D4FF", stopOpacity:1}} />
+                        <stop offset="30%" style={{stopColor:"#3B82F6", stopOpacity:1}} />
+                        <stop offset="70%" style={{stopColor:"#8B5CF6", stopOpacity:1}} />
+                        <stop offset="100%" style={{stopColor:"#06B6D4", stopOpacity:1}} />
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* V Shape for Velocity */}
+                    <path d="M8 10 L20 28 L32 10" stroke="url(#navLogoGradient)" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                    
+                    {/* Speed Lines */}
+                    <path d="M4 13 L7 13" stroke="url(#navLogoGradient)" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.8"/>
+                    <path d="M5 17 L9 17" stroke="url(#navLogoGradient)" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.6"/>
+                    <path d="M33 13 L36 13" stroke="url(#navLogoGradient)" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.8"/>
+                    <path d="M31 17 L35 17" stroke="url(#navLogoGradient)" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.6"/>
+                    
+                    {/* Crypto Elements */}
+                    <circle cx="20" cy="8" r="1" fill="url(#navLogoGradient)" opacity="0.9"/>
+                    <circle cx="16" cy="22" r="0.8" fill="url(#navLogoGradient)" opacity="0.7"/>
+                    <circle cx="24" cy="22" r="0.8" fill="url(#navLogoGradient)" opacity="0.7"/>
+                  </svg>
                   
-                  {/* Animated bars */}
+                  {/* Animated velocity effect */}
                   <motion.div className="absolute inset-0 flex items-end justify-center gap-0.5">
-                    {[0.3, 0.7, 0.5, 0.9].map((height, i) => (
+                    {[0.4, 0.8, 0.6, 1.0].map((height, i) => (
                       <motion.div
                         key={i}
-                        className="w-0.5 bg-gray-300/60"
+                        className="w-0.5 bg-gradient-to-t from-cyan-400/60 to-blue-400/60"
                         animate={{
                           height: isHovered ? `${height * 16}px` : '2px',
-                          opacity: isHovered ? 1 : 0
+                          opacity: isHovered ? 0.8 : 0
                         }}
                         transition={{ 
                           delay: i * 0.1,
@@ -83,7 +120,7 @@ export function Navbar() {
                 className="text-xl font-bold"
                 animate={{
                   backgroundImage: isHovered 
-                    ? "linear-gradient(to right, #60a5fa, #ffffff, #a78bfa)"
+                    ? "linear-gradient(to right, #00D4FF, #ffffff, #8B5CF6)"
                     : "linear-gradient(to right, #ffffff, #e5e7eb, #dbeafe)"
                 }}
                 style={{
@@ -93,13 +130,13 @@ export function Navbar() {
                 }}
                 transition={{ duration: 0.3 }}
               >
-                {isHovered ? "Analytics Pro" : "Web3Analytics"}
+                {isHovered ? "Velocity Pro" : "Velocity Crypto"}
               </motion.span>
               <motion.span 
                 className="text-xs text-gray-500/70 group-hover:text-gray-400 transition-colors duration-300 -mt-1"
                 animate={{ opacity: isHovered ? 1 : 0.7 }}
               >
-                Powered by 0xBenzen
+                {isHovered ? "Developer by @OxBenzen" : "Crypto Analytics"}
               </motion.span>
             </div>
           </Link>
@@ -110,6 +147,7 @@ export function Navbar() {
               <Link
                 key={item.label}
                 href={item.href}
+                onClick={(e) => handleNavClick(e, item.href)}
                 className="text-white-secondary hover:text-white transition-colors"
               >
                 {item.label}
@@ -170,8 +208,11 @@ export function Navbar() {
               <Link
                 key={item.label}
                 href={item.href}
+                onClick={(e) => {
+                  handleNavClick(e, item.href)
+                  setIsMenuOpen(false)
+                }}
                 className="block text-white-secondary hover:text-white transition-colors"
-                onClick={() => setIsMenuOpen(false)}
               >
                 {item.label}
               </Link>

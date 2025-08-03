@@ -120,9 +120,35 @@ export function Sidebar({ isOpen = true, onClose, onCollapsedChange }: SidebarPr
       {/* Logo */}
       <div className="p-6 border-b border-gray-border flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex-shrink-0" />
+          <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900 rounded-lg border border-gray-600/30">
+            {/* VelocityCrypto SVG Logo */}
+            <svg width="18" height="18" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="sidebarLogoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{stopColor:"#00D4FF", stopOpacity:1}} />
+                  <stop offset="30%" style={{stopColor:"#3B82F6", stopOpacity:1}} />
+                  <stop offset="70%" style={{stopColor:"#8B5CF6", stopOpacity:1}} />
+                  <stop offset="100%" style={{stopColor:"#06B6D4", stopOpacity:1}} />
+                </linearGradient>
+              </defs>
+              
+              {/* V Shape for Velocity */}
+              <path d="M7 9 L18 26 L29 9" stroke="url(#sidebarLogoGradient)" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+              
+              {/* Speed Lines */}
+              <path d="M4 12 L6 12" stroke="url(#sidebarLogoGradient)" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.8"/>
+              <path d="M4.5 16 L7.5 16" stroke="url(#sidebarLogoGradient)" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.6"/>
+              <path d="M30 12 L32 12" stroke="url(#sidebarLogoGradient)" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.8"/>
+              <path d="M28.5 16 L31.5 16" stroke="url(#sidebarLogoGradient)" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.6"/>
+              
+              {/* Crypto Elements */}
+              <circle cx="18" cy="7" r="0.8" fill="url(#sidebarLogoGradient)" opacity="0.9"/>
+              <circle cx="15" cy="20" r="0.6" fill="url(#sidebarLogoGradient)" opacity="0.7"/>
+              <circle cx="21" cy="20" r="0.6" fill="url(#sidebarLogoGradient)" opacity="0.7"/>
+            </svg>
+          </div>
           {(!isCollapsed || isMobile) && (
-            <span className="text-xl font-bold text-white">Web3Analytics</span>
+            <span className="text-xl font-bold text-white">VelocityCrypto</span>
           )}
         </Link>
         {isMobile && (

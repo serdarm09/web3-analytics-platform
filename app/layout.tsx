@@ -7,8 +7,77 @@ import Script from 'next/script'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Web3 Analytics Platform - Track, Analyze, and Manage Your Crypto Portfolio',
-  description: 'Modern Web3 analytics platform for tracking crypto projects, whale movements, trend analysis, and portfolio management.',
+  title: 'VelocityCrypto - Advanced Crypto Analytics & Portfolio Management',
+  description: 'VelocityCrypto offers advanced crypto analytics, portfolio tracking, whale movement analysis, and comprehensive DeFi insights for serious traders.',
+  keywords: ['velocitycrypto', 'crypto', 'analytics', 'portfolio', 'blockchain', 'defi', 'trading', 'whale tracker', 'velocity crypto'],
+  authors: [{ name: 'VelocityCrypto Team' }],
+  creator: 'VelocityCrypto',
+  publisher: 'VelocityCrypto',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://www.velocitycrypto.tech'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'VelocityCrypto - Advanced Crypto Analytics & Portfolio Management',
+    description: 'VelocityCrypto offers advanced crypto analytics, portfolio tracking, whale movement analysis, and comprehensive DeFi insights for serious traders.',
+    url: 'https://www.velocitycrypto.tech',
+    siteName: 'VelocityCrypto',
+    images: [
+      {
+        url: '/logo-512.svg',
+        width: 512,
+        height: 512,
+        alt: 'VelocityCrypto',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'VelocityCrypto - Advanced Crypto Analytics & Portfolio Management',
+    description: 'VelocityCrypto offers advanced crypto analytics, portfolio tracking, whale movement analysis, and comprehensive DeFi insights for serious traders.',
+    images: ['/logo-512.svg'],
+    creator: '@velocitycrypto',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/logo-192.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/logo-192.svg' },
+      { url: '/logo-512.svg', sizes: '512x512', type: 'image/svg+xml' },
+    ],
+    other: [
+      {
+        rel: 'apple-touch-icon-precomposed',
+        url: '/logo-192.svg',
+      },
+    ],
+  },
+  manifest: '/manifest.json',
+  verification: {
+    google: 'your-google-verification-code',
+    yandex: 'your-yandex-verification-code',
+  },
 }
 
 export default function RootLayout({
@@ -19,6 +88,26 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        {/* Additional SEO Meta Tags */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+        <meta name="theme-color" content="#3B82F6" />
+        <meta name="msapplication-TileColor" content="#3B82F6" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        
+        {/* PWA Meta Tags */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="W3Analytics" />
+        
+        {/* Additional Icons */}
+        <link rel="mask-icon" href="/logo-192.svg" color="#3B82F6" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        
+        {/* Preconnect for Performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
         <Script
           id="crypto-polyfill"
           strategy="afterInteractive"

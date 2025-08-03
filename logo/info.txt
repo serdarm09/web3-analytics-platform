@@ -1,0 +1,14 @@
+
+Hope you enjoy your new logo, here are the people that
+made your beautiful logo happen :)
+font name: Sansation_Regular
+font link: https://www.fontsquirrel.com/fonts/sansation
+font author: Bernd Montag
+font author site: mailto:berndmontag@gmx.de
+
+
+icon designer: Icons By Alfredo
+icon designer link: /creator/AlfredoCreates/
+        
+{"bg":"transparent","icon-gradient-0":"#920DE9","icon-gradient-1":"#1536F1","font":"#000000","slogan":"#141414"}
+      

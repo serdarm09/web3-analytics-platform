@@ -1,0 +1,56 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="230" fill="url(#logoGradient)" opacity="0.15"/>
+  
+  <!-- Main Logo Shape - V for Velocity -->
+  <g filter="url(#glow)">
+    <!-- V Shape (Main) -->
+    <path d="M110 130 L256 370 L402 130" stroke="url(#logoGradient)" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Speed Lines (Left) -->
+    <path d="M50 170 L90 170" stroke="url(#logoGradient)" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.8"/>
+    <path d="M65 210 L115 210" stroke="url(#logoGradient)" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.6"/>
+    <path d="M80 250 L140 250" stroke="url(#logoGradient)" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.4"/>
+    <path d="M95 290 L165 290" stroke="url(#logoGradient)" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.3"/>
+    
+    <!-- Speed Lines (Right) -->
+    <path d="M422 170 L462 170" stroke="url(#logoGradient)" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.8"/>
+    <path d="M397 210 L447 210" stroke="url(#logoGradient)" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.6"/>
+    <path d="M372 250 L432 250" stroke="url(#logoGradient)" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.4"/>
+    <path d="M347 290 L417 290" stroke="url(#logoGradient)" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.3"/>
+    
+    <!-- Crypto Symbols & Elements -->
+    <circle cx="256" cy="120" r="8" fill="url(#logoGradient)" opacity="0.9"/>
+    <circle cx="200" cy="290" r="5" fill="url(#logoGradient)" opacity="0.7"/>
+    <circle cx="312" cy="290" r="5" fill="url(#logoGradient)" opacity="0.7"/>
+    
+    <!-- Speed Trail Effects -->
+    <path d="M256 370 Q256 390 240 405" stroke="url(#logoGradient)" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.5"/>
+    <path d="M256 370 Q256 390 272 405" stroke="url(#logoGradient)" stroke-width="8" fill="none" stroke-linecap="round" opacity="0.5"/>
+    
+    <!-- Additional Tech Elements -->
+    <circle cx="150" cy="180" r="3" fill="url(#logoGradient)" opacity="0.5"/>
+    <circle cx="362" cy="180" r="3" fill="url(#logoGradient)" opacity="0.5"/>
+    <circle cx="180" cy="330" r="2" fill="url(#logoGradient)" opacity="0.4"/>
+    <circle cx="332" cy="330" r="2" fill="url(#logoGradient)" opacity="0.4"/>
+    
+    <!-- Velocity Text Hint -->
+    <text x="256" y="450" text-anchor="middle" fill="url(#logoGradient)" font-family="Arial, sans-serif" font-size="24" font-weight="bold" opacity="0.3">VELOCITY</text>
+  </g>
+</svg>
