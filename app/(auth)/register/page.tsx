@@ -56,7 +56,18 @@ export default function RegisterPage() {
         body: JSON.stringify({ code: code.trim() }),
       })
 
-      const data = await response.json()
+      let data
+      try {
+        const responseText = await response.text()
+        console.log('Raw response:', responseText) // Debug log
+        data = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('❌ Invite validation JSON Parse Error:', parseError)
+        console.error('❌ Response status:', response.status)
+        setInviteCodeValid(false)
+        setInviteCodeInfo(null)
+        return
+      }
 
       if (response.ok && data.valid) {
         setInviteCodeValid(true)
@@ -134,7 +145,16 @@ export default function RegisterPage() {
         }),
       })
 
-      const data = await response.json()
+      let data
+      try {
+        const responseText = await response.text()
+        console.log('Register response:', responseText) // Debug log
+        data = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('❌ Register JSON Parse Error:', parseError)
+        console.error('❌ Response status:', response.status)
+        throw new Error('Server returned invalid response')
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed')
@@ -312,9 +332,6 @@ export default function RegisterPage() {
                   >
                     <div className="text-green-400 text-sm">
                       ✓ Valid invite code
-                    </div>
-                    <div className="text-green-300 text-xs mt-1">
-                      {inviteCodeInfo.remainingUses} uses remaining • Created by {inviteCodeInfo.createdBy}
                     </div>
                   </motion.div>
                 )}
